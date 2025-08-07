@@ -6,7 +6,7 @@ import { FilterCheckbox, RangeSlider } from "./index";
 import { Input } from "../ui";
 import { Checkbox } from "@radix-ui/react-checkbox";
 import { CheckboxFiltersGroup } from "./checkbox-filters-group";
-import { useFilterIngredients } from "@/hooks/useFilterIngredients";
+import { useFilterIngredients } from "@/hooks/use-filter-ingredients";
 import { useSet } from "react-use";
 import qs from "qs";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -33,7 +33,7 @@ export const Filters: React.FC<Props> = ({ className }) => {
   >;
   const router = useRouter();
   const { ingredients, loading, onAddId, selectedIngredients } =
-    useFilterIngredients();
+    useFilterIngredients(searchParams.get("ingredients")?.split(","));
 
   const [sizes, { toggle: toggleSizes }] = useSet(
     new Set<string>(
