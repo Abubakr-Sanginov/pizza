@@ -23,7 +23,6 @@ export const SearchInput: React.FC<Props> = ({ className }) => {
     setFocused(false);
   });
 
-  // 1) Обёртка для запроса, зависит от searchQuery:
   const doSearch = React.useCallback(async () => {
     try {
       const result: Product[] = await Api.products.search(searchQuery);
@@ -33,7 +32,6 @@ export const SearchInput: React.FC<Props> = ({ className }) => {
     }
   }, [searchQuery]);
 
-  // 2) Debounce: вызовет doSearch() через 300 мс после последнего изменения searchQuery
   useDebounce(doSearch, 300, [doSearch]);
 
   const onClickItem = React.useCallback(() => {
