@@ -3,19 +3,15 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   try {
-    const userId = 1;
     const token = req.cookies.get("cartToken")?.value;
 
     if (!token) {
-      return NextResponse.json({ items: [] });
+      return NextResponse.json({ totalAmount: 0, items: [] });
     }
 
     const userCart = await prisma.cart.findFirst({
       where: {
         OR: [
-          {
-            userId,
-          },
           {
             token,
           },
@@ -38,7 +34,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ items: [] });
+    return NextResponse.json(userCart);
   } catch (error) {
     console.log(error);
   }
