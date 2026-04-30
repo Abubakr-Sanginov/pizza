@@ -149,7 +149,20 @@ bot.command('addcourier', async (ctx) => {
       data: { isCourier: true },
     });
 
-    ctx.reply(`Пользователь @${targetUsername} теперь отмечен как курьер.`);
+    // Синхронизируем с основной базой сайта
+    await prisma.user.upsert({
+      where: { telegramUsername: targetUsername },
+      update: { role: 'COURIER' },
+      create: {
+        email: `${targetUsername}@tg.bot`, // Заглушка для email
+        fullName: targetUsername,
+        role: 'COURIER',
+        telegramUsername: targetUsername,
+        password: '', // Пустой пароль
+      }
+    });
+
+    ctx.reply(`Пользователь @${targetUsername} теперь отмечен как курьер и добавлен в базу сайта.`);
   } catch (error) {
     ctx.reply('Ошибка при добавлении курьера.');
   }

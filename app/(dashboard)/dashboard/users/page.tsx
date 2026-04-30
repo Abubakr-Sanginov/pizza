@@ -47,19 +47,9 @@ export default async function DashboardUsersPage() {
                    <form action={async (formData) => {
                       'use server';
                       const role = formData.get('role') as UserRole;
-                      const telegramUsername = formData.get('telegramUsername') as string;
-                      await updateUserData(user.id, { 
-                        role, 
-                        telegramUsername: telegramUsername || null 
-                      });
+                      await updateUserData(user.id, { role });
                       revalidatePath('/dashboard/users');
-                   }} className="flex flex-col md:flex-row justify-end gap-2">
-                      <input 
-                        name="telegramUsername" 
-                        defaultValue={user.telegramUsername || ''} 
-                        placeholder="@username"
-                        className="text-xs border rounded px-2 py-1 w-24"
-                      />
+                   }} className="flex justify-end gap-2">
                       <select name="role" defaultValue={user.role} className="text-xs border rounded px-1 py-1">
                          <option value="USER">USER</option>
                          <option value="COURIER">COURIER</option>
