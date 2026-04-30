@@ -1,7 +1,7 @@
 import { prisma } from '@/back/prisma/prisma-client';
 import { Title } from '@/shared/components/shared';
 import { UserRole } from '@prisma/client';
-import { updateUserRole } from './actions';
+import { updateUserData } from './actions';
 import { revalidatePath } from 'next/cache';
 
 export default async function DashboardUsersPage() {
