@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { prisma } from '@/back/prisma/prisma-client';
 import { Title } from '@/shared/components/shared';
 import { UserRole } from '@prisma/client';

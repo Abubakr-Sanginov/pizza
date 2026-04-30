@@ -1,4 +1,6 @@
-﻿import { prisma } from '@/back/prisma/prisma-client';
+export const dynamic = 'force-dynamic';
+
+import { prisma } from '@/back/prisma/prisma-client';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
