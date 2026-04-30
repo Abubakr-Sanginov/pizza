@@ -11,6 +11,7 @@ import { sendEmail } from '@/back/lib/send-email';
 import { getUserSession } from '@/back/lib/get-user-session';
 import { OrderStatus, Prisma } from '@prisma/client';
 import { hashSync } from 'bcrypt';
+import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { sendOrderNotification } from '@/bot/service';
 
@@ -167,6 +168,7 @@ export async function createOrder(data: CheckoutFormValues) {
       console.log('[CreateOrder] Failed to send Telegram notification', tgError);
     }
 
+    revalidatePath('/dashboard/orders');
     return '/?paid';
   } catch (err) {
     console.log('[CreateOrder] Server error', err);
