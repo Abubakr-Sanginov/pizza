@@ -43,7 +43,7 @@ export default async function CourierDashboardPage() {
                 {order.apartment && <p><span className="font-semibold">Кв/Офис:</span> {order.apartment}</p>}
                 <p><span className="font-semibold">Клиент:</span> {order.fullName}</p>
                 <p><span className="font-semibold">Тел:</span> {order.phone}</p>
-                {order.comment && <p className="mt-2 p-2 bg-gray-50 rounded italic text-gray-500">"{order.comment}"</p>}
+                {order.comment && <p className="mt-2 p-2 bg-gray-50 rounded italic text-gray-500">&quot;{order.comment}&quot;</p>}
               </div>
             </div>
 
