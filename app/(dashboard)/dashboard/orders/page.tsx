@@ -1,27 +1,26 @@
 import { prisma } from '@/back/prisma/prisma-client';
 import { Title } from '@/shared/components/shared';
 import { OrderStatusSelector } from './components/order-status-selector';
+import { CourierSelector } from './components/courier-selector';
 import { deleteOrder } from '@/back/actions/order-actions';
 import { revalidatePath } from 'next/cache';
-import { Button } from '@/shared/components/ui';
-import { Trash2 } from 'lucide-react';
 import { DeleteButton } from '@/shared/components/shared/delete-button';
 
 export default async function DashboardOrdersPage() {
-  const orders = await prisma.order.findMany({
-    orderBy: {
-      createdAt: 'desc',
-    },
-    include: {
-      user: true,
-    },
-  });
-
-  const onDelete = async (id: number) => {
-    'use server';
-    await deleteOrder(id);
-    revalidatePath('/dashboard/orders');
-  };
+  const [orders, couriers] = await Promise.all([
+    prisma.order.findMany({
+      orderBy: {
+        createdAt: 'desc',
+      },
+      include: {
+        user: true,
+      },
+    }),
+    prisma.user.findMany({
+      where: { role: 'COURIER' },
+      select: { id: true, fullName: true },
+    }),
+  ]);
 
   return (
     <div>
@@ -34,8 +33,8 @@ export default async function DashboardOrdersPage() {
               <th className="px-6 py-4 font-semibold text-gray-600">ID Заказа</th>
               <th className="px-6 py-4 font-semibold text-gray-600">Клиент</th>
               <th className="px-6 py-4 font-semibold text-gray-600">Сумма</th>
-              <th className="px-6 py-4 font-semibold text-gray-600">Дата</th>
               <th className="px-6 py-4 font-semibold text-gray-600">Статус</th>
+              <th className="px-6 py-4 font-semibold text-gray-600">Курьер</th>
               <th className="px-6 py-4 font-semibold text-gray-600 text-right">Действия</th>
             </tr>
           </thead>
@@ -48,16 +47,15 @@ export default async function DashboardOrdersPage() {
                   <div className="text-gray-500 text-xs">{order.phone}</div>
                 </td>
                 <td className="px-6 py-4 font-medium">{order.totalAmount} TJS</td>
-                <td className="px-6 py-4 text-gray-500">
-                  {new Date(order.createdAt).toLocaleString('ru-RU', {
-                    day: 'numeric',
-                    month: 'short',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </td>
                 <td className="px-6 py-4">
                   <OrderStatusSelector orderId={order.id} initialStatus={order.status} />
+                </td>
+                <td className="px-6 py-4">
+                  <CourierSelector 
+                    orderId={order.id} 
+                    couriers={couriers} 
+                    initialCourierId={order.courierId} 
+                  />
                 </td>
                 <td className="px-6 py-4 text-right">
                   {order.status === 'CANCELLED' && (

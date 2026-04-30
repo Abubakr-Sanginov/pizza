@@ -22,7 +22,9 @@ model User {
     address    String?
 
     cart             Cart?
-    orders           Order[]
+    orders           Order[] @relation("UserOrders")
+    courierOrders    Order[] @relation("CourierOrders")
+    telegramUsername String? @unique
     verificationCode VerificationCode?
 
     reviews          Review[]
@@ -121,8 +123,11 @@ model CartItem {
 model Order {
     id Int @id @default(autoincrement())
 
-    user   User? @relation(fields: [userId], references: [id])
+    user   User? @relation("UserOrders", fields: [userId], references: [id])
     userId Int?
+
+    courier   User? @relation("CourierOrders", fields: [courierId], references: [id])
+    courierId Int?
 
     token String
 
@@ -221,6 +226,7 @@ model BotUser {
     chatId   String  @unique
     username String? @unique
     isSuperAdmin Boolean @default(false)
+    isCourier    Boolean @default(false)
 
     storeId Int?
     store   Store? @relation(fields: [storeId], references: [id])
@@ -266,6 +272,7 @@ enum OrderStatus {
 enum UserRole {
     USER
     ADMIN
+    COURIER
 }
 
 enum DeliveryType {

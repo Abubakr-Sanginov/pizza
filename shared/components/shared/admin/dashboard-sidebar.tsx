@@ -3,14 +3,15 @@
 import React from 'react';
 import Link from 'next/link';
 import { cn } from '@/shared/lib/utils';
-import { LayoutDashboard, ShoppingBasket, FolderTree, Beef, ArrowLeft, Images, MapPin, Package, MessageSquare, Settings } from 'lucide-react';
+import { LayoutDashboard, ShoppingBasket, FolderTree, Beef, ArrowLeft, Images, MapPin, Package, MessageSquare, Settings, Bike } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 interface Props {
   className?: string;
 }
 
-const items = [
+const adminItems = [
   { title: 'Главная', icon: LayoutDashboard, href: '/dashboard' },
   { title: 'Заказы', icon: Package, href: '/dashboard/orders' },
   { title: 'Продукты', icon: ShoppingBasket, href: '/dashboard/products' },
@@ -19,17 +20,28 @@ const items = [
   { title: 'Рестораны', icon: MapPin, href: '/dashboard/stores' },
   { title: 'Сториз', icon: Images, href: '/dashboard/stories' },
   { title: 'Отзывы', icon: MessageSquare, href: '/dashboard/reviews' },
+  { title: 'Пользователи', icon: FolderTree, href: '/dashboard/users' },
   { title: 'Настройки', icon: Settings, href: '/dashboard/settings' },
+];
+
+const courierItems = [
+  { title: 'Мои доставки', icon: Bike, href: '/dashboard/courier' },
 ];
 
 export const DashboardSidebar: React.FC<Props> = ({ className }) => {
   const pathname = usePathname();
+  const { data: session } = useSession();
+
+  const isCourier = session?.user?.role === 'COURIER';
+  const isAdmin = session?.user?.role === 'ADMIN';
+
+  const items = isCourier ? courierItems : adminItems;
 
   return (
     <div className={cn('flex flex-col w-64 bg-white border-r h-screen sticky top-0 p-5', className)}>
       <div className="flex items-center gap-3 mb-10 px-2">
         <img src="/logo.png" alt="Logo" width={30} height={30} />
-        <span className="text-xl font-bold">Админка</span>
+        <span className="text-xl font-bold">{isCourier ? 'Курьер' : 'Админка'}</span>
       </div>
 
       <nav className="flex-1 space-y-1">

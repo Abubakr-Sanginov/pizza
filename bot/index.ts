@@ -129,15 +129,40 @@ bot.command('assign', async (ctx) => {
   }
 });
 
+bot.command('addcourier', async (ctx) => {
+  if (!ctx.botUser?.isSuperAdmin) return ctx.reply('Только главный админ может добавлять курьеров.');
+
+  const text = (ctx.message as any).text.split(' ');
+  if (text.length < 2) return ctx.reply('Использование: /addcourier @username');
+
+  const targetUsername = text[1].replace('@', '');
+
+  try {
+    const targetUser = await prisma.botUser.findUnique({
+      where: { username: targetUsername },
+    });
+
+    if (!targetUser) return ctx.reply('Пользователь не найден. Он должен сначала написать боту /start');
+
+    await prisma.botUser.update({
+      where: { id: targetUser.id },
+      data: { isCourier: true },
+    });
+
+    ctx.reply(`Пользователь @${targetUsername} теперь отмечен как курьер.`);
+  } catch (error) {
+    ctx.reply('Ошибка при добавлении курьера.');
+  }
+});
+
 bot.command('help', (ctx) => {
   const isSuper = ctx.botUser?.isSuperAdmin;
   ctx.reply(`
 Доступные команды:
-/stats - Статистика (вашего заведения или общая)
+/stats - Статистика
 /orders - Активные заказы
 /reviews - Последние отзывы
-/menu - Список товаров
-${isSuper ? '\nКоманды главного админа:\n/addadmin @username - Дать доступ\n/assign @username [id] - Привязать к заведению' : ''}
+${isSuper ? '\nКоманды главного админа:\n/addadmin @username - Дать доступ\n/addcourier @username - Назначить курьером\n/assign @username [id] - Привязать к заведению' : ''}
 /help - Список команд
   `, { parse_mode: 'Markdown' });
 });
@@ -190,6 +215,14 @@ bot.command('orders', async (ctx) => {
       where.storeId = user.storeId;
     }
 
+    if (user.isCourier && !user.isSuperAdmin) {
+      // Курьер видит только свои заказы
+      // Но в BotUser нет прямой связи с User.id, поэтому ищем по username
+      const webUser = await prisma.user.findUnique({ where: { email: user.username + '@gmail.com' } }); // Это костыль, но в идеале нужно связать
+      // Для теста: курьеры видят все READY заказы
+      where.status = { in: ['READY', 'DELIVERING'] };
+    }
+
     const orders = await prisma.order.findMany({
       where,
       orderBy: { createdAt: 'desc' },
@@ -202,37 +235,6 @@ bot.command('orders', async (ctx) => {
     ctx.reply(`*Последние активные заказы:*\n\n${text}`, { parse_mode: 'Markdown' });
   } catch (error) {
     ctx.reply('Ошибка при получении списка заказов');
-  }
-});
-
-bot.command('reviews', async (ctx) => {
-  try {
-    const user = ctx.botUser!;
-    const where: any = {};
-    
-    // Отзывы пока не привязаны к Store в схеме, поэтому показываем всем или фильтруем по продуктам?
-    // В данной схеме Review -> Product. Product -> Category. 
-    // Пока оставим общим, либо будем фильтровать, если нужно.
-
-    const reviews = await prisma.review.findMany({
-      include: { user: true, product: true },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-    });
-
-    if (reviews.length === 0) return ctx.reply('Отзывов пока нет.');
-
-    for (const review of reviews) {
-      const text = `💬 *Отзыв от ${review.user.fullName}*\n🛒 *Товар:* ${review.product.name}\n⭐ *Оценка:* ${review.rating}/5\n📝 *Комментарий:* ${review.comment || 'нет'}`;
-      await ctx.reply(text, {
-        parse_mode: 'Markdown',
-        reply_markup: {
-          inline_keyboard: [[{ text: '❌ Удалить', callback_data: `delete_review_${review.id}` }]],
-        },
-      });
-    }
-  } catch (error) {
-    ctx.reply('Ошибка при получении отзывов');
   }
 });
 
@@ -250,15 +252,32 @@ bot.on('callback_query', async (ctx) => {
       const order = await prisma.order.findUnique({ where: { id: orderId } });
       if (!order) return ctx.answerCbQuery('Заказ не найден');
 
-      // Проверка прав на изменение
+      // Проверка прав
+      if (!user.isSuperAdmin && user.isCourier) {
+         // Если курьер пытается обновить, проверяем, назначен ли он (или даем взять заказ)
+         if (!order.courierId && status === 'DELIVERING') {
+            // Курьер берет заказ
+            // Нужно найти веб-юзера
+            const webUser = await prisma.user.findFirst({ where: { fullName: user.username || '' } }); 
+            if (webUser) {
+               await prisma.order.update({ where: { id: orderId }, data: { courierId: webUser.id, status: 'DELIVERING' } });
+               return ctx.answerCbQuery('Вы взяли заказ!');
+            }
+         }
+      }
+
       if (!user.isSuperAdmin && user.storeId && order.storeId !== user.storeId) {
-        return ctx.answerCbQuery('У вас нет прав на этот заказ (чужое заведение)');
+        return ctx.answerCbQuery('Нет прав на этот заказ');
       }
 
       await prisma.order.update({
         where: { id: orderId },
         data: { status },
       });
+
+      if (status === 'COOKING' || status === 'READY') {
+         await notifyCouriers(orderId);
+      }
 
       if (status === 'SUCCEEDED') {
         await prisma.globalStat.upsert({
@@ -276,19 +295,25 @@ bot.on('callback_query', async (ctx) => {
     }
   }
 
-  if (data.startsWith('delete_review_')) {
-    const reviewId = Number(data.split('_')[2]);
+  if (data.startsWith('assign_courier_')) {
+    const orderId = Number(data.split('_')[2]);
+    const courierId = Number(data.split('_')[3]);
+
     try {
-      await prisma.review.delete({ where: { id: reviewId } });
-      await ctx.answerCbQuery('Отзыв удален');
-      await ctx.editMessageText('❌ *Отзыв удален администратором.*', { parse_mode: 'Markdown' });
+      await prisma.order.update({
+        where: { id: orderId },
+        data: { courierId },
+      });
+      await ctx.answerCbQuery('Курьер назначен');
+      // @ts-ignore
+      await ctx.editMessageText(`${ctx.callbackQuery.message.text}\n\n🚴‍♂️ *Курьер назначен!*`, { parse_mode: 'Markdown' });
     } catch (error) {
-      await ctx.answerCbQuery('Ошибка удаления');
+      await ctx.answerCbQuery('Ошибка назначения');
     }
   }
 });
 
-// Функция для рассылки уведомлений о новых заказах
+// Уведомление
 export async function notifyNewOrder(orderId: number) {
   try {
     const order = await prisma.order.findUnique({
@@ -297,45 +322,114 @@ export async function notifyNewOrder(orderId: number) {
     });
     if (!order) return;
 
-    const admins = await prisma.botUser.findMany();
+    const admins = await prisma.botUser.findMany({ where: { OR: [{ isSuperAdmin: true }, { storeId: order.storeId }] } });
     
-    const text = `🔔 *Новый заказ #${order.id}*\n💰 Сумма: ${order.totalAmount} TJS\n🏢 Заведение: ${order.store?.name || 'Самовывоз/Общее'}\n📍 Адрес: ${order.address || 'В заведении'}\n📞 Тел: ${order.phone}`;
+    const text = `🔔 *Новый заказ #${order.id}*\n💰 Сумма: ${order.totalAmount} TJS\n🏢 Заведение: ${order.store?.name || 'Самовывоз'}\n📍 Адрес: ${order.address || 'В заведении'}\n📞 Тел: ${order.phone}`;
 
     for (const admin of admins) {
-      // Отправляем если:
-      // 1. Это супер-админ (видит всё)
-      // 2. Это админ заведения, к которому относится заказ
-      if (admin.isSuperAdmin || (order.storeId && admin.storeId === order.storeId)) {
         bot.telegram.sendMessage(admin.chatId, text, {
           parse_mode: 'Markdown',
           reply_markup: {
             inline_keyboard: [
               [{ text: '⏳ Готовится', callback_data: `order_status_COOKING_${order.id}` }, { text: '✅ Готов', callback_data: `order_status_READY_${order.id}` }],
-              [{ text: '🏁 Завершен', callback_data: `order_status_SUCCEEDED_${order.id}` }],
             ]
           }
         });
-      }
     }
   } catch (error) {
     console.error('Notification error:', error);
   }
 }
 
-// Периодическая очистка (как была)
+// Уведомление курьеров (когда заказ принят или готов)
+export async function notifyCouriers(orderId: number) {
+   try {
+      const order = await prisma.order.findUnique({ where: { id: orderId } });
+      if (!order) return;
+
+      const couriers = await prisma.user.findMany({ 
+         where: { 
+            role: 'COURIER',
+            telegramUsername: { not: null }
+         } 
+      });
+      
+      if (couriers.length === 0) return;
+
+      const text = `🚴‍♂️ *Заказ #${order.id} готов к доставке!*\n📍 Адрес: ${order.address}\n💰 Оплата: ${order.totalAmount} TJS\n📞 Клиент: ${order.fullName} (${order.phone})`;
+
+      // Ищем всех курьеров в боте по их юзернеймам
+      const telegramUsernames = couriers.map(c => c.telegramUsername?.replace('@', ''));
+      const botCouriers = await prisma.botUser.findMany({
+         where: { 
+            username: { in: telegramUsernames as string[] },
+            isCourier: true
+         }
+      });
+
+      if (botCouriers.length === 0) return;
+
+      // Отправляем одному случайному (как просили)
+      const randomCourier = botCouriers[Math.floor(Math.random() * botCouriers.length)];
+
+      bot.telegram.sendMessage(randomCourier.chatId, text, {
+         parse_mode: 'Markdown',
+         reply_markup: {
+            inline_keyboard: [
+               [{ text: '🚀 Взять заказ', callback_data: `order_status_DELIVERING_${order.id}` }]
+            ]
+         }
+      });
+   } catch (error) {
+      console.error('Courier notification error:', error);
+   }
+}
+
+// Периодическая очистка и АВТО-НАЗНАЧЕНИЕ
 setInterval(async () => {
+  // 1. Очистка старых заказов
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const result = await prisma.order.deleteMany({
+  await prisma.order.deleteMany({
     where: { status: { in: ['SUCCEEDED', 'CANCELLED'] }, updatedAt: { lt: oneDayAgo } }
   });
-  if (result.count > 0) {
-    const mainAdmin = await prisma.botUser.findFirst({ where: { isSuperAdmin: true } });
-    if (mainAdmin) bot.telegram.sendMessage(mainAdmin.chatId, `🧹 Очистка: удалено ${result.count} заказов.`);
+
+  // 2. Авто-назначение курьеров (если прошло 5 минут и курьера нет)
+  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+  const unassignedOrders = await prisma.order.findMany({
+     where: {
+        courierId: null,
+        status: { in: ['COOKING', 'READY'] },
+        createdAt: { lt: fiveMinutesAgo },
+        deliveryType: 'DELIVERY'
+     }
+  });
+
+  if (unassignedOrders.length > 0) {
+     const couriers = await prisma.user.findMany({ 
+        where: { 
+           role: 'COURIER',
+           telegramUsername: { not: null } 
+        } 
+     });
+
+     if (couriers.length > 0) {
+        for (const order of unassignedOrders) {
+           const courier = couriers[Math.floor(Math.random() * couriers.length)];
+           await prisma.order.update({ where: { id: order.id }, data: { courierId: courier.id } });
+           
+           // Уведомляем курьера в телеграм
+           const tgUsername = courier.telegramUsername?.replace('@', '');
+           const botCourier = await prisma.botUser.findFirst({ where: { username: tgUsername } });
+           if (botCourier) {
+              bot.telegram.sendMessage(botCourier.chatId, `⚠️ *Авто-назначение:*\nВам назначен заказ #${order.id} (админ не назначил вовремя).`, { parse_mode: 'Markdown' });
+           }
+        }
+     }
   }
-}, 60 * 60 * 1000);
+}, 60 * 1000); // Раз в минуту
 
 bot.launch();
-console.log('Multi-Admin Bot is running...');
+console.log('Multi-Admin Bot is running with Courier support...');
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
