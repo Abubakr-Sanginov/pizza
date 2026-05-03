@@ -64,7 +64,7 @@ export default function CheckoutPage() {
     }
 
     fetchData();
-  }, []);
+  }, [form]);
 
   React.useEffect(() => {
     async function fetchUserInfo() {
@@ -80,7 +80,7 @@ export default function CheckoutPage() {
     if (session) {
       fetchUserInfo();
     }
-  }, [session]);
+  }, [session, form]);
 
   const onSubmit = async (data: CheckoutFormValues) => {
     try {
