@@ -96,33 +96,44 @@ export default function ProfileScreen() {
   };
 
   const handleSocialLogin = async (provider: 'google' | 'github') => {
-    const callbackUrl = encodeURIComponent(`${BASE_URL}/profile`);
-    const authUrl = `${BASE_URL}/api/auth/signin/${provider}?callbackUrl=${callbackUrl}`;
+    setLoading(true);
     try {
-      const result = await WebBrowser.openAuthSessionAsync(authUrl, `${BASE_URL}/profile`);
+      // Создаем URL для возврата в приложение
+      const redirectUri = Linking.createURL('profile');
+      
+      // Формируем URL для входа, который после успеха отправит на нашу страницу-мост
+      const bridgeUrl = `${BASE_URL}/auth/success?redirect=${encodeURIComponent(redirectUri)}`;
+      const authUrl = `${BASE_URL}/api/auth/signin/${provider}?callbackUrl=${encodeURIComponent(bridgeUrl)}`;
+      
+      console.log('Redirect URI:', redirectUri);
+      console.log('Auth URL:', authUrl);
+
+      const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
       
       if (result.type === 'success') {
-        // After browser closes, try to fetch user info
-        setLoading(true);
-      const res = await fetch(`${BASE_URL}/api/auth/session`);
-      const session = await res.json();
-      if (session?.user) {
-        // Fetch full user data from our API
-        const usersRes = await fetch(`${BASE_URL}/api/users`);
-        const allUsers = await usersRes.json();
-        const foundUser = allUsers.find((u: any) => u.email === session.user.email);
-        if (foundUser) {
-          setUser({
-            id: foundUser.id.toString(),
-            email: foundUser.email,
-            fullName: foundUser.fullName,
-            role: foundUser.role
-          });
+        // Проверяем сессию после возврата
+        const res = await fetch(`${BASE_URL}/api/auth/session`);
+        const session = await res.json();
+        
+        if (session?.user) {
+          const usersRes = await fetch(`${BASE_URL}/api/users`);
+          const allUsers = await usersRes.json();
+          const foundUser = allUsers.find((u: any) => u.email === session.user.email);
+          
+          if (foundUser) {
+            setUser({
+              id: foundUser.id.toString(),
+              email: foundUser.email,
+              fullName: foundUser.fullName,
+              role: foundUser.role
+            });
+            alert('С возвращением!');
+          }
         }
       }
-    }
     } catch (e) {
-      console.error(e);
+      console.error('Social login error:', e);
+      alert('Ошибка при входе через соцсети');
     } finally {
       setLoading(false);
     }
