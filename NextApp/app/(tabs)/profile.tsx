@@ -110,15 +110,17 @@ export default function ProfileScreen() {
 
       const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
       
-      if (result.type === 'success') {
-        // Проверяем сессию после возврата
-        const res = await fetch(`${BASE_URL}/api/auth/session`);
-        const session = await res.json();
-        
-        if (session?.user) {
+      if (result.type === 'success' && result.url) {
+        // Парсим параметры из URL возврата
+        const { queryParams } = Linking.parse(result.url);
+        const email = queryParams?.email as string;
+        const name = queryParams?.name as string;
+
+        if (email) {
+          // Ищем пользователя в нашей базе по email
           const usersRes = await fetch(`${BASE_URL}/api/users`);
           const allUsers = await usersRes.json();
-          const foundUser = allUsers.find((u: any) => u.email === session.user.email);
+          const foundUser = allUsers.find((u: any) => u.email === email);
           
           if (foundUser) {
             setUser({
@@ -127,7 +129,15 @@ export default function ProfileScreen() {
               fullName: foundUser.fullName,
               role: foundUser.role
             });
-            alert('С возвращением!');
+            alert(`С возвращением, ${foundUser.fullName}!`);
+          } else {
+            // Если пользователя нет в базе (странно, но вдруг), создаем временный профиль
+            setUser({
+              id: 'social',
+              email: email,
+              fullName: name || email,
+              role: 'USER'
+            });
           }
         }
       }
