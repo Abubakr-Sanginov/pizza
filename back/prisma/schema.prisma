@@ -64,6 +64,7 @@ model ProductItem {
     id Int @id @default(autoincrement())
 
     price     Int
+    priceOld  Int?
     size      Int?
     pizzaType Int?
 

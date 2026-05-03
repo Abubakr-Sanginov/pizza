@@ -225,7 +225,7 @@ export default function ProfileScreen() {
               {step === 'verify' ? 'Подтверждение' : isLogin ? 'Вход в аккаунт' : 'Регистрация'}
             </Text>
             <Text style={styles.authSubtitle}>
-              {step === 'verify' ? `Введите код, отправленный на ${email}` : 'Чтобы копить баллы и видеть историю заказов'}
+              {step === 'verify' ? `Введите код, отправленный на ${email}` : 'Чтобы видеть историю заказов'}
             </Text>
           </View>
 

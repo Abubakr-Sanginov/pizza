@@ -21,6 +21,7 @@ const productSchema = z.object({
   items: z.array(z.object({
     id: z.number().optional(),
     price: z.coerce.number().min(1, 'Минимум 1 TJS'),
+    priceOld: z.coerce.number().optional(),
     size: z.coerce.number().optional(),
     pizzaType: z.coerce.number().optional(),
   })).min(1, 'Добавьте хотя бы одну вариацию'),
@@ -49,6 +50,7 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
       items: initialData?.items.map(item => ({
         id: item.id,
         price: item.price,
+        priceOld: item.priceOld || undefined,
         size: item.size || undefined,
         pizzaType: item.pizzaType || undefined,
       })) || [{ price: 0 }],
@@ -69,6 +71,7 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
         ingredientIds: values.ingredients,
         items: values.items.map((item) => ({
           price: item.price,
+          priceOld: item.priceOld || undefined,
           size: item.size || undefined,
           pizzaType: item.pizzaType || undefined,
         })),
@@ -175,6 +178,10 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
                   <div className="flex-1">
                     <label className="block text-xs font-medium mb-1">Цена (TJS)</label>
                     <Input {...form.register(`items.${index}.price`)} type="number" placeholder="390" />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-xs font-medium mb-1">Старая цена</label>
+                    <Input {...form.register(`items.${index}.priceOld`)} type="number" placeholder="450" />
                   </div>
                   <div className="flex-1">
                     <label className="block text-xs font-medium mb-1">Размер</label>

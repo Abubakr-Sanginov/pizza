@@ -13,6 +13,7 @@ interface Props {
   id: number;
   name: string;
   price: number;
+  priceOld?: number | null;
   imageUrl: string;
   ingredients: Ingredient[];
   reviews?: ReviewWithUser[];
@@ -23,6 +24,7 @@ export const ProductCard: React.FC<Props> = ({
   id,
   name,
   price,
+  priceOld,
   imageUrl,
   ingredients,
   reviews = [],
@@ -68,9 +70,16 @@ export const ProductCard: React.FC<Props> = ({
         </p>
 
         <div className="flex justify-between items-center mt-4">
-          <span className="text-[20px]">
-            от <b>{price} TJS</b>
-          </span>
+          <div className="flex flex-col">
+            {priceOld && (
+              <span className="text-sm text-gray-400 line-through mb-[-2px]">
+                {priceOld} TJS
+              </span>
+            )}
+            <span className="text-[20px]">
+              от <b>{price} TJS</b>
+            </span>
+          </div>
 
           <motion.div whileTap={{ scale: 0.95 }}>
             <Button variant="secondary" className="text-base font-bold">

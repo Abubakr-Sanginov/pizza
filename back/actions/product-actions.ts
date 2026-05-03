@@ -1,4 +1,4 @@
-﻿'use server';
+'use server';
 
 import { prisma } from '@/back/prisma/prisma-client';
 import { revalidatePath } from 'next/cache';
@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 interface ProductItemInput {
   id?: number;
   price: number;
+  priceOld?: number;
   size?: number;
   pizzaType?: number;
 }
@@ -31,6 +32,7 @@ export async function createProduct(data: ProductInput) {
         items: {
           create: data.items.map((item) => ({
             price: item.price,
+            priceOld: item.priceOld || null,
             size: item.size || null,
             pizzaType: item.pizzaType || null,
           })),
@@ -67,6 +69,7 @@ export async function updateProduct(id: number, data: ProductInput) {
         items: {
           create: data.items.map((item) => ({
             price: item.price,
+            priceOld: item.priceOld || null,
             size: item.size || null,
             pizzaType: item.pizzaType || null,
           })),

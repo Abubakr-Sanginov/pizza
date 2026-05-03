@@ -239,8 +239,16 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
 
           {tab === 'details' && (
             <View style={styles.footer}>
+              <View style={styles.priceContainer}>
+                {currentItem?.priceOld && (
+                  <Text style={styles.totalPriceOld}>
+                    {(currentItem.priceOld + selectedIngredients.reduce((acc, id) => acc + (product.ingredients.find((i: any) => i.id === id)?.price || 0), 0))} TJS
+                  </Text>
+                )}
+                <Text style={styles.totalPriceText}>Итого: {totalPrice} TJS</Text>
+              </View>
               <TouchableOpacity style={styles.addBtn} onPress={handleAdd}>
-                <Text style={styles.addBtnText}>Добавить в корзину за {totalPrice} TJS</Text>
+                <Text style={styles.addBtnText}>Добавить в корзину</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -428,6 +436,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 20,
     elevation: 10,
+  },
+  priceContainer: {
+    marginBottom: 15,
+    alignItems: 'center',
+  },
+  totalPriceOld: {
+    fontSize: 14,
+    color: '#9BA1A6',
+    textDecorationLine: 'line-through',
+    marginBottom: 2,
+  },
+  totalPriceText: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#11181C',
   },
   addBtn: {
     backgroundColor: '#ff7000',

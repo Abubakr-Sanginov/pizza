@@ -142,7 +142,12 @@ export default function MenuScreen() {
           {item.ingredients.map((i: any) => i.name).join(', ')}
         </Text>
         <View style={styles.productFooter}>
-          <Text style={styles.productPrice}>от {item.items[0]?.price} TJS</Text>
+          <View>
+            {item.items[0]?.priceOld && (
+              <Text style={styles.productPriceOld}>{item.items[0].priceOld} TJS</Text>
+            )}
+            <Text style={styles.productPrice}>от {item.items[0]?.price} TJS</Text>
+          </View>
           <View style={styles.addBtn}>
             <Ionicons name="add" size={20} color="#ff7000" />
           </View>
@@ -453,6 +458,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '900',
     color: '#11181C',
+  },
+  productPriceOld: {
+    fontSize: 12,
+    color: '#9BA1A6',
+    textDecorationLine: 'line-through',
+    marginBottom: -2,
   },
   addBtn: {
     backgroundColor: '#fff7f0',
