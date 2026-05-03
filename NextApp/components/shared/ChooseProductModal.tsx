@@ -2,6 +2,9 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, Modal, Image, TouchableOpacity, ScrollView, Animated, Dimensions, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCartStore } from '@/store/useCartStore';
+import { useUserStore } from '@/store/useUserStore';
+
+const BASE_URL = 'https://pizza-liart-chi.vercel.app';
 
 interface Props {
   product: any;
@@ -22,10 +25,14 @@ const PIZZA_TYPES = [
 ];
 
 export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose, onAddToCart }) => {
+  const user = useUserStore(state => state.user);
   const [size, setSize] = useState<number>(20);
   const [type, setType] = useState<number>(1);
   const [tab, setTab] = useState<'details' | 'reviews'>('details');
   const [selectedIngredients, setSelectedIngredients] = useState<number[]>([]);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const scaleAnim = useMemo(() => new Animated.Value(1), []);
 
   useEffect(() => {
@@ -91,6 +98,41 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
       ingredients: selectedIngredients,
     });
     onClose();
+  };
+
+  const submitReview = async () => {
+    if (!rating) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${BASE_URL}/api/reviews`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productId: product.id,
+          rating,
+          comment,
+        }),
+      });
+
+      if (res.ok) {
+        alert('Спасибо за отзыв!');
+        setRating(0);
+        setComment('');
+        // We might want to refresh the product data here, 
+        // but for now, just closing and re-opening will work
+      } else {
+        const error = await res.json();
+        alert(error.message || 'Ошибка при отправке');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Проблема с сетью');
+    } finally {
+      setSubmitting(true); // Wait, should be false
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -202,6 +244,45 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
               </>
             ) : (
               <View style={styles.reviewsList}>
+                {user ? (
+                  <View style={styles.addReviewForm}>
+                    <Text style={styles.addReviewTitle}>Оставить отзыв</Text>
+                    <View style={styles.starRowBig}>
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <TouchableOpacity key={s} onPress={() => setRating(s)}>
+                          <Ionicons 
+                            name={s <= rating ? "star" : "star-outline"} 
+                            size={32} 
+                            color={s <= rating ? "#ff7000" : "#9BA1A6"} 
+                          />
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                    <TextInput
+                      style={styles.reviewInput}
+                      placeholder="Ваш комментарий..."
+                      multiline
+                      value={comment}
+                      onChangeText={setComment}
+                    />
+                    <TouchableOpacity 
+                      style={[styles.submitReviewBtn, (!rating || submitting) && styles.submitReviewBtnDisabled]}
+                      onPress={submitReview}
+                      disabled={!rating || submitting}
+                    >
+                      {submitting ? (
+                        <ActivityIndicator color="white" size="small" />
+                      ) : (
+                        <Text style={styles.submitReviewText}>Отправить отзыв</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <View style={styles.loginToReview}>
+                    <Text style={styles.loginToReviewText}>Войдите, чтобы оставить отзыв</Text>
+                  </View>
+                )}
+
                 {product.reviews && product.reviews.length > 0 ? (
                   product.reviews.map((review: any) => (
                     <View key={review.id} style={styles.reviewCard}>
@@ -215,16 +296,16 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                             {[...Array(5)].map((_, i) => (
                               <Ionicons 
                                 key={i} 
-                                name={i < review.stars ? "star" : "star-outline"} 
+                                name={i < review.rating ? "star" : "star-outline"} 
                                 size={14} 
-                                color={i < review.stars ? "#ff7000" : "#9BA1A6"} 
+                                color={i < review.rating ? "#ff7000" : "#9BA1A6"} 
                               />
                             ))}
                           </View>
                         </View>
                         <Text style={styles.reviewDate}>{new Date(review.createdAt).toLocaleDateString()}</Text>
                       </View>
-                      <Text style={styles.reviewText}>{review.text}</Text>
+                      <Text style={styles.reviewText}>{review.comment}</Text>
                     </View>
                   ))
                 ) : (
@@ -522,6 +603,66 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#11181C',
     lineHeight: 20,
+  },
+  addReviewForm: {
+    backgroundColor: 'white',
+    borderRadius: 25,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  addReviewTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#11181C',
+    marginBottom: 10,
+  },
+  starRowBig: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 15,
+  },
+  reviewInput: {
+    backgroundColor: '#f3f4f6',
+    borderRadius: 15,
+    padding: 15,
+    minHeight: 100,
+    fontSize: 14,
+    color: '#11181C',
+    textAlignVertical: 'top',
+    marginBottom: 15,
+  },
+  submitReviewBtn: {
+    backgroundColor: '#ff7000',
+    borderRadius: 15,
+    height: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  submitReviewBtnDisabled: {
+    backgroundColor: '#9BA1A6',
+  },
+  submitReviewText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  loginToReview: {
+    padding: 20,
+    backgroundColor: '#fff7f0',
+    borderRadius: 25,
+    marginBottom: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: '#ff7000',
+  },
+  loginToReviewText: {
+    color: '#ff7000',
+    fontWeight: '700',
   },
   emptyReviews: {
     alignItems: 'center',
