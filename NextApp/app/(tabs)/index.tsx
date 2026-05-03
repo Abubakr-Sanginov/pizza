@@ -303,6 +303,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#fdf7f2',
   },
   headerTop: {
     flexDirection: 'row',

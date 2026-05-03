@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star } from 'lucide-react';
+import { Star, Trash2 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 
 interface Props {
@@ -8,16 +8,29 @@ interface Props {
   comment?: string | null;
   createdAt: Date;
   className?: string;
+  canDelete?: boolean;
+  onDelete?: () => void;
 }
 
-export const ReviewCard: React.FC<Props> = ({ fullName, rating, comment, createdAt, className }) => {
+export const ReviewCard: React.FC<Props> = ({ fullName, rating, comment, createdAt, className, canDelete, onDelete }) => {
   return (
-    <div className={cn('p-5 bg-white rounded-xl border border-gray-100 shadow-sm', className)}>
+    <div className={cn('p-5 bg-white rounded-xl border border-gray-100 shadow-sm relative', className)}>
       <div className="flex items-center justify-between mb-3">
         <span className="font-bold">{fullName}</span>
-        <span className="text-sm text-gray-400">
-          {new Date(createdAt).toLocaleDateString('ru-RU')}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-gray-400">
+            {new Date(createdAt).toLocaleDateString('ru-RU')}
+          </span>
+          {canDelete && (
+            <button 
+              onClick={onDelete}
+              className="text-gray-400 hover:text-red-500 transition-colors"
+              title="Удалить отзыв"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex gap-1 mb-3">

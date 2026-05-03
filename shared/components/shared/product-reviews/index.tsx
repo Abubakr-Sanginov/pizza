@@ -14,8 +14,28 @@ interface Props {
   className?: string;
 }
 
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
+
 export const ProductReviews: React.FC<Props> = ({ productId, reviews, className }) => {
   const { data: session } = useSession();
+  const router = useRouter();
+
+  const handleDelete = async (id: number) => {
+    if (confirm('Вы уверены, что хотите удалить отзыв?')) {
+      try {
+        const res = await fetch(`/api/reviews/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          toast.success('Отзыв удален');
+          router.refresh();
+        } else {
+          toast.error('Не удалось удалить отзыв');
+        }
+      } catch (error) {
+        toast.error('Ошибка при удалении');
+      }
+    }
+  };
 
   return (
     <div className={cn('p-8 border-t bg-white', className)}>
@@ -27,15 +47,20 @@ export const ProductReviews: React.FC<Props> = ({ productId, reviews, className 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         <div className="space-y-6 max-h-[500px] overflow-y-auto pr-4 scrollbar">
           {reviews.length > 0 ? (
-            reviews.map((review) => (
-              <ReviewCard
-                key={review.id}
-                fullName={review.user.fullName}
-                rating={review.rating}
-                comment={review.comment}
-                createdAt={review.createdAt}
-              />
-            ))
+            reviews.map((review) => {
+              const canDelete = session?.user && (Number(session.user.id) === review.userId || session.user.role === 'ADMIN');
+              return (
+                <ReviewCard
+                  key={review.id}
+                  fullName={review.user.fullName}
+                  rating={review.rating}
+                  comment={review.comment}
+                  createdAt={review.createdAt}
+                  canDelete={Boolean(canDelete)}
+                  onDelete={() => handleDelete(review.id)}
+                />
+              );
+            })
           ) : (
             <div className="flex flex-col items-center justify-center h-40 bg-gray-50 rounded-2xl text-gray-400">
               <p>Отзывов пока нет</p>

@@ -6,10 +6,12 @@ import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useUserStore } from '@/store/useUserStore';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const insets = useSafeAreaInsets();
+  const user = useUserStore(state => state.user);
 
   return (
     <Tabs
@@ -71,6 +73,16 @@ export default function TabLayout() {
           title: 'Профиль',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'person' : 'person-outline'} size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="courier"
+        options={{
+          title: 'Курьер',
+          href: user?.role === 'COURIER' ? '/courier' : null,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'bicycle' : 'bicycle-outline'} size={24} color={color} />
           ),
         }}
       />

@@ -24,10 +24,22 @@ export default function ProfileScreen() {
   const [fullName, setFullName] = useState('');
   const [code, setCode] = useState('');
 
+  // Edit Profile states
+  const [isEditing, setIsEditing] = useState(false);
+  const [editFullName, setEditFullName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editPassword, setEditPassword] = useState('');
+
+  useEffect(() => {
+    if (user) {
+      setEditFullName(user.fullName);
+      setEditEmail(user.email);
+    }
+  }, [user]);
+
   const fetchOrders = async () => {
     if (!user) return;
     try {
-      // In a real app, we'd use the userId to fetch orders
       const res = await fetch(`${BASE_URL}/api/users/orders?userId=${user.id}`);
       const data = await res.json();
       setOrders(data);
@@ -46,6 +58,35 @@ export default function ProfileScreen() {
     setRefreshing(false);
   }, [user]);
 
+  const handleUpdateProfile = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${BASE_URL}/api/users/me`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: editFullName,
+          email: editEmail,
+          password: editPassword || undefined,
+        })
+      });
+      
+      if (res.ok) {
+        const updatedUser = await res.json();
+        setUser(updatedUser);
+        setIsEditing(false);
+        setEditPassword('');
+        alert('Данные обновлены');
+      } else {
+        alert('Ошибка при обновлении');
+      }
+    } catch (e) {
+      alert('Ошибка сети');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAuth = async () => {
     setLoading(true);
     try {
@@ -57,9 +98,7 @@ export default function ProfileScreen() {
           body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&json=true`
         });
         
-        // Note: NextAuth might not return JSON directly here, so we might need a custom login route
-        // For simplicity in this demo, let's assume a custom route or manual check
-        const loginRes = await fetch(`${BASE_URL}/api/users`); // Dummy check to get user info
+        const loginRes = await fetch(`${BASE_URL}/api/users`);
         const allUsers = await loginRes.json();
         const foundUser = allUsers.find((u: any) => u.email === email);
 
@@ -172,6 +211,7 @@ export default function ProfileScreen() {
     }
   };
 
+
   if (user) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -180,11 +220,61 @@ export default function ProfileScreen() {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#ff7000']} />}
         >
           <View style={styles.profileHeader}>
-            <View style={styles.avatarLarge}>
-              <Text style={styles.avatarTextLarge}>{user.fullName[0]}</Text>
+            <View style={styles.headerTop}>
+              <View style={styles.avatarLarge}>
+                <Text style={styles.avatarTextLarge}>{user.fullName[0]}</Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.editBtn} 
+                onPress={() => setIsEditing(!isEditing)}
+              >
+                <Ionicons name={isEditing ? "close" : "create-outline"} size={22} color="#ff7000" />
+              </TouchableOpacity>
             </View>
-            <Text style={styles.userNameLarge}>{user.fullName}</Text>
-            <Text style={styles.userEmailLarge}>{user.email}</Text>
+
+            {isEditing ? (
+              <View style={styles.editForm}>
+                <View style={styles.editInputGroup}>
+                  <Text style={styles.editLabel}>Полное имя</Text>
+                  <TextInput 
+                    style={styles.editInput} 
+                    value={editFullName} 
+                    onChangeText={setEditFullName} 
+                  />
+                </View>
+                <View style={styles.editInputGroup}>
+                  <Text style={styles.editLabel}>Email</Text>
+                  <TextInput 
+                    style={styles.editInput} 
+                    value={editEmail} 
+                    onChangeText={setEditEmail} 
+                    autoCapitalize="none"
+                  />
+                </View>
+                <View style={styles.editInputGroup}>
+                  <Text style={styles.editLabel}>Новый пароль (опционально)</Text>
+                  <TextInput 
+                    style={styles.editInput} 
+                    placeholder="••••••••"
+                    value={editPassword} 
+                    onChangeText={setEditPassword} 
+                    secureTextEntry
+                  />
+                </View>
+                <TouchableOpacity 
+                  style={styles.saveBtn} 
+                  onPress={handleUpdateProfile}
+                  disabled={loading}
+                >
+                  {loading ? <ActivityIndicator color="white" /> : <Text style={styles.saveBtnText}>Сохранить</Text>}
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <>
+                <Text style={styles.userNameLarge}>{user.fullName}</Text>
+                <Text style={styles.userEmailLarge}>{user.email}</Text>
+              </>
+            )}
             
             <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
               <Ionicons name="log-out-outline" size={20} color="#ff4d4f" />
@@ -208,7 +298,7 @@ export default function ProfileScreen() {
                   <Text style={styles.orderDate}>{new Date(order.createdAt).toLocaleDateString()}</Text>
                   <Text style={styles.orderPrice}>{order.totalAmount} TJS</Text>
                   <View style={styles.orderDivider} />
-                  <Text style={styles.orderItems} numberOfLines={1}>
+                  <Text style={styles.orderItems}>
                     {JSON.parse(order.items).map((i: any) => i.productItem.product.name).join(', ')}
                   </Text>
                 </View>
@@ -401,6 +491,56 @@ const styles = StyleSheet.create({
   logoutText: {
     color: '#ff4d4f',
     fontWeight: '800',
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    position: 'relative',
+  },
+  editBtn: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    backgroundColor: '#fff7f0',
+    padding: 10,
+    borderRadius: 15,
+  },
+  editForm: {
+    width: '100%',
+    marginTop: 20,
+    gap: 15,
+  },
+  editInputGroup: {
+    gap: 5,
+  },
+  editLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#687076',
+    marginLeft: 5,
+  },
+  editInput: {
+    backgroundColor: '#f3f4f6',
+    height: 50,
+    borderRadius: 15,
+    paddingHorizontal: 15,
+    fontSize: 15,
+    color: '#11181C',
+  },
+  saveBtn: {
+    backgroundColor: '#ff7000',
+    height: 55,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  saveBtnText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '900',
   },
   ordersSection: {
     marginTop: 30,

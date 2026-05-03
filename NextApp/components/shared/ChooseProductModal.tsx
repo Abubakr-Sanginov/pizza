@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, Modal, Image, TouchableOpacity, ScrollView, Animated, Dimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, Modal, Image, TouchableOpacity, ScrollView, Animated, Dimensions, Platform, TextInput, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCartStore } from '@/store/useCartStore';
 import { useUserStore } from '@/store/useUserStore';
@@ -233,7 +233,7 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                           >
                             {isSelected && <Ionicons name="checkmark-circle" size={20} color="#ff7000" style={styles.checkIcon} />}
                             <Image source={{ uri: item.imageUrl }} style={styles.ingredientImage} />
-                            <Text style={styles.ingredientName} numberOfLines={1}>{item.name}</Text>
+                            <Text style={styles.ingredientName}>{item.name}</Text>
                             <Text style={styles.ingredientPrice}>{item.price} TJS</Text>
                           </TouchableOpacity>
                         );
@@ -306,6 +306,40 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                         <Text style={styles.reviewDate}>{new Date(review.createdAt).toLocaleDateString()}</Text>
                       </View>
                       <Text style={styles.reviewText}>{review.comment}</Text>
+                      
+                      {user && (Number(user.id) === review.userId || user.role === 'ADMIN') && (
+                        <TouchableOpacity 
+                          style={styles.deleteReviewBtn}
+                          onPress={() => {
+                            Alert.alert(
+                              'Удалить отзыв?',
+                              'Вы уверены, что хотите удалить этот отзыв?',
+                              [
+                                { text: 'Отмена', style: 'cancel' },
+                                { 
+                                  text: 'Удалить', 
+                                  style: 'destructive',
+                                  onPress: async () => {
+                                    try {
+                                      const res = await fetch(`${BASE_URL}/api/reviews/${review.id}`, { method: 'DELETE' });
+                                      if (res.ok) {
+                                        Alert.alert('Успех', 'Отзыв удален');
+                                      } else {
+                                        Alert.alert('Ошибка', 'Не удалось удалить отзыв');
+                                      }
+                                    } catch (e) {
+                                      Alert.alert('Ошибка', 'Проблема с сетью');
+                                    }
+                                  }
+                                }
+                              ]
+                            );
+                          }}
+                        >
+                          <Ionicons name="trash-outline" size={16} color="#ff4d4f" />
+                          <Text style={styles.deleteReviewText}>Удалить</Text>
+                        </TouchableOpacity>
+                      )}
                     </View>
                   ))
                 ) : (
@@ -393,7 +427,7 @@ const styles = StyleSheet.create({
   },
   scroll: {
     padding: 20,
-    paddingBottom: 120,
+    paddingBottom: 220,
   },
   imageContainer: {
     alignItems: 'center',
@@ -662,6 +696,22 @@ const styles = StyleSheet.create({
   },
   loginToReviewText: {
     color: '#ff7000',
+    fontWeight: '700',
+  },
+  deleteReviewBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 10,
+    alignSelf: 'flex-start',
+    backgroundColor: '#fff1f0',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  deleteReviewText: {
+    color: '#ff4d4f',
+    fontSize: 12,
     fontWeight: '700',
   },
   emptyReviews: {
