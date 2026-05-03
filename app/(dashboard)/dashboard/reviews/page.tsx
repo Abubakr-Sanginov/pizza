@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { prisma } from '@/back/prisma/prisma-client';
 import { Title, DeleteButton } from '@/shared/components/shared';
 import { Star } from 'lucide-react';

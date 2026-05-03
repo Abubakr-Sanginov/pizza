@@ -1,4 +1,5 @@
-﻿import { prisma } from '@/back/prisma/prisma-client';
+export const dynamic = 'force-dynamic';
+import { prisma } from '@/back/prisma/prisma-client';
 import { ProductForm } from '@/shared/components/shared/admin/product-form';
 import React from 'react';
 
