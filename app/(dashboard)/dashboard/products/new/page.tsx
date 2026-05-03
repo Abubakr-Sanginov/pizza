@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { prisma } from '@/back/prisma/prisma-client';
 import { ProductForm } from '@/shared/components/shared/admin/product-form';
 import React from 'react';

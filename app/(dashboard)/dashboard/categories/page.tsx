@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { prisma } from '@/back/prisma/prisma-client';
 import { Title } from '@/shared/components/shared';
 import { Button } from '@/shared/components/ui';
