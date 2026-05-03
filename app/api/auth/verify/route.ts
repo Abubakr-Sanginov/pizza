@@ -42,3 +42,41 @@ export async function GET(req: NextRequest) {
   }
 }
 
+export async function POST(req: NextRequest) {
+  try {
+    const { code, email } = await req.json();
+
+    const user = await prisma.user.findFirst({
+      where: { email },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'Пользователь не найден' }, { status: 404 });
+    }
+
+    const verificationCode = await prisma.verificationCode.findFirst({
+      where: {
+        userId: user.id,
+        code,
+      },
+    });
+
+    if (!verificationCode) {
+      return NextResponse.json({ error: 'Неверный код подтверждения' }, { status: 400 });
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { verified: new Date() },
+    });
+
+    await prisma.verificationCode.delete({
+      where: { id: verificationCode.id },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.log('Error [VERIFY_API]', err);
+    return NextResponse.json({ error: 'Ошибка сервера' }, { status: 500 });
+  }
+}

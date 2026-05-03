@@ -14,6 +14,7 @@ import { hashSync } from 'bcrypt';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { sendOrderNotification } from '@/bot/service';
+import { IikoService } from '@/back/services/iiko-service';
 
 export async function createOrder(data: CheckoutFormValues) {
   try {
@@ -166,6 +167,20 @@ export async function createOrder(data: CheckoutFormValues) {
       );
     } catch (tgError) {
       console.log('[CreateOrder] Failed to send Telegram notification', tgError);
+    }
+
+    /* Синхронизация с iiko */
+    try {
+       const iikoResult = await IikoService.syncOrderToIiko(order, userCart.items);
+       if (iikoResult) {
+          await prisma.order.update({
+             where: { id: order.id },
+             data: { iikoOrderId: iikoResult.order?.id }
+          });
+       }
+    } catch (iikoError) {
+       console.error('[CreateOrder] iiko sync failed:', iikoError);
+       // Мы не прерываем основной процесс, если iiko упал, чтобы клиент не видел ошибку
     }
 
     revalidatePath('/dashboard/orders');

@@ -87,32 +87,37 @@ export const CheckoutAddressForm: React.FC<Props> = ({ className, stores }) => {
 
 
         {isDelivery && (
-          <Controller
-             control={control}
-             name="address"
-             render={({ field, fieldState }) => (
-               <div className="flex flex-col gap-3">
-                 <AdressInput value={field.value} onChange={field.onChange} />
+          <>
+            <Controller
+              control={control}
+              name="address"
+              render={({ field, fieldState }) => (
+                <div className="flex flex-col gap-3">
+                  <AdressInput value={field.value} onChange={field.onChange} />
+                  {fieldState.error?.message && <ErrorText text={fieldState.error.message} />}
+                </div>
+              )}
+            />
 
-                 <div className="grid grid-cols-2 gap-4">
-                   <FormInput name="apartment" label="Кв/офис" />
-                   <FormInput name="floor" label="Этаж" />
-                   <FormInput name="entrance" label="Подъезд" />
-                   <FormInput name="doorCode" label="Код двери" />
-                 </div>
-                 
-                 <div className="mt-2 text-sm font-medium">Или выберите точку на карте:</div>
-                 <CheckoutAddressMap 
-                    onChange={field.onChange} 
-                    position={lat && lng ? [lat, lng] : null} 
-                    onPositionChange={onMapPositionChange} 
-                 />
-                 
-                 {field.value && <p className="text-sm text-gray-500">Выбранный адрес: {field.value}</p>}
-                 {fieldState.error?.message && <ErrorText text={fieldState.error.message} />}
-               </div>
-             )}
-          />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+              <FormInput name="apartment" label="Кв/офис" placeholder="101" />
+              <FormInput name="entrance" label="Подъезд" placeholder="1" />
+              <FormInput name="floor" label="Этаж" placeholder="5" />
+              <FormInput name="doorCode" label="Код двери" placeholder="1234" />
+            </div>
+
+            <div className="mt-5">
+              <div className="mb-3 text-sm font-medium">Или выберите точку на карте:</div>
+              <CheckoutAddressMap
+                onChange={(addr) => setValue('address', addr, { shouldValidate: true })}
+                position={lat && lng ? [lat, lng] : null}
+                onPositionChange={onMapPositionChange}
+              />
+              {watch('address') && (
+                <p className="mt-2 text-sm text-gray-500">Выбранный адрес: {watch('address')}</p>
+              )}
+            </div>
+          </>
         )}
 
         <FormTextarea

@@ -28,7 +28,8 @@ export const TopProducts: React.FC<Props> = async ({ className }) => {
     const queryNames = topQueries.map(q => q.query);
     products = await prisma.product.findMany({
       where: {
-        name: { in: queryNames }
+        name: { in: queryNames },
+        items: { some: {} } // Ensure it has at least one item
       },
       include: {
         items: true,

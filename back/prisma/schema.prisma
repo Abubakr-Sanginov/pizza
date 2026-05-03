@@ -71,6 +71,8 @@ model ProductItem {
 
     product   Product @relation(fields: [productId], references: [id])
     productId Int
+
+    iikoId String?
 }
 
 model Ingredient {
@@ -82,6 +84,8 @@ model Ingredient {
 
     products  Product[]
     cartItems CartItem[]
+
+    iikoId String?
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -150,6 +154,8 @@ model Order {
     lat      Float?
     lng      Float?
 
+    iikoOrderId String?
+
     storeId Int?
     store   Store? @relation(fields: [storeId], references: [id])
 
@@ -166,6 +172,9 @@ model Store {
     lng     Float?
     orders  Order[]
     botUsers BotUser[]
+
+    iikoOrganizationId String?
+    iikoTerminalGroupId String?
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
