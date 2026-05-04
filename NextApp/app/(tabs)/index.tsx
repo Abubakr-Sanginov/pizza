@@ -28,7 +28,7 @@ export default function MenuScreen() {
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const storyProgress = useRef(new Animated.Value(0)).current;
 
-  const addCartItem = useCartStore((state) => state.addCartItem);
+  const addItem = useCartStore((state) => state.addItem);
 
   const fetchData = async () => {
     try {
@@ -65,7 +65,7 @@ export default function MenuScreen() {
   };
 
   const handleAddToCart = async (values: any) => {
-    await addCartItem(values);
+    await addItem(values.productItemId, values.ingredients);
   };
 
   const handleCategoryPress = (categoryId: number, index: number) => {
@@ -138,7 +138,7 @@ export default function MenuScreen() {
       <Image source={{ uri: item.imageUrl }} style={styles.productImage} />
       <View style={styles.productInfo}>
         <Text style={styles.productName}>{item.name}</Text>
-        <Text style={styles.productDescription} numberOfLines={2}>
+        <Text style={styles.productDescription}>
           {item.ingredients.map((i: any) => i.name).join(', ')}
         </Text>
         <View style={styles.productFooter}>

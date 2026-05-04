@@ -432,13 +432,13 @@ export default function CartScreen() {
                         style={[styles.storeCard, selectedStoreId === store.id && styles.storeCardActive]}
                         onPress={() => setSelectedStoreId(store.id)}
                       >
-                        <View style={styles.storeIcon}>
+                        <DefaultView style={styles.storeIcon}>
                           <Ionicons name="pizza" size={20} color="#ff7000" />
-                        </View>
-                        <View style={styles.storeMeta}>
+                        </DefaultView>
+                        <DefaultView style={styles.storeMeta}>
                           <DefaultText style={styles.storeName}>{store.name}</DefaultText>
                           <DefaultText style={styles.storeAddress}>{store.address}</DefaultText>
-                        </View>
+                        </DefaultView>
                         {selectedStoreId === store.id && <Ionicons name="checkmark-circle" size={24} color="#ff7000" />}
                       </TouchableOpacity>
                     ))}
@@ -833,7 +833,7 @@ const styles = StyleSheet.create({
   },
   totalAmount: {
     fontSize: 24,
-    fontWeight: '950',
+    fontWeight: '900',
     color: '#11181C',
   },
   mainButton: {

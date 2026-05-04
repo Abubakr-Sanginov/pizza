@@ -273,6 +273,9 @@ export default function ProfileScreen() {
               <>
                 <Text style={styles.userNameLarge}>{user.fullName}</Text>
                 <Text style={styles.userEmailLarge}>{user.email}</Text>
+                <View style={{ marginTop: 10, backgroundColor: '#fff7f0', paddingHorizontal: 15, paddingVertical: 5, borderRadius: 10 }}>
+                  <Text style={{ color: '#ff7000', fontWeight: 'bold' }}>РОЛЬ: {user.role}</Text>
+                </View>
               </>
             )}
             

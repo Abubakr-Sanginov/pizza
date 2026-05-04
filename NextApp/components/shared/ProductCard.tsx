@@ -21,7 +21,7 @@ export const ProductCard: React.FC<Props> = ({ name, price, imageUrl, onPress })
       </View>
       
       <View style={styles.content}>
-        <Text numberOfLines={2} style={styles.title}>{name}</Text>
+        <Text style={styles.title}>{name}</Text>
         
         <View style={styles.footer}>
           <Text style={styles.price}>от {price} TJS</Text>
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#11181C',
     lineHeight: 18,
-    height: 36,
+    minHeight: 36,
     marginBottom: 8,
   },
   footer: {
