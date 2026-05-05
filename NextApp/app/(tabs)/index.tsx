@@ -129,13 +129,24 @@ export default function MenuScreen() {
     return filtered;
   }, [categories, searchQuery]);
 
-  const renderProduct = ({ item }: { item: any }) => (
+  const renderProduct = ({ item }: { item: any }) => {
+    const hasDiscount = item.items[0]?.priceOld && item.items[0].priceOld > item.items[0]?.price;
+    const discountPercent = hasDiscount ? Math.round((1 - item.items[0].price / item.items[0].priceOld) * 100) : 0;
+
+    return (
     <TouchableOpacity 
       style={styles.productCard} 
       activeOpacity={0.7}
       onPress={() => handleProductPress(item)}
     >
-      <Image source={{ uri: item.imageUrl }} style={styles.productImage} />
+      <View style={{ position: 'relative' }}>
+        <Image source={{ uri: item.imageUrl }} style={styles.productImage} />
+        {hasDiscount && (
+          <View style={styles.discountBadge}>
+            <Text style={styles.discountBadgeText}>-{discountPercent}%</Text>
+          </View>
+        )}
+      </View>
       <View style={styles.productInfo}>
         <Text style={styles.productName}>{item.name}</Text>
         <Text style={styles.productDescription}>
@@ -143,7 +154,7 @@ export default function MenuScreen() {
         </Text>
         <View style={styles.productFooter}>
           <View>
-            {item.items[0]?.priceOld && (
+            {hasDiscount && (
               <Text style={styles.productPriceOld}>{item.items[0].priceOld} TJS</Text>
             )}
             <Text style={styles.productPrice}>от {item.items[0]?.price} TJS</Text>
@@ -154,7 +165,8 @@ export default function MenuScreen() {
         </View>
       </View>
     </TouchableOpacity>
-  );
+    );
+  };
 
   if (loading) {
     return (
@@ -475,6 +487,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#ffeddb',
+  },
+  discountBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    backgroundColor: '#ef4444',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    zIndex: 10,
+    shadowColor: '#ef4444',
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  discountBadgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '900',
   },
   storyModalContainer: {
     flex: 1,

@@ -21,7 +21,7 @@ const productSchema = z.object({
   items: z.array(z.object({
     id: z.number().optional(),
     price: z.coerce.number().min(1, 'Минимум 1 TJS'),
-    priceOld: z.coerce.number().optional(),
+    discount: z.coerce.number().min(0).max(99).optional(),
     size: z.coerce.number().optional(),
     pizzaType: z.coerce.number().optional(),
   })).min(1, 'Добавьте хотя бы одну вариацию'),
@@ -49,8 +49,8 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
       ingredients: initialData?.ingredients.map((i) => i.id) || [],
       items: initialData?.items.map(item => ({
         id: item.id,
-        price: item.price,
-        priceOld: item.priceOld || undefined,
+        price: item.priceOld && item.priceOld > item.price ? item.priceOld : item.price,
+        discount: item.priceOld && item.priceOld > item.price ? Math.round((1 - item.price / item.priceOld) * 100) : undefined,
         size: item.size || undefined,
         pizzaType: item.pizzaType || undefined,
       })) || [{ price: 0 }],
@@ -69,12 +69,17 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
         imageUrl: values.imageUrl,
         categoryId: Number(values.categoryId),
         ingredientIds: values.ingredients,
-        items: values.items.map((item) => ({
-          price: item.price,
-          priceOld: item.priceOld || undefined,
-          size: item.size || undefined,
-          pizzaType: item.pizzaType || undefined,
-        })),
+        items: values.items.map((item) => {
+          const discount = item.discount || 0;
+          const originalPrice = item.price;
+          const finalPrice = discount > 0 ? Math.round(originalPrice * (1 - discount / 100)) : originalPrice;
+          return {
+            price: finalPrice,
+            priceOld: discount > 0 ? originalPrice : undefined,
+            size: item.size || undefined,
+            pizzaType: item.pizzaType || undefined,
+          };
+        }),
       };
 
       if (initialData) {
@@ -180,8 +185,8 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
                     <Input {...form.register(`items.${index}.price`)} type="number" placeholder="390" />
                   </div>
                   <div className="flex-1">
-                    <label className="block text-xs font-medium mb-1">Старая цена</label>
-                    <Input {...form.register(`items.${index}.priceOld`)} type="number" placeholder="450" />
+                    <label className="block text-xs font-medium mb-1">Скидка (%)</label>
+                    <Input {...form.register(`items.${index}.discount`)} type="number" placeholder="0" min="0" max="99" />
                   </div>
                   <div className="flex-1">
                     <label className="block text-xs font-medium mb-1">Размер</label>

@@ -54,6 +54,12 @@ export const ProductCard: React.FC<Props> = ({
             alt={name} 
           />
           
+          {priceOld && priceOld > price && (
+            <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1.5 rounded-full shadow-lg z-10">
+              <span className="text-sm font-black">-{Math.round((1 - price / priceOld) * 100)}%</span>
+            </div>
+          )}
+
           {reviews.length > 0 && (
             <div className="absolute top-3 left-3 bg-white px-2 py-1 rounded-md shadow-sm flex items-center gap-1">
               <Star size={14} className="text-yellow-400 fill-yellow-400" />
