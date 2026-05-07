@@ -17,11 +17,13 @@ import { createOrder } from '@/app/actions';
 import toast from 'react-hot-toast';
 import React from 'react';
 import { useSession } from 'next-auth/react';
+import { useTranslation } from 'react-i18next';
 import { Api } from '@/back/services/api-client';
 import { getStores } from '@/back/actions/store-actions';
 import { Store } from '@prisma/client';
 
 export default function CheckoutPage() {
+  const { t } = useTranslation();
   const [submitting, setSubmitting] = React.useState(false);
   const [stores, setStores] = React.useState<Store[]>([]);
   const { totalAmount, updateItemQuantity, items, removeCartItem, loading } = useCart();
@@ -88,7 +90,7 @@ export default function CheckoutPage() {
 
       const url = await createOrder(data);
 
-      toast.success('Заказ успешно оформлен! 📝 Возвращаем на главную... ', {
+      toast.success(t('checkout.success'), {
         icon: '✅',
       });
 
@@ -98,7 +100,7 @@ export default function CheckoutPage() {
     } catch (err) {
       console.log(err);
       setSubmitting(false);
-      toast.error('Не удалось создать заказ', {
+      toast.error(t('checkout.error'), {
         icon: '❌',
       });
     }
@@ -111,7 +113,7 @@ export default function CheckoutPage() {
 
   return (
     <Container className="mt-10">
-      <Title text="Оформление заказа" className="font-extrabold mb-8 text-[28px] md:text-[36px]" />
+      <Title text={t('checkout.title')} className="font-extrabold mb-8 text-[28px] md:text-[36px]" />
 
       <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>

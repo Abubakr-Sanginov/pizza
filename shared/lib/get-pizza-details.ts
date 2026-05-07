@@ -8,9 +8,15 @@ export const getPizzaDetails = (
   items: ProductItem[],
   ingredients: Ingredient[],
   selectedIngredients: Set<number>,
+  t?: any,
 ) => {
   const totalPrice = calcTotalPizzaPrice(type, size, items, ingredients, selectedIngredients);
-  const textDetaills = `${size} см, ${mapPizzaType[type]} пицца`;
+  
+  const typeName = t ? (type === 1 ? t('cart.traditional') : t('cart.thin')) : (type === 1 ? 'традиционная' : 'тонкая');
+  const cm = t ? t('cart.cm') : 'см';
+  const pizzaLabel = t ? t('cart.pizza') : 'пицца';
+
+  const textDetaills = `${size} ${cm}, ${typeName} ${pizzaLabel}`;
 
   return { totalPrice, textDetaills };
 };

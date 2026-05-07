@@ -5,12 +5,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUserStore } from '@/store/useUserStore';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
+import { useTranslation } from 'react-i18next';
 
 const BASE_URL = 'https://pizza-liart-chi.vercel.app';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { user, setUser, logout } = useUserStore();
+  const { t } = useTranslation();
   
   const [isLogin, setIsLogin] = useState(true);
   const [step, setStep] = useState<'auth' | 'verify'>('auth');
@@ -76,12 +78,12 @@ export default function ProfileScreen() {
         setUser(updatedUser);
         setIsEditing(false);
         setEditPassword('');
-        alert('Данные обновлены');
+        Alert.alert(t('profile.updateSuccess'));
       } else {
-        alert('Ошибка при обновлении');
+        Alert.alert(t('profile.updateError'));
       }
     } catch (e) {
-      alert('Ошибка сети');
+      Alert.alert(t('profile.networkError'));
     } finally {
       setLoading(false);
     }
@@ -110,7 +112,7 @@ export default function ProfileScreen() {
             role: foundUser.role
           });
         } else {
-          alert('Ошибка входа. Проверьте данные или подтвердите почту.');
+          Alert.alert(t('profile.updateError'));
         }
       } else {
         // Register Logic
@@ -123,12 +125,12 @@ export default function ProfileScreen() {
         if (data.success) {
           setStep('verify');
         } else {
-          alert(data.error || 'Ошибка регистрации');
+          Alert.alert(data.error || t('profile.updateError'));
         }
       }
     } catch (e) {
       console.error(e);
-      alert('Ошибка соединения с сервером');
+      Alert.alert(t('profile.networkError'));
     } finally {
       setLoading(false);
     }
@@ -168,7 +170,7 @@ export default function ProfileScreen() {
               fullName: foundUser.fullName,
               role: foundUser.role
             });
-            alert(`С возвращением, ${foundUser.fullName}!`);
+            Alert.alert(`${t('profile.welcomeBack')}, ${foundUser.fullName}!`);
           } else {
             // Если пользователя нет в базе (странно, но вдруг), создаем временный профиль
             setUser({
@@ -182,7 +184,7 @@ export default function ProfileScreen() {
       }
     } catch (e) {
       console.error('Social login error:', e);
-      alert('Ошибка при входе через соцсети');
+      Alert.alert(t('profile.socialError'));
     } finally {
       setLoading(false);
     }
@@ -198,11 +200,11 @@ export default function ProfileScreen() {
       });
       const data = await res.json();
       if (data.success) {
-        alert('Почта подтверждена! Теперь вы можете войти.');
+        Alert.alert(t('auth.verifySuccess'));
         setIsLogin(true);
         setStep('auth');
       } else {
-        alert(data.error || 'Неверный код');
+        Alert.alert(data.error || t('auth.invalidCode'));
       }
     } catch (e) {
       console.error(e);
@@ -235,7 +237,7 @@ export default function ProfileScreen() {
             {isEditing ? (
               <View style={styles.editForm}>
                 <View style={styles.editInputGroup}>
-                  <Text style={styles.editLabel}>Полное имя</Text>
+                  <Text style={styles.editLabel}>{t('profile.fullName')}</Text>
                   <TextInput 
                     style={styles.editInput} 
                     value={editFullName} 
@@ -243,7 +245,7 @@ export default function ProfileScreen() {
                   />
                 </View>
                 <View style={styles.editInputGroup}>
-                  <Text style={styles.editLabel}>Email</Text>
+                  <Text style={styles.editLabel}>{t('profile.email')}</Text>
                   <TextInput 
                     style={styles.editInput} 
                     value={editEmail} 
@@ -252,7 +254,7 @@ export default function ProfileScreen() {
                   />
                 </View>
                 <View style={styles.editInputGroup}>
-                  <Text style={styles.editLabel}>Новый пароль (опционально)</Text>
+                  <Text style={styles.editLabel}>{t('profile.password')}</Text>
                   <TextInput 
                     style={styles.editInput} 
                     placeholder="••••••••"
@@ -266,7 +268,7 @@ export default function ProfileScreen() {
                   onPress={handleUpdateProfile}
                   disabled={loading}
                 >
-                  {loading ? <ActivityIndicator color="white" /> : <Text style={styles.saveBtnText}>Сохранить</Text>}
+                  {loading ? <ActivityIndicator color="white" /> : <Text style={styles.saveBtnText}>{t('profile.save')}</Text>}
                 </TouchableOpacity>
               </View>
             ) : (
@@ -274,27 +276,27 @@ export default function ProfileScreen() {
                 <Text style={styles.userNameLarge}>{user.fullName}</Text>
                 <Text style={styles.userEmailLarge}>{user.email}</Text>
                 <View style={{ marginTop: 10, backgroundColor: '#fff7f0', paddingHorizontal: 15, paddingVertical: 5, borderRadius: 10 }}>
-                  <Text style={{ color: '#ff7000', fontWeight: 'bold' }}>РОЛЬ: {user.role}</Text>
+                  <Text style={{ color: '#ff7000', fontWeight: 'bold' }}>{t('profile.role')}: {user.role}</Text>
                 </View>
               </>
             )}
             
             <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
               <Ionicons name="log-out-outline" size={20} color="#ff4d4f" />
-              <Text style={styles.logoutText}>Выйти</Text>
+              <Text style={styles.logoutText}>{t('profile.logout')}</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.ordersSection}>
-            <Text style={styles.sectionTitle}>Мои заказы</Text>
+            <Text style={styles.sectionTitle}>{t('profile.myOrders')}</Text>
             {orders.length > 0 ? (
               orders.map((order) => (
                 <View key={order.id} style={styles.orderCard}>
                   <View style={styles.orderHeader}>
-                    <Text style={styles.orderId}>Заказ #{order.id}</Text>
+                    <Text style={styles.orderId}>{t('courier.order')} #{order.id}</Text>
                     <View style={[styles.statusBadge, { backgroundColor: order.status === 'SUCCEEDED' ? '#f6ffed' : '#fff7e6' }]}>
                       <Text style={[styles.statusText, { color: order.status === 'SUCCEEDED' ? '#52c41a' : '#faad14' }]}>
-                        {order.status === 'SUCCEEDED' ? 'Выполнен' : 'В обработке'}
+                        {order.status === 'SUCCEEDED' ? t('profile.orderStatus.succeeded') : t('profile.orderStatus.processing')}
                       </Text>
                     </View>
                   </View>
@@ -309,7 +311,7 @@ export default function ProfileScreen() {
             ) : (
               <View style={styles.emptyOrders}>
                 <Ionicons name="receipt-outline" size={60} color="#9BA1A6" />
-                <Text style={styles.emptyOrdersText}>Вы еще ничего не заказывали</Text>
+                <Text style={styles.emptyOrdersText}>{t('profile.emptyOrders')}</Text>
               </View>
             )}
           </View>
@@ -325,10 +327,10 @@ export default function ProfileScreen() {
           <View style={styles.authHeader}>
             <Image source={{ uri: 'https://cdn.dodostatic.net/site-static/dist/assets/522384a867822955.svg' }} style={styles.logo} />
             <Text style={styles.authTitle}>
-              {step === 'verify' ? 'Подтверждение' : isLogin ? 'Вход в аккаунт' : 'Регистрация'}
+              {step === 'verify' ? t('auth.verify') : isLogin ? t('auth.login') : t('auth.register')}
             </Text>
             <Text style={styles.authSubtitle}>
-              {step === 'verify' ? `Введите код, отправленный на ${email}` : 'Чтобы видеть историю заказов'}
+              {step === 'verify' ? `${t('auth.verifySubtitle')} ${email}` : t('auth.authSubtitle')}
             </Text>
           </View>
 
@@ -336,17 +338,17 @@ export default function ProfileScreen() {
             <View style={styles.form}>
               {!isLogin && (
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Полное имя</Text>
+                  <Text style={styles.label}>{t('auth.fullName')}</Text>
                   <TextInput 
                     style={styles.input} 
-                    placeholder="Иван Иванов" 
+                    placeholder="Фирдавс Рахимов" 
                     value={fullName} 
                     onChangeText={setFullName} 
                   />
                 </View>
               )}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>E-mail</Text>
+                <Text style={styles.label}>{t('auth.email')}</Text>
                 <TextInput 
                   style={styles.input} 
                   placeholder="example@mail.com" 
@@ -356,7 +358,7 @@ export default function ProfileScreen() {
                 />
               </View>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Пароль</Text>
+                <Text style={styles.label}>{t('auth.password')}</Text>
                 <TextInput 
                   style={styles.input} 
                   placeholder="••••••••" 
@@ -368,13 +370,13 @@ export default function ProfileScreen() {
 
               <TouchableOpacity style={styles.mainBtn} onPress={handleAuth} disabled={loading}>
                 {loading ? <ActivityIndicator color="white" /> : (
-                  <Text style={styles.mainBtnText}>{isLogin ? 'Войти' : 'Создать аккаунт'}</Text>
+                  <Text style={styles.mainBtnText}>{isLogin ? t('auth.loginBtn') : t('auth.registerBtn')}</Text>
                 )}
               </TouchableOpacity>
 
               <View style={styles.dividerRow}>
                 <View style={styles.line} />
-                <Text style={styles.dividerText}>или через соцсети</Text>
+                <Text style={styles.dividerText}>{t('auth.socialDivider')}</Text>
                 <View style={styles.line} />
               </View>
 
@@ -403,14 +405,14 @@ export default function ProfileScreen() {
                 }}
               >
                 <Text style={styles.switchText}>
-                  {isLogin ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти'}
+                  {isLogin ? t('auth.noAccount') : t('auth.hasAccount')}
                 </Text>
               </TouchableOpacity>
             </View>
           ) : (
             <View style={styles.form}>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Код из письма</Text>
+                <Text style={styles.label}>{t('auth.codeInput')}</Text>
                 <TextInput 
                   style={[styles.input, styles.codeInput]} 
                   placeholder="000000" 
@@ -422,11 +424,11 @@ export default function ProfileScreen() {
               </View>
               <TouchableOpacity style={styles.mainBtn} onPress={handleVerify} disabled={loading}>
                 {loading ? <ActivityIndicator color="white" /> : (
-                  <Text style={styles.mainBtnText}>Подтвердить</Text>
+                  <Text style={styles.mainBtnText}>{t('auth.confirmBtn')}</Text>
                 )}
               </TouchableOpacity>
               <TouchableOpacity style={styles.switchBtn} onPress={() => setStep('auth')}>
-                <Text style={styles.switchText}>Назад к регистрации</Text>
+                <Text style={styles.switchText}>{t('auth.backToRegister')}</Text>
               </TouchableOpacity>
             </View>
           )}

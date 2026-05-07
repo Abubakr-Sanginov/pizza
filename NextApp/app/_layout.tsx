@@ -6,6 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { StatusBar } from 'expo-status-bar';
+import '@/lib/i18n';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { SafeAreaProvider } from 'react-native-safe-area-context';

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUserStore } from '@/store/useUserStore';
+import { useTranslation } from 'react-i18next';
 
 const BASE_URL = 'https://pizza-liart-chi.vercel.app';
 
@@ -12,6 +13,7 @@ export default function CourierScreen() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const { t } = useTranslation();
 
   const fetchOrders = async () => {
     try {
@@ -44,13 +46,13 @@ export default function CourierScreen() {
       });
       
       if (res.ok) {
-        Alert.alert('Успех', 'Статус обновлен');
+        Alert.alert(t('courier.success'), t('courier.statusUpdated'));
         fetchOrders();
       } else {
-        Alert.alert('Ошибка', 'Не удалось обновить статус');
+        Alert.alert(t('courier.error'), t('courier.statusUpdateError'));
       }
     } catch (e) {
-      Alert.alert('Ошибка', 'Проблема с сетью');
+      Alert.alert(t('courier.error'), t('courier.networkError'));
     }
   };
 
@@ -65,8 +67,8 @@ export default function CourierScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Доставки</Text>
-        <Text style={styles.subtitle}>Заказы, готовые к отправке</Text>
+        <Text style={styles.title}>{t('courier.title')}</Text>
+        <Text style={styles.subtitle}>{t('courier.subtitle')}</Text>
       </View>
 
       <ScrollView 
@@ -77,10 +79,10 @@ export default function CourierScreen() {
           orders.map((order) => (
             <View key={order.id} style={styles.orderCard}>
               <View style={styles.orderHeader}>
-                <Text style={styles.orderId}>Заказ #{order.id}</Text>
+                <Text style={styles.orderId}>{t('courier.order')} #{order.id}</Text>
                 <View style={[styles.statusBadge, { backgroundColor: order.status === 'READY' ? '#e6f7ff' : '#f6ffed' }]}>
                   <Text style={[styles.statusText, { color: order.status === 'READY' ? '#1890ff' : '#52c41a' }]}>
-                    {order.status === 'READY' ? 'Готов' : 'В пути'}
+                    {order.status === 'READY' ? t('courier.ready') : t('courier.delivering')}
                   </Text>
                 </View>
               </View>
@@ -96,7 +98,7 @@ export default function CourierScreen() {
               </View>
 
               <View style={styles.priceRow}>
-                <Text style={styles.priceLabel}>К оплате:</Text>
+                <Text style={styles.priceLabel}>{t('courier.priceLabel')}</Text>
                 <Text style={styles.priceValue}>{order.totalAmount} TJS</Text>
               </View>
 
@@ -107,7 +109,7 @@ export default function CourierScreen() {
                     onPress={() => updateStatus(order.id, 'DELIVERING')}
                   >
                     <Ionicons name="bicycle" size={20} color="white" />
-                    <Text style={styles.actionBtnText}>Взять заказ</Text>
+                    <Text style={styles.actionBtnText}>{t('courier.takeOrder')}</Text>
                   </TouchableOpacity>
                 ) : (
                   <TouchableOpacity 
@@ -115,7 +117,7 @@ export default function CourierScreen() {
                     onPress={() => updateStatus(order.id, 'SUCCEEDED')}
                   >
                     <Ionicons name="checkmark-done" size={20} color="white" />
-                    <Text style={styles.actionBtnText}>Доставлено</Text>
+                    <Text style={styles.actionBtnText}>{t('courier.delivered')}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -124,7 +126,7 @@ export default function CourierScreen() {
         ) : (
           <View style={styles.empty}>
             <Ionicons name="cafe-outline" size={64} color="#9BA1A6" />
-            <Text style={styles.emptyText}>Пока нет заказов для доставки</Text>
+            <Text style={styles.emptyText}>{t('courier.empty')}</Text>
           </View>
         )}
       </ScrollView>

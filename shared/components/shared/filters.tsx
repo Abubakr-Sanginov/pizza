@@ -6,58 +6,64 @@ import { Input } from '../ui';
 import { RangeSlider } from './range-slider';
 import { CheckboxFiltersGroup } from './checkbox-filters-group';
 import { useQueryFilters, useIngredients, useFilters } from '@/shared/hooks';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   className?: string;
 }
 
 export const Filters: React.FC<Props> = ({ className }) => {
+  const { t } = useTranslation();
   const { ingredients, loading } = useIngredients();
   const filters = useFilters();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useQueryFilters(filters);
 
   const items = ingredients.map((item) => ({ value: String(item.id), text: item.name }));
 
   const updatePrices = (prices: number[]) => {
-    console.log(prices, 999);
     filters.setPrices('priceFrom', prices[0]);
     filters.setPrices('priceTo', prices[1]);
   };
 
   return (
     <div className={className}>
-      <Title text="Фильтрация" size="sm" className="mb-5 font-bold" />
+      <Title text={mounted ? t('filters.title') : ''} size="sm" className="mb-5 font-bold" />
 
       {/* Верхние чекбоксы */}
       <CheckboxFiltersGroup
-        title="Тип теста"
+        title={mounted ? t('filters.pizzaTypes') : ''}
         name="pizzaTypes"
         className="mb-5"
         onClickCheckbox={filters.setPizzaTypes}
         selected={filters.pizzaTypes}
         items={[
-          { text: 'Тонкое', value: '1' },
-          { text: 'Традиционное', value: '2' },
+          { text: mounted ? t('cart.thin') : '', value: '1' },
+          { text: mounted ? t('cart.traditional') : '', value: '2' },
         ]}
       />
 
       <CheckboxFiltersGroup
-        title="Размеры"
+        title={mounted ? t('filters.sizes') : ''}
         name="sizes"
         className="mb-5"
         onClickCheckbox={filters.setSizes}
         selected={filters.sizes}
         items={[
-          { text: '20 см', value: '20' },
-          { text: '30 см', value: '30' },
-          { text: '40 см', value: '40' },
+          { text: mounted ? `20 ${t('cart.cm')}` : '', value: '20' },
+          { text: mounted ? `30 ${t('cart.cm')}` : '', value: '30' },
+          { text: mounted ? `40 ${t('cart.cm')}` : '', value: '40' },
         ]}
       />
 
       {/* Фильтр цен */}
       <div className="mt-5 border-y border-y-neutral-100 py-6 pb-7">
-        <p className="font-bold mb-3">Цена от и до:</p>
+        <p className="font-bold mb-3">{mounted && t('filters.priceTitle')}</p>
         <div className="flex gap-3 mb-5">
           <Input
             type="number"
@@ -87,7 +93,7 @@ export const Filters: React.FC<Props> = ({ className }) => {
       </div>
 
       <CheckboxFiltersGroup
-        title="Ингредиенты"
+        title={mounted ? t('filters.ingredients') : ''}
         name="ingredients"
         className="mt-5"
         limit={6}

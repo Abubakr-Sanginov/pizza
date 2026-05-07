@@ -8,8 +8,10 @@ import toast from 'react-hot-toast';
 import { MapPin, Phone, CheckCircle, Package, Truck } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 
 export default function CourierPage() {
+  const { t } = useTranslation();
   const [orders, setOrders] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const router = useRouter();
@@ -21,7 +23,7 @@ export default function CourierPage() {
       const data = await res.json();
       setOrders(data);
     } catch (e) {
-      toast.error('Ошибка при загрузке заказов');
+      toast.error(t('courier.errorLoad'));
     } finally {
       setLoading(false);
     }
@@ -40,26 +42,26 @@ export default function CourierPage() {
       });
 
       if (res.ok) {
-        toast.success('Статус обновлен');
+        toast.success(t('courier.statusUpdated'));
         fetchOrders();
       } else {
-        toast.error('Не удалось обновить статус');
+        toast.error(t('courier.errorUpdate'));
       }
     } catch (e) {
-      toast.error('Ошибка сети');
+      toast.error(t('courier.network'));
     }
   };
 
-  if (loading) return <div className="p-20 text-center">Загрузка...</div>;
+  if (loading) return <div className="p-20 text-center">{t('courier.loading')}</div>;
 
   return (
     <Container className="my-10">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <Title text="Панель курьера" size="lg" className="font-extrabold" />
-          <p className="text-gray-400">Управление доставками и заказами</p>
+          <Title text={t('courier.title')} size="lg" className="font-extrabold" />
+          <p className="text-gray-400">{t('courier.subtitle')}</p>
         </div>
-        <Button onClick={fetchOrders} variant="outline">Обновить</Button>
+        <Button onClick={fetchOrders} variant="outline">{t('courier.update')}</Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -67,12 +69,12 @@ export default function CourierPage() {
           orders.map((order) => (
             <div key={order.id} className="bg-white border rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between mb-4">
-                <span className="font-bold text-lg">Заказ #{order.id}</span>
+                <span className="font-bold text-lg">{t('courier.orderNum')}{order.id}</span>
                 <div className={cn(
                   'px-3 py-1 rounded-full text-xs font-bold',
                   order.status === 'READY' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-green-600'
                 )}>
-                  {order.status === 'READY' ? 'Готов к выдаче' : 'В пути'}
+                  {order.status === 'READY' ? t('courier.readyToPick') : t('courier.delivering')}
                 </div>
               </div>
 
@@ -97,7 +99,7 @@ export default function CourierPage() {
                   onClick={() => updateStatus(order.id, OrderStatus.DELIVERING)}
                 >
                   <Truck className="mr-2" size={20} />
-                  Взять заказ
+                  {t('courier.takeOrder')}
                 </Button>
               ) : (
                 <Button 
@@ -106,7 +108,7 @@ export default function CourierPage() {
                   onClick={() => updateStatus(order.id, OrderStatus.SUCCEEDED)}
                 >
                   <CheckCircle className="mr-2" size={20} />
-                  Доставлено
+                  {t('courier.delivered')}
                 </Button>
               )}
             </div>
@@ -114,8 +116,8 @@ export default function CourierPage() {
         ) : (
           <div className="col-span-full py-20 text-center bg-gray-50 rounded-3xl border-2 border-dashed">
             <Package className="mx-auto mb-4 text-gray-300" size={48} />
-            <p className="text-gray-400 font-medium text-lg">Пока нет доступных заказов</p>
-            <p className="text-gray-400 text-sm">Зайдите позже или обновите страницу</p>
+            <p className="text-gray-400 font-medium text-lg">{t('courier.emptyTitle')}</p>
+            <p className="text-gray-400 text-sm">{t('courier.emptyText')}</p>
           </div>
         )}
       </div>

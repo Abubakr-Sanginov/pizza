@@ -4,6 +4,7 @@ import React from 'react';
 import { FilterChecboxProps, FilterCheckbox } from './filter-checkbox';
 import { Input } from '../ui/input';
 import { Skeleton } from '../ui';
+import { useTranslation } from 'react-i18next';
 
 type Item = FilterChecboxProps;
 
@@ -26,13 +27,14 @@ export const CheckboxFiltersGroup: React.FC<Props> = ({
   items,
   defaultItems,
   limit = 5,
-  searchInputPlaceholder = 'Поиск...',
+  searchInputPlaceholder,
   className,
   loading,
   onClickCheckbox,
   selected,
   name,
 }) => {
+  const { t } = useTranslation();
   const [showAll, setShowAll] = React.useState(false);
   const [searchValue, setSearchValue] = React.useState('');
 
@@ -66,7 +68,7 @@ export const CheckboxFiltersGroup: React.FC<Props> = ({
         <div className="mb-5">
           <Input
             onChange={onChangeSearchInput}
-            placeholder={searchInputPlaceholder}
+            placeholder={searchInputPlaceholder || t('filters.searchPlaceholder')}
             className="bg-gray-50 border-none"
           />
         </div>
@@ -89,7 +91,7 @@ export const CheckboxFiltersGroup: React.FC<Props> = ({
       {items.length > limit && (
         <div className={showAll ? 'border-t border-t-neutral-100 mt-4' : ''}>
           <button onClick={() => setShowAll(!showAll)} className="text-primary mt-3">
-            {showAll ? 'Скрыть' : '+ Показать все'}
+            {showAll ? t('filters.hide') : `+ ${t('filters.showAll')}`}
           </button>
         </div>
       )}

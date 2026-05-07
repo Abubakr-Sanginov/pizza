@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCartStore } from '@/store/useCartStore';
 import { ChooseProductModal } from '@/components/shared/ChooseProductModal';
+import { useTranslation } from 'react-i18next';
 
 const BASE_URL = 'https://pizza-liart-chi.vercel.app';
 const { width, height } = Dimensions.get('window');
@@ -28,7 +29,7 @@ export default function MenuScreen() {
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const storyProgress = useRef(new Animated.Value(0)).current;
 
-  const addItem = useCartStore((state) => state.addItem);
+  const { t, i18n } = useTranslation();
 
   const fetchData = async () => {
     try {
@@ -52,6 +53,12 @@ export default function MenuScreen() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const toggleLanguage = () => {
+    const langs = ['ru', 'tg', 'en'];
+    const nextIdx = (langs.indexOf(i18n.language) + 1) % langs.length;
+    i18n.changeLanguage(langs[nextIdx]);
+  };
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -129,6 +136,14 @@ export default function MenuScreen() {
     return filtered;
   }, [categories, searchQuery]);
 
+  const categoryMapping: Record<string, string> = {
+    'Пиццы': 'menu.pizzas',
+    'Завтрак': 'menu.breakfast',
+    'Закуски': 'menu.snacks',
+    'Коктейли': 'menu.cocktails',
+    'Напитки': 'menu.drinks',
+  };
+
   const renderProduct = ({ item }: { item: any }) => {
     const hasDiscount = item.items[0]?.priceOld && item.items[0].priceOld > item.items[0]?.price;
     const discountPercent = hasDiscount ? Math.round((1 - item.items[0].price / item.items[0].priceOld) * 100) : 0;
@@ -157,7 +172,7 @@ export default function MenuScreen() {
             {hasDiscount && (
               <Text style={styles.productPriceOld}>{item.items[0].priceOld} TJS</Text>
             )}
-            <Text style={styles.productPrice}>от {item.items[0]?.price} TJS</Text>
+            <Text style={styles.productPrice}>{t('menu.from')} {item.items[0]?.price} TJS</Text>
           </View>
           <View style={styles.addBtn}>
             <Ionicons name="add" size={20} color="#ff7000" />
@@ -182,18 +197,25 @@ export default function MenuScreen() {
         <View style={styles.headerTop}>
           <View>
             <Text style={styles.headerTitle}>NEXT PIZZA</Text>
-            <Text style={styles.headerSubtitle}>Доставка за 45 минут</Text>
+            <Text style={styles.headerSubtitle}>{t('header.slogan')}</Text>
           </View>
-          <TouchableOpacity style={styles.profileBtn}>
-            <Ionicons name="person-outline" size={24} color="#11181C" />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <TouchableOpacity style={styles.profileBtn} onPress={toggleLanguage}>
+              <Text style={{ fontWeight: '900', fontSize: 14, color: '#ff7000' }}>
+                {i18n.language.toUpperCase()}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.profileBtn}>
+              <Ionicons name="person-outline" size={24} color="#11181C" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.searchContainer}>
           <Ionicons name="search-outline" size={20} color="#9BA1A6" style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Поиск еды..."
+            placeholder={t('header.searchPlaceholder')}
             placeholderTextColor="#9BA1A6"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -204,17 +226,21 @@ export default function MenuScreen() {
         {!searchQuery && (
           <View style={styles.stickyCategories}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoriesScroll}>
-              {categories.map((cat, index) => (
-                <TouchableOpacity
-                  key={cat.id}
-                  onPress={() => handleCategoryPress(cat.id, index)}
-                  style={[styles.categoryBtn, activeCategory === cat.id && styles.categoryBtnActive]}
-                >
-                  <Text style={[styles.categoryText, activeCategory === cat.id && styles.categoryTextActive]}>
-                    {cat.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              {categories.map((cat, index) => {
+                const translationKey = categoryMapping[cat.name] || cat.name;
+                const translatedName = translationKey.includes('.') ? t(translationKey) : cat.name;
+                return (
+                  <TouchableOpacity
+                    key={cat.id}
+                    onPress={() => handleCategoryPress(cat.id, index)}
+                    style={[styles.categoryBtn, activeCategory === cat.id && styles.categoryBtnActive]}
+                  >
+                    <Text style={[styles.categoryText, activeCategory === cat.id && styles.categoryTextActive]}>
+                      {translatedName}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
           </View>
         )}

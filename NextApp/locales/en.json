@@ -1,0 +1,42 @@
+{
+  "header": {
+    "searchPlaceholder": "Search pizza...",
+    "slogan": "more delicious than ever",
+    "paidSuccess": "Order paid successfully! Information sent to your email.",
+    "verifiedSuccess": "Email verified successfully!",
+    "signIn": "Sign In",
+    "profile": "Profile",
+    "cart": "Cart"
+  },
+  "menu": {
+    "pizzas": "Pizzas",
+    "breakfast": "Breakfast",
+    "snacks": "Snacks",
+    "cocktails": "Cocktails",
+    "drinks": "Drinks",
+    "addBtn": "Add",
+    "from": "from"
+  },
+  "cart": {
+    "title": "Cart",
+    "emptyTitle": "Your cart is empty",
+    "emptyText": "Add at least one pizza to place an order",
+    "total": "Total",
+    "checkout": "Checkout",
+    "back": "Go back"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "personalTitle": "1. Personal Information",
+    "deliveryTitle": "2. Delivery Address",
+    "paymentTitle": "3. Payment Method",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "E-Mail",
+    "phone": "Phone",
+    "address": "Delivery Address",
+    "comment": "Order Comment",
+    "totalAmount": "To Pay",
+    "submit": "Pay Now"
+  }
+}

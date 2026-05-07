@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { WhiteBlock } from '../white-block';
 import { CheckoutItem } from '../checkout-item';
@@ -5,6 +7,7 @@ import { getCartItemDetails } from '@/shared/lib';
 import { PizzaSize, PizzaType } from '@/shared/constants/pizza';
 import { CartStateItem } from '@/shared/lib/get-cart-details';
 import { CheckoutItemSkeleton } from '../checkout-item-skeleton';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   items: CartStateItem[];
@@ -21,8 +24,9 @@ export const CheckoutCart: React.FC<Props> = ({
   loading,
   className,
 }) => {
+  const { t } = useTranslation();
   return (
-    <WhiteBlock title="1. Корзина" className={className}>
+    <WhiteBlock title={t('checkout.cartTitle')} className={className}>
       <div className="flex flex-col gap-5">
         {loading
           ? [...Array(4)].map((_, index) => <CheckoutItemSkeleton key={index} />)
@@ -35,6 +39,7 @@ export const CheckoutCart: React.FC<Props> = ({
                   item.ingredients,
                   item.pizzaType as PizzaType,
                   item.pizzaSize as PizzaSize,
+                  t,
                 )}
                 name={item.name}
                 price={item.price}

@@ -1,7 +1,10 @@
+'use client';
+
 import { cn } from '@/shared/lib/utils';
 import React from 'react';
 import { Title } from './title';
 import { Button } from '../ui';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   imageUrl: string;
@@ -23,6 +26,8 @@ export const ChooseProductForm: React.FC<Props> = ({
   className,
   loading,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div className={cn(className, 'flex flex-col lg:flex-row flex-1')}>
       <div className="flex items-center justify-center flex-1 relative w-full p-10">
@@ -40,7 +45,7 @@ export const ChooseProductForm: React.FC<Props> = ({
           loading={loading}
           onClick={() => onSubmit?.()}
           className="h-[55px] px-10 text-base rounded-[18px] w-full mt-10">
-          Добавить в корзину за {price} TJS
+          {t('productModal.addToCart')} {price} TJS
         </Button>
       </div>
     </div>

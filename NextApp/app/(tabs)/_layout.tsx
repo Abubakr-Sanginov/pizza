@@ -7,11 +7,13 @@ import { useColorScheme } from '@/components/useColorScheme';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUserStore } from '@/store/useUserStore';
+import { useTranslation } from 'react-i18next';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const insets = useSafeAreaInsets();
   const user = useUserStore(state => state.user);
+  const { t } = useTranslation();
 
   return (
     <Tabs
@@ -50,7 +52,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Меню',
+          title: t('tabs.menu'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'pizza' : 'pizza-outline'} size={24} color={color} />
           ),
@@ -59,7 +61,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="two"
         options={{
-          title: 'Корзина',
+          title: t('tabs.cart'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'cart' : 'cart-outline'} size={24} color={color} />
           ),
@@ -68,7 +70,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Профиль',
+          title: t('tabs.profile'),
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'person' : 'person-outline'} size={24} color={color} />
           ),
@@ -77,7 +79,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="courier"
         options={{
-          title: 'Курьер',
+          title: t('tabs.courier'),
           href: user?.role === 'COURIER' ? '/courier' : null,
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'bicycle' : 'bicycle-outline'} size={24} color={color} />

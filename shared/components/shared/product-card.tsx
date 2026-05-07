@@ -8,6 +8,7 @@ import { Plus, Star } from 'lucide-react';
 import { Ingredient } from '@prisma/client';
 import { ReviewWithUser } from '@/@types/prisma';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   id: number;
@@ -33,6 +34,7 @@ export const ProductCard: React.FC<Props> = ({
   const averageRating = reviews.length > 0 
     ? (reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length).toFixed(1)
     : 0;
+  const { t } = useTranslation();
 
   return (
     <motion.div 
@@ -83,14 +85,14 @@ export const ProductCard: React.FC<Props> = ({
               </span>
             )}
             <span className="text-[20px]">
-              от <b>{price} TJS</b>
+              {t('menu.from')} <b>{price} TJS</b>
             </span>
           </div>
 
           <motion.div whileTap={{ scale: 0.95 }}>
             <Button variant="secondary" className="text-base font-bold">
               <Plus size={20} className="mr-1" />
-              Добавить
+              {t('menu.addBtn')}
             </Button>
           </motion.div>
         </div>

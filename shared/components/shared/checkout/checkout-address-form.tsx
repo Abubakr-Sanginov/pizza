@@ -8,6 +8,7 @@ import { Controller, useFormContext } from 'react-hook-form';
 import { ErrorText } from '../error-text';
 import dynamic from 'next/dynamic';
 import { Store } from '@prisma/client';
+import { useTranslation } from 'react-i18next';
 
 const CheckoutAddressMap = dynamic(
   () => import('./checkout-address-map').then((m) => m.CheckoutAddressMap),
@@ -21,6 +22,7 @@ interface Props {
 
 export const CheckoutAddressForm: React.FC<Props> = ({ className, stores }) => {
   const { control, watch, setValue } = useFormContext();
+  const { t } = useTranslation();
   const deliveryType = watch('deliveryType');
   const lat = watch('lat');
   const lng = watch('lng');
@@ -35,7 +37,7 @@ export const CheckoutAddressForm: React.FC<Props> = ({ className, stores }) => {
 
 
   return (
-    <WhiteBlock title="3. Способ и адрес доставки" className={className}>
+    <WhiteBlock title={t('checkout.deliveryTitle')} className={className}>
       <div className="flex flex-col gap-5">
         <Controller
           control={control}
@@ -51,7 +53,7 @@ export const CheckoutAddressForm: React.FC<Props> = ({ className, stores }) => {
                   onChange={() => field.onChange('DELIVERY')}
                   className="w-4 h-4 cursor-pointer"
                 />
-                <span className="font-medium text-sm md:text-base">Доставка курьером</span>
+                <span className="font-medium text-sm md:text-base">{t('checkout.delivery')}</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer bg-gray-100 p-3 rounded-md flex-1">
                 <input
@@ -62,7 +64,7 @@ export const CheckoutAddressForm: React.FC<Props> = ({ className, stores }) => {
                   onChange={() => field.onChange('PICKUP')}
                   className="w-4 h-4 cursor-pointer"
                 />
-                <span className="font-medium text-sm md:text-base">Самовывоз</span>
+                <span className="font-medium text-sm md:text-base">{t('checkout.pickup')}</span>
               </label>
             </div>
           )}
@@ -72,8 +74,8 @@ export const CheckoutAddressForm: React.FC<Props> = ({ className, stores }) => {
           <>
             <FormSelect
               name="storeId"
-              label="Заведение (где заберете заказ)"
-              placeholder="Выберите заведение..."
+              label={t('checkout.store')}
+              placeholder={t('checkout.storePlaceholder')}
               items={stores.map((s) => ({ value: s.id.toString(), label: s.name }))}
             />
 
@@ -100,21 +102,21 @@ export const CheckoutAddressForm: React.FC<Props> = ({ className, stores }) => {
             />
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-              <FormInput name="apartment" label="Кв/офис" placeholder="101" />
-              <FormInput name="entrance" label="Подъезд" placeholder="1" />
-              <FormInput name="floor" label="Этаж" placeholder="5" />
-              <FormInput name="doorCode" label="Код двери" placeholder="1234" />
+              <FormInput name="apartment" label={t('checkout.apartment')} placeholder="101" />
+              <FormInput name="entrance" label={t('checkout.entrance')} placeholder="1" />
+              <FormInput name="floor" label={t('checkout.floor')} placeholder="5" />
+              <FormInput name="doorCode" label={t('checkout.doorCode')} placeholder="1234" />
             </div>
 
             <div className="mt-5">
-              <div className="mb-3 text-sm font-medium">Или выберите точку на карте:</div>
+              <div className="mb-3 text-sm font-medium">{t('checkout.mapPoint')}:</div>
               <CheckoutAddressMap
                 onChange={(addr) => setValue('address', addr, { shouldValidate: true })}
                 position={lat && lng ? [lat, lng] : null}
                 onPositionChange={onMapPositionChange}
               />
               {watch('address') && (
-                <p className="mt-2 text-sm text-gray-500">Выбранный адрес: {watch('address')}</p>
+                <p className="mt-2 text-sm text-gray-500">{t('checkout.selectedAddress')}: {watch('address')}</p>
               )}
             </div>
           </>
@@ -123,7 +125,7 @@ export const CheckoutAddressForm: React.FC<Props> = ({ className, stores }) => {
         <FormTextarea
           name="comment"
           className="text-base"
-          placeholder="Комментарий к заказу"
+          placeholder={t('checkout.comment')}
           rows={5}
         />
       </div>

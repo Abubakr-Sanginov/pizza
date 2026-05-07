@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Modal, Image, TouchableOpacity, ScrollView, Ani
 import { Ionicons } from '@expo/vector-icons';
 import { useCartStore } from '@/store/useCartStore';
 import { useUserStore } from '@/store/useUserStore';
+import { useTranslation } from 'react-i18next';
 
 const BASE_URL = 'https://pizza-liart-chi.vercel.app';
 
@@ -13,19 +14,21 @@ interface Props {
   onAddToCart: (values: any) => void;
 }
 
-const SIZE_LABELS: Record<number, string> = {
-  20: 'Маленькая',
-  30: 'Средняя',
-  40: 'Большая',
-};
-
-const PIZZA_TYPES = [
-  { name: 'Традиционное', value: 1 },
-  { name: 'Тонкое', value: 2 },
-];
-
 export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose, onAddToCart }) => {
   const user = useUserStore(state => state.user);
+  const { t } = useTranslation();
+  
+  const SIZE_LABELS: Record<number, string> = {
+    20: t('productModal.sizeSmall'),
+    30: t('productModal.sizeMedium'),
+    40: t('productModal.sizeLarge'),
+  };
+
+  const PIZZA_TYPES = [
+    { name: t('productModal.typeTraditional'), value: 1 },
+    { name: t('productModal.typeThin'), value: 2 },
+  ];
+
   const [size, setSize] = useState<number>(20);
   const [type, setType] = useState<number>(1);
   const [tab, setTab] = useState<'details' | 'reviews'>('details');
@@ -51,7 +54,7 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
       name: SIZE_LABELS[s],
       disabled: !product.items.some((item: any) => item.pizzaType === type && item.size === s)
     }));
-  }, [product, type]);
+  }, [product, type, SIZE_LABELS]);
 
   useEffect(() => {
     const isCurrentSizeDisabled = availableSizes.find(s => s.value === size)?.disabled;
@@ -117,20 +120,17 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
       });
 
       if (res.ok) {
-        alert('Спасибо за отзыв!');
+        Alert.alert(t('reviews.thanks'));
         setRating(0);
         setComment('');
-        // We might want to refresh the product data here, 
-        // but for now, just closing and re-opening will work
       } else {
         const error = await res.json();
-        alert(error.message || 'Ошибка при отправке');
+        Alert.alert(error.message || t('reviews.error'));
       }
     } catch (error) {
       console.error(error);
-      alert('Проблема с сетью');
+      Alert.alert(t('courier.networkError'));
     } finally {
-      setSubmitting(true); // Wait, should be false
       setSubmitting(false);
     }
   };
@@ -145,11 +145,11 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
 
           <View style={styles.tabHeader}>
             <TouchableOpacity onPress={() => setTab('details')} style={[styles.tabBtn, tab === 'details' && styles.tabBtnActive]}>
-              <Text style={[styles.tabText, tab === 'details' && styles.tabTextActive]}>Детали</Text>
+              <Text style={[styles.tabText, tab === 'details' && styles.tabTextActive]}>{t('productModal.details')}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setTab('reviews')} style={[styles.tabBtn, tab === 'reviews' && styles.tabBtnActive]}>
               <Text style={[styles.tabText, tab === 'reviews' && styles.tabTextActive]}>
-                Отзывы ({product.reviews?.length || 0})
+                {t('productModal.reviews')} ({product.reviews?.length || 0})
               </Text>
             </TouchableOpacity>
           </View>
@@ -221,7 +221,7 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
 
                 {product.ingredients.length > 0 && (
                   <View style={styles.ingredientsSection}>
-                    <Text style={styles.sectionTitle}>Добавить по вкусу</Text>
+                    <Text style={styles.sectionTitle}>{t('productModal.addIngredients')}</Text>
                     <View style={styles.ingredientsGrid}>
                       {product.ingredients.map((item: any) => {
                         const isSelected = selectedIngredients.includes(item.id);
@@ -246,7 +246,7 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
               <View style={styles.reviewsList}>
                 {user ? (
                   <View style={styles.addReviewForm}>
-                    <Text style={styles.addReviewTitle}>Оставить отзыв</Text>
+                    <Text style={styles.addReviewTitle}>{t('reviews.leaveReview')}</Text>
                     <View style={styles.starRowBig}>
                       {[1, 2, 3, 4, 5].map((s) => (
                         <TouchableOpacity key={s} onPress={() => setRating(s)}>
@@ -260,7 +260,7 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                     </View>
                     <TextInput
                       style={styles.reviewInput}
-                      placeholder="Ваш комментарий..."
+                      placeholder={t('reviews.yourComment')}
                       multiline
                       value={comment}
                       onChangeText={setComment}
@@ -273,13 +273,13 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                       {submitting ? (
                         <ActivityIndicator color="white" size="small" />
                       ) : (
-                        <Text style={styles.submitReviewText}>Отправить отзыв</Text>
+                        <Text style={styles.submitReviewText}>{t('reviews.sendReview')}</Text>
                       )}
                     </TouchableOpacity>
                   </View>
                 ) : (
                   <View style={styles.loginToReview}>
-                    <Text style={styles.loginToReviewText}>Войдите, чтобы оставить отзыв</Text>
+                    <Text style={styles.loginToReviewText}>{t('reviews.loginToReview')}</Text>
                   </View>
                 )}
 
@@ -291,7 +291,7 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                           <Text style={styles.avatarText}>{review.user?.fullName?.[0] || 'U'}</Text>
                         </View>
                         <View style={styles.reviewMeta}>
-                          <Text style={styles.userName}>{review.user?.fullName || 'Пользователь'}</Text>
+                          <Text style={styles.userName}>{review.user?.fullName || t('reviews.user')}</Text>
                           <View style={styles.starRow}>
                             {[...Array(5)].map((_, i) => (
                               <Ionicons 
@@ -312,23 +312,23 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                           style={styles.deleteReviewBtn}
                           onPress={() => {
                             Alert.alert(
-                              'Удалить отзыв?',
-                              'Вы уверены, что хотите удалить этот отзыв?',
+                              t('reviews.deleteTitle'),
+                              t('reviews.deleteConfirm'),
                               [
-                                { text: 'Отмена', style: 'cancel' },
+                                { text: t('reviews.cancel'), style: 'cancel' },
                                 { 
-                                  text: 'Удалить', 
+                                  text: t('reviews.delete'), 
                                   style: 'destructive',
                                   onPress: async () => {
                                     try {
                                       const res = await fetch(`${BASE_URL}/api/reviews/${review.id}`, { method: 'DELETE' });
                                       if (res.ok) {
-                                        Alert.alert('Успех', 'Отзыв удален');
+                                        Alert.alert(t('courier.success'), t('reviews.delete'));
                                       } else {
-                                        Alert.alert('Ошибка', 'Не удалось удалить отзыв');
+                                        Alert.alert(t('courier.error'), t('reviews.deleteConfirm'));
                                       }
                                     } catch (e) {
-                                      Alert.alert('Ошибка', 'Проблема с сетью');
+                                      Alert.alert(t('courier.error'), t('courier.networkError'));
                                     }
                                   }
                                 }
@@ -337,7 +337,7 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                           }}
                         >
                           <Ionicons name="trash-outline" size={16} color="#ff4d4f" />
-                          <Text style={styles.deleteReviewText}>Удалить</Text>
+                          <Text style={styles.deleteReviewText}>{t('reviews.delete')}</Text>
                         </TouchableOpacity>
                       )}
                     </View>
@@ -345,7 +345,7 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                 ) : (
                   <View style={styles.emptyReviews}>
                     <Ionicons name="chatbox-outline" size={60} color="#9BA1A6" />
-                    <Text style={styles.emptyReviewsText}>У этого товара пока нет отзывов. Станьте первым!</Text>
+                    <Text style={styles.emptyReviewsText}>{t('reviews.empty')}</Text>
                   </View>
                 )}
               </View>
@@ -360,10 +360,10 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                     {(currentItem.priceOld + selectedIngredients.reduce((acc, id) => acc + (product.ingredients.find((i: any) => i.id === id)?.price || 0), 0))} TJS
                   </Text>
                 )}
-                <Text style={styles.totalPriceText}>Итого: {totalPrice} TJS</Text>
+                <Text style={styles.totalPriceText}>{t('productModal.total')}: {totalPrice} TJS</Text>
               </View>
               <TouchableOpacity style={styles.addBtn} onPress={handleAdd}>
-                <Text style={styles.addBtnText}>Добавить в корзину</Text>
+                <Text style={styles.addBtnText}>{t('productModal.addToCart')}</Text>
               </TouchableOpacity>
             </View>
           )}

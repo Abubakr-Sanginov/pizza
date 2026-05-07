@@ -13,6 +13,8 @@ import { cn } from '@/shared/lib/utils';
 import { getPizzaDetails } from '@/shared/lib';
 import { usePizzaOptions } from '@/shared/hooks';
 
+import { useTranslation } from 'react-i18next';
+
 interface Props {
   imageUrl: string;
   name: string;
@@ -35,6 +37,7 @@ export const ChoosePizzaForm: React.FC<Props> = ({
   onSubmit,
   className,
 }) => {
+  const { t } = useTranslation();
   const {
     size,
     type,
@@ -52,6 +55,7 @@ export const ChoosePizzaForm: React.FC<Props> = ({
     items,
     ingredients,
     selectedIngredients,
+    t,
   );
 
   const handleClickAdd = () => {
@@ -102,7 +106,7 @@ export const ChoosePizzaForm: React.FC<Props> = ({
           loading={loading}
           onClick={handleClickAdd}
           className="h-[55px] px-10 text-base rounded-[18px] w-full mt-10">
-          Добавить в корзину за {totalPrice} TJS
+          {t('productModal.addToCart')} {totalPrice} TJS
         </Button>
       </div>
     </div>

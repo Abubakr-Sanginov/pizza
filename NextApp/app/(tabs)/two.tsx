@@ -9,12 +9,14 @@ import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 const BASE_URL = 'https://pizza-liart-chi.vercel.app';
 
 export default function CartScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { t } = useTranslation();
   const { items, totalAmount, loading, fetchCart, updateQuantity, removeItem } = useCartStore();
   const [refreshing, setRefreshing] = useState(false);
   const [step, setStep] = useState(1); 
@@ -102,17 +104,17 @@ export default function CartScreen() {
 
   const onSubmitOrder = async () => {
     if (!firstName || !lastName || !phone || !email) {
-      alert('Пожалуйста, заполните контактные данные');
+      Alert.alert(t('cart.fillContacts'));
       return;
     }
 
     if (deliveryType === 'DELIVERY' && !address) {
-      alert('Пожалуйста, укажите адрес доставки');
+      Alert.alert(t('cart.fillAddress'));
       return;
     }
 
     if (deliveryType === 'PICKUP' && !selectedStoreId) {
-      alert('Пожалуйста, выберите ресторан для самовывоза');
+      Alert.alert(t('cart.fillStore'));
       return;
     }
 
@@ -145,14 +147,14 @@ export default function CartScreen() {
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || 'Ошибка при создании заказа');
+        throw new Error(err.error || t('courier.error'));
       }
 
-      alert('Заказ успешно оформлен! 🎉');
+      Alert.alert(t('cart.success'));
       clearCart();
       router.replace('/profile');
     } catch (e: any) {
-      alert(e.message);
+      Alert.alert(e.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -258,10 +260,10 @@ export default function CartScreen() {
           <DefaultView style={styles.emptyIconContainer}>
             <Ionicons name="cart-outline" size={100} color="#ff7000" />
           </DefaultView>
-          <DefaultText style={styles.emptyText}>Корзина пуста</DefaultText>
-          <DefaultText style={styles.emptySubText}>Выберите что-нибудь вкусное!</DefaultText>
+          <DefaultText style={styles.emptyText}>{t('cart.empty')}</DefaultText>
+          <DefaultText style={styles.emptySubText}>{t('cart.emptySubtitle')}</DefaultText>
           <TouchableOpacity style={styles.goBackButton} onPress={() => router.replace('/')}>
-            <DefaultText style={styles.goBackText}>В меню</DefaultText>
+            <DefaultText style={styles.goBackText}>{t('cart.toMenu')}</DefaultText>
           </TouchableOpacity>
         </ScrollView>
       </DefaultView>
@@ -282,7 +284,7 @@ export default function CartScreen() {
           {step === 1 ? (
             <>
               <DefaultView style={styles.headerRow}>
-                <DefaultText style={styles.title}>Корзина</DefaultText>
+                <DefaultText style={styles.title}>{t('cart.title')}</DefaultText>
                 <TouchableOpacity onPress={onRefresh}>
                   <Ionicons name="refresh-circle" size={32} color="#ff7000" />
                 </TouchableOpacity>
@@ -296,7 +298,7 @@ export default function CartScreen() {
                       <DefaultText style={styles.itemName}>{item.productItem.product.name}</DefaultText>
                       <DefaultText style={styles.itemSpec}>
                         {item.productItem.size && `${item.productItem.size} см, `}
-                        {item.productItem.pizzaType === 1 ? 'традиционное' : item.productItem.pizzaType === 2 ? 'тонкое' : ''}
+                        {item.productItem.pizzaType === 1 ? t('cart.traditional') : item.productItem.pizzaType === 2 ? t('cart.thin') : ''}
                       </DefaultText>
                       {item.ingredients?.length > 0 && (
                         <DefaultText style={styles.itemIngredients}>
@@ -329,32 +331,32 @@ export default function CartScreen() {
                 <TouchableOpacity onPress={prevStep} style={styles.backBtn}>
                   <Ionicons name="chevron-back" size={30} color="#11181C" />
                 </TouchableOpacity>
-                <DefaultText style={styles.title}>Оформление</DefaultText>
+                <DefaultText style={styles.title}>{t('cart.checkout')}</DefaultText>
                 <DefaultView style={{ width: 30 }} />
               </DefaultView>
 
               <DefaultView style={styles.section}>
                 <DefaultView style={styles.sectionHeaderRow}>
                   <Ionicons name="person-outline" size={22} color="#ff7000" />
-                  <DefaultText style={styles.sectionHeader}>Контактные данные</DefaultText>
+                  <DefaultText style={styles.sectionHeader}>{t('cart.contactInfo')}</DefaultText>
                 </DefaultView>
                 <DefaultView style={styles.inputGrid}>
                   <DefaultView style={styles.inputGroup}>
-                    <DefaultText style={styles.label}>Имя</DefaultText>
-                    <TextInput style={styles.input} value={firstName} onChangeText={setFirstName} placeholder="Иван" placeholderTextColor="#9BA1A6" />
+                    <DefaultText style={styles.label}>{t('cart.firstName')}</DefaultText>
+                    <TextInput style={styles.input} value={firstName} onChangeText={setFirstName} placeholder="Фирдавс" placeholderTextColor="#9BA1A6" />
                   </DefaultView>
                   <DefaultView style={styles.inputGroup}>
-                    <DefaultText style={styles.label}>Фамилия</DefaultText>
-                    <TextInput style={styles.input} value={lastName} onChangeText={setLastName} placeholder="Иванов" placeholderTextColor="#9BA1A6" />
+                    <DefaultText style={styles.label}>{t('cart.lastName')}</DefaultText>
+                    <TextInput style={styles.input} value={lastName} onChangeText={setLastName} placeholder="Рахимов" placeholderTextColor="#9BA1A6" />
                   </DefaultView>
                 </DefaultView>
                 <DefaultView style={[styles.inputGroup, { marginTop: 15 }]}>
-                  <DefaultText style={styles.label}>E-mail</DefaultText>
-                  <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="example@mail.ru" keyboardType="email-address" placeholderTextColor="#9BA1A6" autoCapitalize="none" />
+                  <DefaultText style={styles.label}>{t('auth.email')}</DefaultText>
+                  <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="example@gmail.com" keyboardType="email-address" placeholderTextColor="#9BA1A6" autoCapitalize="none" />
                 </DefaultView>
                 <DefaultView style={[styles.inputGroup, { marginTop: 15 }]}>
-                  <DefaultText style={styles.label}>Телефон</DefaultText>
-                  <TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="+7 (999) 999-99-99" keyboardType="phone-pad" placeholderTextColor="#9BA1A6" />
+                  <DefaultText style={styles.label}>{t('courier.phone')}</DefaultText>
+                  <TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="+992 (XX) XXX-XX-XX" keyboardType="phone-pad" placeholderTextColor="#9BA1A6" />
                 </DefaultView>
               </DefaultView>
 
@@ -365,14 +367,14 @@ export default function CartScreen() {
                     style={[styles.toggleBtn, deliveryType === 'DELIVERY' && styles.toggleBtnActive]}
                   >
                     <Ionicons name="bicycle-outline" size={20} color={deliveryType === 'DELIVERY' ? 'white' : '#687076'} />
-                    <DefaultText style={[styles.toggleText, deliveryType === 'DELIVERY' && styles.toggleTextActive]}>Доставка</DefaultText>
+                    <DefaultText style={[styles.toggleText, deliveryType === 'DELIVERY' && styles.toggleTextActive]}>{t('cart.delivery')}</DefaultText>
                   </TouchableOpacity>
                   <TouchableOpacity 
                     onPress={() => setDeliveryType('PICKUP')}
                     style={[styles.toggleBtn, deliveryType === 'PICKUP' && styles.toggleBtnActive]}
                   >
                     <Ionicons name="storefront-outline" size={20} color={deliveryType === 'PICKUP' ? 'white' : '#687076'} />
-                    <DefaultText style={[styles.toggleText, deliveryType === 'PICKUP' && styles.toggleTextActive]}>Самовывоз</DefaultText>
+                    <DefaultText style={[styles.toggleText, deliveryType === 'PICKUP' && styles.toggleTextActive]}>{t('cart.pickup')}</DefaultText>
                   </TouchableOpacity>
                 </DefaultView>
 
@@ -380,7 +382,7 @@ export default function CartScreen() {
                   <>
                     <DefaultView style={styles.sectionHeaderRow}>
                       <Ionicons name="map-outline" size={22} color="#ff7000" />
-                      <DefaultText style={styles.sectionHeader}>Адрес доставки</DefaultText>
+                      <DefaultText style={styles.sectionHeader}>{t('cart.address')}</DefaultText>
                     </DefaultView>
                     
                     <AddressAutocomplete value={address} onChange={setAddress} />
@@ -400,23 +402,23 @@ export default function CartScreen() {
 
                     <DefaultView style={styles.inputGrid}>
                       <DefaultView style={styles.inputGroup}>
-                        <DefaultText style={styles.label}>Кв/Офис</DefaultText>
+                        <DefaultText style={styles.label}>{t('cart.apartment')}</DefaultText>
                         <TextInput style={styles.input} value={apartment} onChangeText={setApartment} placeholder="№" keyboardType="numeric" placeholderTextColor="#9BA1A6" />
                       </DefaultView>
                       <DefaultView style={styles.inputGroup}>
-                        <DefaultText style={styles.label}>Подъезд</DefaultText>
+                        <DefaultText style={styles.label}>{t('cart.entrance')}</DefaultText>
                         <TextInput style={styles.input} value={entrance} onChangeText={setEntrance} placeholder="№" keyboardType="numeric" placeholderTextColor="#9BA1A6" />
                       </DefaultView>
                     </DefaultView>
 
                     <DefaultView style={styles.inputGrid}>
                       <DefaultView style={styles.inputGroup}>
-                        <DefaultText style={styles.label}>Этаж</DefaultText>
+                        <DefaultText style={styles.label}>{t('cart.floor')}</DefaultText>
                         <TextInput style={styles.input} value={floor} onChangeText={setFloor} placeholder="№" keyboardType="numeric" placeholderTextColor="#9BA1A6" />
                       </DefaultView>
                       <DefaultView style={styles.inputGroup}>
-                        <DefaultText style={styles.label}>Код</DefaultText>
-                        <TextInput style={styles.input} value={doorCode} onChangeText={setDoorCode} placeholder="Код" placeholderTextColor="#9BA1A6" />
+                        <DefaultText style={styles.label}>{t('cart.doorCode')}</DefaultText>
+                        <TextInput style={styles.input} value={doorCode} onChangeText={setDoorCode} placeholder={t('cart.doorCode')} placeholderTextColor="#9BA1A6" />
                       </DefaultView>
                     </DefaultView>
                   </>
@@ -424,7 +426,7 @@ export default function CartScreen() {
                   <>
                     <DefaultView style={styles.sectionHeaderRow}>
                       <Ionicons name="storefront-outline" size={22} color="#ff7000" />
-                      <DefaultText style={styles.sectionHeader}>Выберите ресторан</DefaultText>
+                      <DefaultText style={styles.sectionHeader}>{t('cart.selectStore')}</DefaultText>
                     </DefaultView>
                     {stores.map(store => (
                       <TouchableOpacity 
@@ -446,12 +448,12 @@ export default function CartScreen() {
                 )}
 
                 <DefaultView style={{ marginTop: 20 }}>
-                  <DefaultText style={styles.label}>Комментарий к заказу</DefaultText>
+                  <DefaultText style={styles.label}>{t('cart.comment')}</DefaultText>
                   <TextInput 
                     style={[styles.input, { height: 80, paddingTop: 12 }]} 
                     value={comment} 
                     onChangeText={setComment} 
-                    placeholder="Ваши пожелания..." 
+                    placeholder={t('cart.commentPlaceholder')}
                     placeholderTextColor="#9BA1A6"
                     multiline
                   />
@@ -461,20 +463,20 @@ export default function CartScreen() {
               <DefaultView style={styles.section}>
                 <DefaultView style={styles.sectionHeaderRow}>
                   <Ionicons name="receipt-outline" size={22} color="#ff7000" />
-                  <DefaultText style={styles.sectionHeader}>Детали заказа</DefaultText>
+                  <DefaultText style={styles.sectionHeader}>{t('cart.orderDetails')}</DefaultText>
                 </DefaultView>
                 
                 <DefaultView style={styles.priceRow}>
-                  <DefaultText style={styles.priceLabel}>Корзина</DefaultText>
+                  <DefaultText style={styles.priceLabel}>{t('cart.title')}</DefaultText>
                   <DefaultText style={styles.priceVal}>{totalAmount} TJS</DefaultText>
                 </DefaultView>
                 <DefaultView style={styles.priceRow}>
-                  <DefaultText style={styles.priceLabel}>Налоги (15%)</DefaultText>
+                  <DefaultText style={styles.priceLabel}>{t('cart.vat')}</DefaultText>
                   <DefaultText style={styles.priceVal}>{vatPrice.toFixed(0)} TJS</DefaultText>
                 </DefaultView>
                 {deliveryType === 'DELIVERY' && (
                   <DefaultView style={styles.priceRow}>
-                    <DefaultText style={styles.priceLabel}>Доставка</DefaultText>
+                    <DefaultText style={styles.priceLabel}>{t('cart.delivery')}</DefaultText>
                     <DefaultText style={styles.priceVal}>{DELIVERY_PRICE} TJS</DefaultText>
                   </DefaultView>
                 )}
@@ -483,11 +485,11 @@ export default function CartScreen() {
               <DefaultView style={styles.section}>
                 <DefaultView style={styles.sectionHeaderRow}>
                   <Ionicons name="card-outline" size={22} color="#ff7000" />
-                  <DefaultText style={styles.sectionHeader}>Оплата</DefaultText>
+                  <DefaultText style={styles.sectionHeader}>{t('cart.payment')}</DefaultText>
                 </DefaultView>
                 <TouchableOpacity style={styles.paymentMethod}>
                   <Ionicons name="wallet-outline" size={24} color="#ff7000" />
-                  <DefaultText style={styles.paymentText}>Наличными курьеру</DefaultText>
+                  <DefaultText style={styles.paymentText}>{t('cart.cash')}</DefaultText>
                   <Ionicons name="checkmark-circle" size={24} color="#ff7000" />
                 </TouchableOpacity>
               </DefaultView>
@@ -501,7 +503,7 @@ export default function CartScreen() {
           <DefaultView style={[styles.footer, { bottom: insets.bottom + 100 }]}>
             <DefaultView style={styles.footerContent}>
               <DefaultView style={styles.totalBlock}>
-                <DefaultText style={styles.totalLabel}>Итого к оплате</DefaultText>
+                <DefaultText style={styles.totalLabel}>{t('cart.total')}</DefaultText>
                 <DefaultText style={styles.totalAmount}>{finalTotal.toFixed(0)} TJS</DefaultText>
               </DefaultView>
               <TouchableOpacity 
@@ -515,7 +517,7 @@ export default function CartScreen() {
                 ) : (
                   <>
                     <DefaultText style={styles.mainButtonText}>
-                      {step === 1 ? 'К оформлению' : 'Заказать'}
+                      {step === 1 ? t('cart.toCheckout') : t('cart.order')}
                     </DefaultText>
                     <Ionicons name="arrow-forward" size={20} color="white" />
                   </>

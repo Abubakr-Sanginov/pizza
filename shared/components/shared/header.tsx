@@ -11,6 +11,25 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { ProfileButton } from './profile-button';
 import { AuthModal } from './modals';
+import { useTranslation } from 'react-i18next';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui';
+
+const LanguageSelector = () => {
+  const { i18n } = useTranslation();
+
+  return (
+    <Select value={i18n.language} onValueChange={(val) => i18n.changeLanguage(val)}>
+      <SelectTrigger className="w-[60px] h-[38px] bg-gray-50 border-none shadow-none focus:ring-0">
+        <SelectValue placeholder="Lang" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="ru">RU</SelectItem>
+        <SelectItem value="tg">TG</SelectItem>
+        <SelectItem value="en">EN</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+};
 
 interface Props {
   hasSearch?: boolean;
@@ -21,18 +40,22 @@ interface Props {
 export const Header: React.FC<Props> = ({ hasSearch = true, hasCart = true, className }) => {
   const router = useRouter();
   const [openAuthModal, setOpenAuthModal] = React.useState(false);
+  const { t } = useTranslation();
 
   const searchParams = useSearchParams();
 
+  const [mounted, setMounted] = React.useState(false);
+
   React.useEffect(() => {
+    setMounted(true);
     let toastMessage = '';
 
     if (searchParams.has('paid')) {
-      toastMessage = 'Заказ успешно оплачен! Информация отправлена на почту.';
+      toastMessage = t('header.paidSuccess'); // Added to locales below
     }
 
     if (searchParams.has('verified')) {
-      toastMessage = 'Почта успешно подтверждена!';
+      toastMessage = t('header.verifiedSuccess'); // Added to locales below
     }
 
     if (toastMessage) {
@@ -56,7 +79,7 @@ export const Header: React.FC<Props> = ({ hasSearch = true, hasCart = true, clas
               <div className="hidden sm:block">
                 <h1 className="text-lg md:text-2xl uppercase font-black leading-none">Next Pizza</h1>
                 <p className="text-[10px] md:text-sm text-gray-400 leading-3 hidden md:block mt-1">
-                  вкусней уже некуда
+                  {mounted && t('header.slogan')}
                 </p>
               </div>
             </div>
@@ -65,13 +88,15 @@ export const Header: React.FC<Props> = ({ hasSearch = true, hasCart = true, clas
           {/* Поиск на десктопе */}
           {hasSearch && (
             <div className="mx-2 md:mx-10 flex-1 hidden md:block">
-              <SearchInput />
+              <SearchInput placeholder={t('header.searchPlaceholder')} />
             </div>
           )}
 
           {/* Правая часть */}
           <div className="flex items-center gap-1 md:gap-3">
             <AuthModal open={openAuthModal} onClose={() => setOpenAuthModal(false)} />
+
+            <LanguageSelector />
 
             <ProfileButton onClickSignIn={() => setOpenAuthModal(true)} />
 
@@ -82,7 +107,7 @@ export const Header: React.FC<Props> = ({ hasSearch = true, hasCart = true, clas
         {/* Поиск на мобилке (второй ряд) */}
         {hasSearch && (
           <div className="mt-4 md:hidden">
-            <SearchInput />
+            <SearchInput placeholder={t('header.searchPlaceholder')} />
           </div>
         )}
       </Container>

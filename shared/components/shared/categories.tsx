@@ -5,6 +5,7 @@ import { useCategoryStore } from '@/shared/store/category';
 import { Category } from '@prisma/client';
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   items: Category[];
@@ -13,11 +14,23 @@ interface Props {
 
 export const Categories: React.FC<Props> = ({ items, className }) => {
   const categoryActiveId = useCategoryStore((state) => state.activeId);
+  const { t } = useTranslation();
+
+  const categoryMapping: Record<string, string> = {
+    'Пиццы': 'menu.pizzas',
+    'Завтрак': 'menu.breakfast',
+    'Закуски': 'menu.snacks',
+    'Коктейли': 'menu.cocktails',
+    'Напитки': 'menu.drinks',
+  };
 
   return (
     <div className={cn('inline-flex gap-1 bg-gray-50 p-1 rounded-2xl overflow-x-auto scrollbar-hide', className)}>
       {items.map(({ name, id }, index) => {
         const isActive = categoryActiveId === id;
+        const translationKey = categoryMapping[name] || name;
+        const translatedName = translationKey.includes('.') ? t(translationKey) : name;
+
         return (
           <a
             className={cn(
@@ -34,7 +47,7 @@ export const Categories: React.FC<Props> = ({ items, className }) => {
                 transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
               />
             )}
-            <span className="relative z-10">{name}</span>
+            <span className="relative z-10">{translatedName}</span>
           </a>
         );
       })}
