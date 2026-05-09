@@ -16,8 +16,9 @@ export default function CourierScreen() {
   const { t } = useTranslation();
 
   const fetchOrders = async () => {
+    if (!user) return;
     try {
-      const res = await fetch(`${BASE_URL}/api/orders/courier`);
+      const res = await fetch(`${BASE_URL}/api/orders/courier?userId=${user.id}`);
       const data = await res.json();
       setOrders(data);
     } catch (e) {
@@ -42,7 +43,7 @@ export default function CourierScreen() {
       const res = await fetch(`${BASE_URL}/api/orders/${orderId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ status, userId: user.id })
       });
       
       if (res.ok) {
@@ -120,6 +121,26 @@ export default function CourierScreen() {
                     <Text style={styles.actionBtnText}>{t('courier.delivered')}</Text>
                   </TouchableOpacity>
                 )}
+
+                <TouchableOpacity 
+                  style={styles.cancelBtn} 
+                  onPress={() => {
+                    Alert.alert(
+                      t('courier.confirmCancelTitle') || 'Отмена заказа',
+                      t('courier.confirmCancel') || 'Вы уверены, что хотите отменить этот заказ?',
+                      [
+                        { text: t('reviews.cancel'), style: 'cancel' },
+                        { 
+                          text: t('courier.cancelOrder'), 
+                          style: 'destructive',
+                          onPress: () => updateStatus(order.id, 'CANCELLED')
+                        }
+                      ]
+                    );
+                  }}
+                >
+                  <Text style={styles.cancelBtnText}>{t('courier.cancelOrder')}</Text>
+                </TouchableOpacity>
               </View>
             </View>
           ))
@@ -243,6 +264,17 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '800',
+  },
+  cancelBtn: {
+    marginTop: 10,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelBtnText: {
+    color: '#ff4d4f',
+    fontSize: 14,
+    fontWeight: '600',
   },
   empty: {
     alignItems: 'center',
