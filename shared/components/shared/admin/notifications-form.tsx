@@ -39,13 +39,14 @@ export const NotificationsForm: React.FC = () => {
         imageUrl: imageUrl || null,
       });
 
-      if (data.count === 0) {
+      if (data.count === 0 && (!data.results || (data.results.web.success + data.results.expo.success === 0))) {
         toast.error('Нет зарегистрированных устройств для получения уведомлений');
       } else {
-        const webSuccess = data.details?.web?.success || 0;
-        const webError = data.details?.web?.error || 0;
-        const expoSuccess = data.details?.expo?.success || 0;
-        const expoError = data.details?.expo?.error || 0;
+        const results = data.results;
+        const webSuccess = results?.web?.success || 0;
+        const webError = results?.web?.error || 0;
+        const expoSuccess = results?.expo?.success || 0;
+        const expoError = results?.expo?.error || 0;
         
         const totalSuccess = webSuccess + expoSuccess;
         const totalError = webError + expoError;
@@ -53,7 +54,8 @@ export const NotificationsForm: React.FC = () => {
         if (totalSuccess > 0) {
             toast.success(`Отправлено успешно: ${totalSuccess}${totalError > 0 ? ` (Ошибок: ${totalError})` : ''}`);
         } else {
-            toast.error(`Не удалось отправить ни одного уведомления. Ошибок: ${totalError}`);
+            const errorDetails = [...(results?.web?.details || []), ...(results?.expo?.details || [])].join(', ');
+            toast.error(`Не удалось отправить: ${errorDetails || 'Неизвестная ошибка'}`, { duration: 6000 });
         }
       }
 
