@@ -7,12 +7,13 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { SearchInput } from './search-input';
 import { CartButton } from './cart-button';
+import { Bell } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { ProfileButton } from './profile-button';
 import { AuthModal } from './modals';
 import { useTranslation } from 'react-i18next';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Button } from '../ui';
 
 const LanguageSelector = () => {
   const { i18n } = useTranslation();
@@ -97,6 +98,12 @@ export const Header: React.FC<Props> = ({ hasSearch = true, hasCart = true, clas
             <AuthModal open={openAuthModal} onClose={() => setOpenAuthModal(false)} />
 
             <LanguageSelector />
+
+            <Link href="/notifications">
+              <Button variant="secondary" className="px-2 md:px-4">
+                <Bell size={20} className="text-gray-500" />
+              </Button>
+            </Link>
 
             <ProfileButton onClickSignIn={() => setOpenAuthModal(true)} />
 
