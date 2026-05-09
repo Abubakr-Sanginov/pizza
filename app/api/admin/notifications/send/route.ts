@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
 
     await Promise.all([...expoPromises, ...webPushPromises]);
 
-    return NextResponse.json({ success: true, count: tokens.length });
+    return NextResponse.json({ success: true, count: tokens.length, notification });
   } catch (error) {
     console.error('[NOTIFICATIONS_SEND_POST]', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

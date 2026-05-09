@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Title } from '../title';
+import { cn } from '@/shared/lib/utils';
 import { Button, Input } from '../../ui';
 import { Textarea } from '../../ui/textarea';
 import toast from 'react-hot-toast';
@@ -32,7 +33,7 @@ export const NotificationsForm: React.FC = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      await axios.post('/api/admin/notifications/send', {
+      const { data } = await axios.post('/api/admin/notifications/send', {
         title,
         body,
         imageUrl: imageUrl || null,
@@ -41,7 +42,10 @@ export const NotificationsForm: React.FC = () => {
       setTitle('');
       setBody('');
       setImageUrl('');
-      fetchHistory();
+      
+      if (data.notification) {
+        setHistory(prev => [data.notification, ...prev]);
+      }
     } catch (error) {
       console.error(error);
       toast.error('Не удалось отправить уведомления');
@@ -50,15 +54,23 @@ export const NotificationsForm: React.FC = () => {
     }
   };
 
+  const [deletingId, setDeletingId] = React.useState<number | null>(null);
+
   const onDelete = async (id: number) => {
-    if (!window.confirm('Вы уверены, что хотите удалить это уведомление из истории?')) return;
-    
+    if (deletingId !== id) {
+      setDeletingId(id);
+      setTimeout(() => setDeletingId(null), 3000); // Reset after 3s
+      return;
+    }
+
     try {
       await axios.delete(`/api/admin/notifications/${id}`);
       toast.success('Удалено');
-      fetchHistory();
+      setHistory((prev) => prev.filter((item) => item.id !== id));
     } catch (error) {
       toast.error('Ошибка при удалении');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -173,10 +185,13 @@ export const NotificationsForm: React.FC = () => {
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="text-red-500 hover:bg-red-50"
+                  className={cn(
+                    'transition-all duration-200',
+                    deletingId === item.id ? 'text-white bg-red-500 hover:bg-red-600 w-20 rounded-xl' : 'text-red-500 hover:bg-red-50'
+                  )}
                   onClick={() => onDelete(item.id)}
                 >
-                  <Trash2 size={20} />
+                  {deletingId === item.id ? <span className="text-[10px] font-bold uppercase">Удалить?</span> : <Trash2 size={20} />}
                 </Button>
               </div>
             ))
