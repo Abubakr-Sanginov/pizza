@@ -93,24 +93,38 @@ export default function CourierPage() {
                 </div>
               </div>
 
-              {order.status === 'READY' ? (
+              <div className="flex flex-col gap-2">
+                {order.status === 'READY' ? (
+                  <Button 
+                    className="w-full h-12 text-base font-bold rounded-xl"
+                    onClick={() => updateStatus(order.id, OrderStatus.DELIVERING)}
+                  >
+                    <Truck className="mr-2" size={20} />
+                    {t('courier.takeOrder')}
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="secondary"
+                    className="w-full h-12 text-base font-bold rounded-xl bg-green-500 text-white hover:bg-green-600"
+                    onClick={() => updateStatus(order.id, OrderStatus.SUCCEEDED)}
+                  >
+                    <CheckCircle className="mr-2" size={20} />
+                    {t('courier.delivered')}
+                  </Button>
+                )}
+
                 <Button 
-                  className="w-full h-12 text-base font-bold rounded-xl"
-                  onClick={() => updateStatus(order.id, OrderStatus.DELIVERING)}
+                  variant="outline"
+                  className="w-full h-10 text-sm font-medium rounded-xl text-red-500 border-red-200 hover:bg-red-50"
+                  onClick={() => {
+                    if (confirm(t('courier.confirmCancel'))) {
+                      updateStatus(order.id, OrderStatus.CANCELLED);
+                    }
+                  }}
                 >
-                  <Truck className="mr-2" size={20} />
-                  {t('courier.takeOrder')}
+                  {t('courier.cancelOrder')}
                 </Button>
-              ) : (
-                <Button 
-                  variant="secondary"
-                  className="w-full h-12 text-base font-bold rounded-xl bg-green-500 text-white hover:bg-green-600"
-                  onClick={() => updateStatus(order.id, OrderStatus.SUCCEEDED)}
-                >
-                  <CheckCircle className="mr-2" size={20} />
-                  {t('courier.delivered')}
-                </Button>
-              )}
+              </div>
             </div>
           ))
         ) : (

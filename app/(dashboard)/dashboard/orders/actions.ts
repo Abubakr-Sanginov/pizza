@@ -51,6 +51,11 @@ export async function updateOrderStatus(orderId: number, status: OrderStatus) {
       },
     });
 
+    // Если заказ стал готов, пробуем назначить курьера автоматически
+    if (status === 'READY') {
+      await autoAssignCouriers();
+    }
+
     // If order is completed, update global stats
     if (status === 'SUCCEEDED') {
       await prisma.globalStat.upsert({
@@ -114,19 +119,31 @@ export async function autoAssignCouriers() {
 
     const couriers = await prisma.user.findMany({
       where: { role: 'COURIER' },
+      include: {
+        _count: {
+          select: {
+            courierOrders: {
+              where: { status: { in: ['COOKING', 'READY', 'DELIVERING'] } }
+            }
+          }
+        }
+      }
     });
 
     if (couriers.length === 0) return { count: 0 };
 
     let assignedCount = 0;
     for (const order of unassignedOrders) {
-      // Pick a random courier for now, or use a better logic if needed
-      const courier = couriers[Math.floor(Math.random() * couriers.length)];
+      // Находим курьера с минимальным количеством заказов
+      const bestCourier = couriers.sort((a, b) => a._count.courierOrders - b._count.courierOrders)[0];
       
       await prisma.order.update({
         where: { id: order.id },
-        data: { courierId: courier.id },
+        data: { courierId: bestCourier.id },
       });
+      
+      // Увеличиваем счетчик локально для следующей итерации цикла
+      bestCourier._count.courierOrders++;
       assignedCount++;
     }
 

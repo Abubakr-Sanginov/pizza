@@ -9,19 +9,37 @@ export async function PATCH(
 ) {
   try {
     const session = await getUserSession();
+    const { status, userId: bodyUserId } = await req.json();
+    const orderId = Number(params.id);
 
-    if (!session || (session.role !== 'COURIER' && session.role !== 'ADMIN')) {
+    let userId: number;
+    let userRole: string;
+
+    if (session) {
+      userId = Number(session.id);
+      userRole = session.role;
+    } else if (bodyUserId) {
+      const user = await prisma.user.findUnique({
+        where: { id: Number(bodyUserId) }
+      });
+      if (!user) {
+        return NextResponse.json({ message: 'Пользователь не найден' }, { status: 404 });
+      }
+      userId = user.id;
+      userRole = user.role;
+    } else {
       return NextResponse.json({ message: 'Нет доступа' }, { status: 403 });
     }
 
-    const { status } = await req.json();
-    const orderId = Number(params.id);
+    if (userRole !== 'COURIER' && userRole !== 'ADMIN') {
+      return NextResponse.json({ message: 'Нет доступа' }, { status: 403 });
+    }
 
     const updateData: any = { status };
     
     // Если курьер берет заказ, записываем его ID в заказ
     if (status === OrderStatus.DELIVERING) {
-      updateData.courierId = Number(session.id);
+      updateData.courierId = userId;
     }
 
     const order = await prisma.order.update({

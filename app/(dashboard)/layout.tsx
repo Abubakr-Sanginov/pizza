@@ -16,7 +16,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return <div className="flex items-center justify-center h-screen">Загрузка...</div>;
   }
 
-  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'COURIER')) {
+  if (!session || session.user.role !== 'ADMIN') {
+    if (session?.user.role === 'COURIER') {
+      return redirect('/courier');
+    }
     return redirect('/admin/login');
   }
 

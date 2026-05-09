@@ -16,6 +16,7 @@ model User {
     password String
     role     UserRole  @default(USER)
     verified DateTime?
+    iikoId   String?   @unique
 
     provider   String?
     providerId String?
