@@ -7,19 +7,19 @@ import { authOptions } from '@/shared/constants/auth-options';
 
 const expo = new Expo();
 
-// Настраиваем Web Push один раз при инициализации
-const pubKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-const privKey = process.env.VAPID_PRIVATE_KEY;
+// Жестко прописанные ключи для обхода проблем с Vercel Env Vars
+const VAPID_PUB = 'BOShScHe-8RIRlNSFXmTUi-6B1aragfn_Quf4eoVq4EyeghLVV1_Ocd6OEqV_fiZAYu_Md6oga5Oap9ZD61WWx4';
+const VAPID_PRIV = 'b-ngCQHcrD837t7twVwbyoAosLle7J6YMI8JkQgjW9g';
+
+const pubKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || VAPID_PUB;
+const privKey = process.env.VAPID_PRIVATE_KEY || VAPID_PRIV;
 
 if (pubKey && privKey) {
-  console.log('[PUSH_INIT] VAPID keys found. Configuring web-push...');
   webpush.setVapidDetails(
     'mailto:sanginovabubakr2222@gmail.com',
     pubKey,
     privKey
   );
-} else {
-  console.warn('[PUSH_INIT] VAPID keys are missing!');
 }
 
 export async function POST(req: NextRequest) {
@@ -34,14 +34,6 @@ export async function POST(req: NextRequest) {
 
     if (!title || !body) {
       return NextResponse.json({ error: 'Title and body are required' }, { status: 400 });
-    }
-
-    // Еще раз проверяем ключи перед отправкой
-    if (!pubKey || !privKey) {
-        return NextResponse.json({ 
-            success: false, 
-            error: 'VAPID keys are not configured on the server. Please check Vercel Env Vars.' 
-        });
     }
 
     // Save notification to history
@@ -68,7 +60,6 @@ export async function POST(req: NextRequest) {
         try {
           const subscription = JSON.parse(pushToken.token);
           
-          // Отправляем с явным указанием настроек (на всякий случай)
           webPushPromises.push(
             webpush.sendNotification(
               subscription,
@@ -93,7 +84,6 @@ export async function POST(req: NextRequest) {
               const msg = err.body || err.message || 'Push service error';
               results.web.details.push(`Token ${pushToken.id}: ${msg}`);
               
-              // Удаляем невалидные токены (410 - Gone, 404 - Not Found, или ошибка авторизации)
               if (err.statusCode === 410 || err.statusCode === 404 || msg.includes('unauthenticated') || msg.includes('Authorization')) {
                 await prisma.pushToken.delete({ where: { id: pushToken.id } }).catch(() => {});
               }
@@ -101,7 +91,7 @@ export async function POST(req: NextRequest) {
           );
         } catch (e) {
           results.web.error++;
-          results.web.details.push(`Token ${pushToken.id}: Invalid JSON format`);
+          results.web.details.push(`Token ${pushToken.id}: Invalid JSON`);
         }
       } else if (Expo.isExpoPushToken(pushToken.token)) {
         expoMessages.push({
@@ -114,10 +104,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Send Web Pushes
     await Promise.all(webPushPromises);
 
-    // Send Expo Pushes
     if (expoMessages.length > 0) {
       const chunks = expo.chunkPushNotifications(expoMessages);
       for (const chunk of chunks) {
