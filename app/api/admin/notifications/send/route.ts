@@ -6,11 +6,13 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/shared/constants/auth-options';
 
 // Configure Web Push
-webpush.setVapidDetails(
-  'mailto:sanginovabubakr2222@gmail.com',
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
+if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    'mailto:sanginovabubakr2222@gmail.com',
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+}
 
 const expo = new Expo();
 
