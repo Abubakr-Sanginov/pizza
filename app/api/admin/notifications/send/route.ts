@@ -83,8 +83,8 @@ export async function POST(req: NextRequest) {
               const msg = err.body || err.message || 'Push service error';
               results.web.details.push(`Token ${pushToken.id}: ${msg}`);
               
-              // Удаляем невалидные токены (410, 404 или ошибка кривой/авторизации)
-              if (err.statusCode === 410 || err.statusCode === 404 || msg.includes('curve') || msg.includes('Authorization')) {
+              // Удаляем невалидные токены (410, 404 или ошибка кривой/авторизации/несоответствия ключей)
+              if (err.statusCode === 410 || err.statusCode === 404 || msg.includes('curve') || msg.includes('Authorization') || msg.includes('correspond')) {
                 await prisma.pushToken.delete({ where: { id: pushToken.id } }).catch(() => {});
               }
             })

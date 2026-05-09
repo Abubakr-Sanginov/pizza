@@ -26,7 +26,9 @@ export const NotificationsManager: React.FC = () => {
 
   const subscribeToPush = async (registration: ServiceWorkerRegistration) => {
     try {
-      const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      const VAPID_PUB = 'BHjNmaZUTX9bX3hatdV8Q7mK3ezc0B2Xp33EGQNux_AES54o4HBllLsPErzSQ2ZLIJ6kW-_GyUACfJjtl_Oxe3w';
+      const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || VAPID_PUB;
+      
       if (!publicKey) return;
 
       const subscription = await registration.pushManager.subscribe({
