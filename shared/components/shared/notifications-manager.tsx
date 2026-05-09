@@ -31,6 +31,14 @@ export const NotificationsManager: React.FC = () => {
       
       if (!publicKey) return;
 
+      const existingSubscription = await registration.pushManager.getSubscription();
+      
+      // Если подписка уже есть, мы её удаляем и создаем заново с новым ключом
+      if (existingSubscription) {
+        await existingSubscription.unsubscribe();
+        console.log('Old subscription removed');
+      }
+
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(publicKey)
@@ -40,7 +48,7 @@ export const NotificationsManager: React.FC = () => {
         token: JSON.stringify(subscription),
         platform: 'web'
       });
-      console.log('Web Push subscribed');
+      console.log('New Web Push subscription created successfully');
     } catch (error) {
       console.error('Push subscription failed:', error);
     }
