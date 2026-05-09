@@ -14,7 +14,7 @@ interface Props {
 
 export const Categories: React.FC<Props> = ({ items, className }) => {
   const categoryActiveId = useCategoryStore((state) => state.activeId);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const categoryMapping: Record<string, string> = {
     'Пиццы': 'menu.pizzas',
