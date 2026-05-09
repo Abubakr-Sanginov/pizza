@@ -1,12 +1,13 @@
 import { Container, Title } from '@/shared/components/shared';
 import { prisma } from '@/back/prisma/prisma-client';
-import React from 'react';
 import { Metadata } from 'next';
-import { formatDate } from '@/shared/lib/utils'; // Assuming this exists or I'll use a simple formatter
 
 export const metadata: Metadata = {
   title: 'Уведомления | Next Pizza',
 };
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function NotificationsPage() {
   const notifications = await prisma.notification.findMany({

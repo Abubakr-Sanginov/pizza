@@ -1,17 +1,25 @@
 self.addEventListener('push', function(event) {
-  const data = event.data.json();
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (e) {
+    console.error('Push data parse error:', e);
+    data = { title: 'New notification', body: event.data ? event.data.text() : '' };
+  }
+
   const options = {
-    body: data.body,
+    body: data.body || '',
     icon: '/logo.png',
     badge: '/logo.png',
-    image: data.imageUrl,
+    image: data.imageUrl || data.image,
+    vibrate: [100, 50, 100],
     data: {
-      url: '/'
+      url: data.url || '/'
     }
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title, options)
+    self.registration.showNotification(data.title || 'Notification', options)
   );
 });
 

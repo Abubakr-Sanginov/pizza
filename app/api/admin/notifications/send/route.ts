@@ -5,15 +5,6 @@ import webpush from 'web-push';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/shared/constants/auth-options';
 
-// Configure Web Push
-if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
-  webpush.setVapidDetails(
-    'mailto:sanginovabubakr2222@gmail.com',
-    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-    process.env.VAPID_PRIVATE_KEY
-  );
-}
-
 const expo = new Expo();
 
 export async function POST(req: NextRequest) {
@@ -30,6 +21,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Title and body are required' }, { status: 400 });
     }
 
+    // Configure Web Push if not already configured
+    if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+      webpush.setVapidDetails(
+        'mailto:sanginovabubakr2222@gmail.com',
+        process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+        process.env.VAPID_PRIVATE_KEY
+      );
+    } else {
+        console.warn('VAPID keys are missing, web push will not work');
+    }
+
     // Save notification to history
     const notification = await prisma.notification.create({
       data: { title, body, imageUrl },
@@ -38,8 +40,15 @@ export async function POST(req: NextRequest) {
     // Get all tokens
     const tokens = await prisma.pushToken.findMany();
 
-    const expoMessages = [];
-    const webPushPromises = [];
+    if (tokens.length === 0) {
+      return NextResponse.json({ success: true, count: 0, message: 'No registered devices found' });
+    }
+
+    const expoMessages: any[] = [];
+    const webPushPromises: Promise<any>[] = [];
+    
+    let webSuccessCount = 0;
+    let webErrorCount = 0;
 
     for (const pushToken of tokens) {
       if (pushToken.platform === 'ios' || pushToken.platform === 'android') {
@@ -59,21 +68,55 @@ export async function POST(req: NextRequest) {
                 webpush.sendNotification(
                     subscription,
                     JSON.stringify({ title, body, imageUrl })
-                ).catch(err => console.error('Web Push Error:', err))
+                ).then(() => {
+                    webSuccessCount++;
+                }).catch(err => {
+                    webErrorCount++;
+                    console.error('Web Push Error for token:', pushToken.id, err.statusCode, err.message);
+                    // If token is invalid/expired, we should probably delete it
+                    if (err.statusCode === 410 || err.statusCode === 404) {
+                        prisma.pushToken.delete({ where: { id: pushToken.id } }).catch(console.error);
+                    }
+                })
               );
           } catch (e) {
-              console.error('Invalid web push subscription:', pushToken.token);
+              console.error('Invalid web push subscription format:', pushToken.token);
+              webErrorCount++;
           }
       }
     }
 
     // Send Expo notifications in chunks
-    const chunks = expo.chunkPushNotifications(expoMessages);
-    const expoPromises = chunks.map(chunk => expo.sendPushNotificationsAsync(chunk));
+    let expoSuccessCount = 0;
+    let expoErrorCount = 0;
 
-    await Promise.all([...expoPromises, ...webPushPromises]);
+    if (expoMessages.length > 0) {
+        const chunks = expo.chunkPushNotifications(expoMessages);
+        for (const chunk of chunks) {
+            try {
+                const tickets = await expo.sendPushNotificationsAsync(chunk);
+                tickets.forEach(ticket => {
+                    if (ticket.status === 'ok') expoSuccessCount++;
+                    else expoErrorCount++;
+                });
+            } catch (error) {
+                console.error('Expo chunk error:', error);
+                expoErrorCount += chunk.length;
+            }
+        }
+    }
 
-    return NextResponse.json({ success: true, count: tokens.length, notification });
+    await Promise.all(webPushPromises);
+
+    return NextResponse.json({ 
+        success: true, 
+        count: tokens.length,
+        details: {
+            web: { success: webSuccessCount, error: webErrorCount },
+            expo: { success: expoSuccessCount, error: expoErrorCount }
+        },
+        notification 
+    });
   } catch (error) {
     console.error('[NOTIFICATIONS_SEND_POST]', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

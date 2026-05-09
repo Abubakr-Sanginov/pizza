@@ -38,7 +38,25 @@ export const NotificationsForm: React.FC = () => {
         body,
         imageUrl: imageUrl || null,
       });
-      toast.success('Уведомления успешно отправлены!');
+
+      if (data.count === 0) {
+        toast.error('Нет зарегистрированных устройств для получения уведомлений');
+      } else {
+        const webSuccess = data.details?.web?.success || 0;
+        const webError = data.details?.web?.error || 0;
+        const expoSuccess = data.details?.expo?.success || 0;
+        const expoError = data.details?.expo?.error || 0;
+        
+        const totalSuccess = webSuccess + expoSuccess;
+        const totalError = webError + expoError;
+
+        if (totalSuccess > 0) {
+            toast.success(`Отправлено успешно: ${totalSuccess}${totalError > 0 ? ` (Ошибок: ${totalError})` : ''}`);
+        } else {
+            toast.error(`Не удалось отправить ни одного уведомления. Ошибок: ${totalError}`);
+        }
+      }
+
       setTitle('');
       setBody('');
       setImageUrl('');
