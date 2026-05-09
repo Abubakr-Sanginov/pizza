@@ -47,7 +47,7 @@ export const Categories: React.FC<Props> = ({ items, className }) => {
               'flex items-center font-bold h-11 rounded-2xl px-5 relative transition-colors duration-300',
               isActive ? 'text-primary' : 'text-gray-500 hover:text-primary',
             )}
-            href={`/#${name}`}
+            href={`/#${cat.name}`}
             key={index}
           >
             {isActive && (
