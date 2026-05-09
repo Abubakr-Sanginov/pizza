@@ -7,9 +7,9 @@ import { authOptions } from '@/shared/constants/auth-options';
 
 const expo = new Expo();
 
-// Жестко прописанные ключи для обхода проблем с Vercel Env Vars
-const VAPID_PUB = 'BOShScHe-8RIRlNSFXmTUi-6B1aragfn_Quf4eoVq4EyeghLVV1_Ocd6OEqV_fiZAYu_Md6oga5Oap9ZD61WWx4';
-const VAPID_PRIV = 'b-ngCQHcrD837t7twVwbyoAosLle7J6YMI8JkQgjW9g';
+// НОВЫЕ ГАРАНТИРОВАННО ВАЛИДНЫЕ КЛЮЧИ (P-256)
+const VAPID_PUB = 'BHjNmaZUTX9bX3hatdV8Q7mK3ezc0B2Xp33EGQNux_AES54o4HBllLsPErzSQ2ZLIJ6kW-_GyUACfJjtl_Oxe3w';
+const VAPID_PRIV = 'qm4bmZqoUmJE6PPB9LQBzvwR4197ud82ft4wBoT2OrM';
 
 const pubKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || VAPID_PUB;
 const privKey = process.env.VAPID_PRIVATE_KEY || VAPID_PRIV;
@@ -36,7 +36,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Title and body are required' }, { status: 400 });
     }
 
-    // Save notification to history
     const notification = await prisma.notification.create({
       data: { title, body, imageUrl },
     });
@@ -84,7 +83,8 @@ export async function POST(req: NextRequest) {
               const msg = err.body || err.message || 'Push service error';
               results.web.details.push(`Token ${pushToken.id}: ${msg}`);
               
-              if (err.statusCode === 410 || err.statusCode === 404 || msg.includes('unauthenticated') || msg.includes('Authorization')) {
+              // Удаляем невалидные токены (410, 404 или ошибка кривой/авторизации)
+              if (err.statusCode === 410 || err.statusCode === 404 || msg.includes('curve') || msg.includes('Authorization')) {
                 await prisma.pushToken.delete({ where: { id: pushToken.id } }).catch(() => {});
               }
             })
