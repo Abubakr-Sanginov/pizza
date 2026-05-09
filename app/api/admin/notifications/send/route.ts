@@ -7,6 +7,21 @@ import { authOptions } from '@/shared/constants/auth-options';
 
 const expo = new Expo();
 
+// Настраиваем Web Push один раз при инициализации
+const pubKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+const privKey = process.env.VAPID_PRIVATE_KEY;
+
+if (pubKey && privKey) {
+  console.log('[PUSH_INIT] VAPID keys found. Configuring web-push...');
+  webpush.setVapidDetails(
+    'mailto:sanginovabubakr2222@gmail.com',
+    pubKey,
+    privKey
+  );
+} else {
+  console.warn('[PUSH_INIT] VAPID keys are missing!');
+}
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -21,30 +36,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Title and body are required' }, { status: 400 });
     }
 
-    // Configure Web Push
-    const pubKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-    const privKey = process.env.VAPID_PRIVATE_KEY;
-
-    console.log('[PUSH_CONFIG] Checking keys:', { 
-      hasPub: !!pubKey, 
-      hasPriv: !!privKey 
-    });
-
-    if (pubKey && privKey) {
-      webpush.setVapidDetails(
-        'mailto:sanginovabubakr2222@gmail.com',
-        pubKey,
-        privKey
-      );
-    } else {
-      const missing = [];
-      if (!pubKey) missing.push('NEXT_PUBLIC_VAPID_PUBLIC_KEY');
-      if (!privKey) missing.push('VAPID_PRIVATE_KEY');
-      
-      return NextResponse.json({ 
-        success: false, 
-        error: `Missing VAPID keys: ${missing.join(', ')}. Check Vercel Environment Variables.` 
-      });
+    // Еще раз проверяем ключи перед отправкой
+    if (!pubKey || !privKey) {
+        return NextResponse.json({ 
+            success: false, 
+            error: 'VAPID keys are not configured on the server. Please check Vercel Env Vars.' 
+        });
     }
 
     // Save notification to history
@@ -70,10 +67,25 @@ export async function POST(req: NextRequest) {
       if (pushToken.platform === 'web') {
         try {
           const subscription = JSON.parse(pushToken.token);
+          
+          // Отправляем с явным указанием настроек (на всякий случай)
           webPushPromises.push(
             webpush.sendNotification(
               subscription,
-              JSON.stringify({ title, body, imageUrl, url: url || '/' })
+              JSON.stringify({ 
+                title, 
+                body, 
+                imageUrl, 
+                url: url || '/',
+                icon: '/logo.png' 
+              }),
+              {
+                vapidDetails: {
+                  subject: 'mailto:sanginovabubakr2222@gmail.com',
+                  publicKey: pubKey,
+                  privateKey: privKey
+                }
+              }
             ).then(() => {
               results.web.success++;
             }).catch(async (err: any) => {
@@ -81,14 +93,15 @@ export async function POST(req: NextRequest) {
               const msg = err.body || err.message || 'Push service error';
               results.web.details.push(`Token ${pushToken.id}: ${msg}`);
               
-              if (err.statusCode === 410 || err.statusCode === 404) {
+              // Удаляем невалидные токены (410 - Gone, 404 - Not Found, или ошибка авторизации)
+              if (err.statusCode === 410 || err.statusCode === 404 || msg.includes('unauthenticated') || msg.includes('Authorization')) {
                 await prisma.pushToken.delete({ where: { id: pushToken.id } }).catch(() => {});
               }
             })
           );
         } catch (e) {
           results.web.error++;
-          results.web.details.push(`Token ${pushToken.id}: Invalid JSON`);
+          results.web.details.push(`Token ${pushToken.id}: Invalid JSON format`);
         }
       } else if (Expo.isExpoPushToken(pushToken.token)) {
         expoMessages.push({

@@ -39,24 +39,26 @@ export const NotificationsForm: React.FC = () => {
         imageUrl: imageUrl || null,
       });
 
-      if (data.count === 0 && (!data.results || (data.results.web.success + data.results.expo.success === 0))) {
-        toast.error('Нет зарегистрированных устройств для получения уведомлений');
-      } else {
-        const results = data.results;
-        const webSuccess = results?.web?.success || 0;
-        const webError = results?.web?.error || 0;
-        const expoSuccess = results?.expo?.success || 0;
-        const expoError = results?.expo?.error || 0;
-        
-        const totalSuccess = webSuccess + expoSuccess;
-        const totalError = webError + expoError;
+      console.log('Send notification response:', data);
 
-        if (totalSuccess > 0) {
-            toast.success(`Отправлено успешно: ${totalSuccess}${totalError > 0 ? ` (Ошибок: ${totalError})` : ''}`);
-        } else {
-            const errorDetails = [...(results?.web?.details || []), ...(results?.expo?.details || [])].join(', ');
-            toast.error(`Не удалось отправить: ${errorDetails || 'Неизвестная ошибка'}`, { duration: 6000 });
-        }
+      const results = data.results || data.details;
+      const webSuccess = results?.web?.success || 0;
+      const webError = results?.web?.error || 0;
+      const expoSuccess = results?.expo?.success || 0;
+      const expoError = results?.expo?.error || 0;
+      
+      const totalSuccess = webSuccess + expoSuccess;
+      const totalError = webError + expoError;
+
+      if (totalSuccess > 0) {
+          toast.success(`Отправлено успешно: ${totalSuccess}${totalError > 0 ? ` (Ошибок: ${totalError})` : ''}`);
+      } else if (totalError > 0) {
+          const errorDetails = [...(results?.web?.details || []), ...(results?.expo?.details || [])].join(', ');
+          toast.error(`Не удалось отправить: ${errorDetails || 'Ошибка сервиса рассылки'}`, { duration: 6000 });
+      } else if (data.count === 0) {
+          toast.error('Нет зарегистрированных устройств');
+      } else {
+          toast.error('Произошла неизвестная ошибка при обработке ответа');
       }
 
       setTitle('');
