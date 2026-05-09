@@ -26,6 +26,7 @@ model User {
     courierOrders    Order[] @relation("CourierOrders")
     telegramUsername String? @unique
     verificationCode VerificationCode?
+    pushTokens       PushToken[]
 
     reviews          Review[]
 
@@ -36,6 +37,8 @@ model User {
 model Category {
     id       Int       @id @default(autoincrement())
     name     String    @unique
+    nameEn   String?
+    nameTg   String?
     products Product[]
 
     createdAt DateTime @default(now())
@@ -288,4 +291,21 @@ enum UserRole {
 enum DeliveryType {
     DELIVERY
     PICKUP
+}
+
+model PushToken {
+    id        Int      @id @default(autoincrement())
+    token     String   @unique
+    platform  String? // 'ios', 'android', 'web'
+    user      User?    @relation(fields: [userId], references: [id])
+    userId    Int?
+    createdAt DateTime @default(now())
+}
+
+model Notification {
+    id        Int      @id @default(autoincrement())
+    title     String
+    body      String
+    imageUrl  String?
+    createdAt DateTime @default(now())
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, Image, LayoutAnimation, RefreshControl, Platform, KeyboardAvoidingView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, Image, LayoutAnimation, RefreshControl, Platform, KeyboardAvoidingView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUserStore } from '@/store/useUserStore';
@@ -7,7 +7,7 @@ import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { useTranslation } from 'react-i18next';
 
-const BASE_URL = 'https://pizza-liart-chi.vercel.app';
+import { BASE_URL } from '@/constants/Api';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();

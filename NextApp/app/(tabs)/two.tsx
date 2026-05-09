@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { View as DefaultView, Text as DefaultText, StyleSheet, FlatList, Image, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, TextInput, RefreshControl, LayoutAnimation, Dimensions, ActivityIndicator, Keyboard } from 'react-native';
+import { View as DefaultView, Text as DefaultText, StyleSheet, FlatList, Image, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, TextInput, RefreshControl, LayoutAnimation, Dimensions, ActivityIndicator, Keyboard, Alert } from 'react-native';
 import { useCartStore, getCartToken } from '@/store/useCartStore';
 import { useUserStore } from '@/store/useUserStore';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,7 +11,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-const BASE_URL = 'https://pizza-liart-chi.vercel.app';
+import { BASE_URL } from '@/constants/Api';
 
 export default function CartScreen() {
   const insets = useSafeAreaInsets();

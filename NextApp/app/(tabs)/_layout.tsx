@@ -77,6 +77,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="notifications"
+        options={{
+          title: t('tabs.notifications'),
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'notifications' : 'notifications-outline'} size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="courier"
         options={{
           title: t('tabs.courier'),

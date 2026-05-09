@@ -1,0 +1,59 @@
+import { Container, Title } from '@/shared/components/shared';
+import { prisma } from '@/back/prisma/prisma-client';
+import React from 'react';
+import { Metadata } from 'next';
+import { formatDate } from '@/shared/lib/utils'; // Assuming this exists or I'll use a simple formatter
+
+export const metadata: Metadata = {
+  title: 'Уведомления | Next Pizza',
+};
+
+export default async function NotificationsPage() {
+  const notifications = await prisma.notification.findMany({
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
+  return (
+    <Container className="my-10">
+      <Title text="Уведомления" size="lg" className="font-bold mb-10" />
+
+      <div className="flex flex-col gap-5 max-w-[800px] mx-auto">
+        {notifications.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-3xl border border-dashed text-gray-400">
+            У вас пока нет уведомлений
+          </div>
+        ) : (
+          notifications.map((item) => (
+            <div key={item.id} className="bg-white p-6 rounded-3xl shadow-sm border flex gap-6">
+              {item.imageUrl && (
+                <div className="w-24 h-24 flex-shrink-0">
+                  <img 
+                    src={item.imageUrl} 
+                    alt={item.title} 
+                    className="w-full h-full object-cover rounded-2xl" 
+                  />
+                </div>
+              )}
+              <div className="flex-1">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="text-xl font-bold">{item.title}</h3>
+                  <span className="text-sm text-gray-400">
+                    {item.createdAt.toLocaleDateString('ru-RU', {
+                      day: 'numeric',
+                      month: 'long',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                </div>
+                <p className="text-gray-600 leading-relaxed">{item.body}</p>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </Container>
+  );
+}

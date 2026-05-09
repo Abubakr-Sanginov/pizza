@@ -5,8 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCartStore } from '@/store/useCartStore';
 import { ChooseProductModal } from '@/components/shared/ChooseProductModal';
 import { useTranslation } from 'react-i18next';
-
-const BASE_URL = 'https://pizza-liart-chi.vercel.app';
+import { BASE_URL } from '@/constants/Api';
 const { width, height } = Dimensions.get('window');
 
 export default function MenuScreen() {
@@ -72,7 +71,7 @@ export default function MenuScreen() {
   };
 
   const handleAddToCart = async (values: any) => {
-    await addItem(values.productItemId, values.ingredients);
+    await useCartStore.getState().addItem(values.productItemId, values.ingredients);
   };
 
   const handleCategoryPress = (categoryId: number, index: number) => {
@@ -227,8 +226,17 @@ export default function MenuScreen() {
           <View style={styles.stickyCategories}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoriesScroll}>
               {categories.map((cat, index) => {
-                const translationKey = categoryMapping[cat.name] || cat.name;
-                const translatedName = translationKey.includes('.') ? t(translationKey) : cat.name;
+                const currentLang = i18n.language;
+                let translatedName = cat.name;
+
+                if (currentLang === 'en' && cat.nameEn) {
+                  translatedName = cat.nameEn;
+                } else if (currentLang === 'tg' && cat.nameTg) {
+                  translatedName = cat.nameTg;
+                } else {
+                  const translationKey = categoryMapping[cat.name] || cat.name;
+                  translatedName = translationKey.includes('.') ? t(translationKey) : cat.name;
+                }
                 return (
                   <TouchableOpacity
                     key={cat.id}

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BASE_URL = 'https://pizza-liart-chi.vercel.app/api'; 
+import { API_URL } from '@/constants/Api';
 
 let tokenCache: string | null = null;
 
@@ -57,7 +57,7 @@ export const useCartStore = create<CartState>((set, get) => ({
       const token = await getCartToken();
       if (!token) return;
 
-      const { data } = await axios.get(`${BASE_URL}/cart`, {
+      const { data } = await axios.get(`${API_URL}/cart`, {
         headers: { 'X-Cart-Token': token },
       });
       
@@ -76,7 +76,7 @@ export const useCartStore = create<CartState>((set, get) => ({
     try {
       let token = await getCartToken();
       
-      const { data } = await axios.post(`${BASE_URL}/cart`, {
+      const { data } = await axios.post(`${API_URL}/cart`, {
         productItemId,
         ingredients,
       }, {
@@ -113,7 +113,7 @@ export const useCartStore = create<CartState>((set, get) => ({
 
     try {
       const token = await getCartToken();
-      const { data } = await axios.patch(`${BASE_URL}/cart/${id}`, {
+      const { data } = await axios.patch(`${API_URL}/cart/${id}`, {
         quantity,
       }, {
         headers: { 'X-Cart-Token': token },
@@ -138,7 +138,7 @@ export const useCartStore = create<CartState>((set, get) => ({
 
     try {
       const token = await getCartToken();
-      const { data } = await axios.delete(`${BASE_URL}/cart/${id}`, {
+      const { data } = await axios.delete(`${API_URL}/cart/${id}`, {
         headers: { 'X-Cart-Token': token },
       });
 

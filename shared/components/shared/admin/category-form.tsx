@@ -13,12 +13,14 @@ import { useRouter } from 'next/navigation';
 
 const categorySchema = z.object({
   name: z.string().min(2, 'Минимум 2 символа'),
+  nameEn: z.string().optional(),
+  nameTg: z.string().optional(),
 });
 
 type CategoryFormValues = z.infer<typeof categorySchema>;
 
 interface Props {
-  initialData?: Category;
+  initialData?: any; // Use any to avoid prisma type mismatch before regen
 }
 
 export const CategoryForm: React.FC<Props> = ({ initialData }) => {
@@ -27,6 +29,8 @@ export const CategoryForm: React.FC<Props> = ({ initialData }) => {
     resolver: zodResolver(categorySchema),
     defaultValues: {
       name: initialData?.name || '',
+      nameEn: initialData?.nameEn || '',
+      nameTg: initialData?.nameTg || '',
     },
   });
 
@@ -53,9 +57,19 @@ export const CategoryForm: React.FC<Props> = ({ initialData }) => {
       <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <div>
-            <label className="block text-sm font-medium mb-1">Название</label>
+            <label className="block text-sm font-medium mb-1">Название (RU)</label>
             <Input {...form.register('name')} placeholder="Пиццы..." />
             {form.formState.errors.name && <p className="text-red-500 text-xs mt-1">{form.formState.errors.name.message}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Название (EN)</label>
+            <Input {...form.register('nameEn')} placeholder="Pizzas..." />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Название (TG)</label>
+            <Input {...form.register('nameTg')} placeholder="Питсаҳо..." />
           </div>
 
           <div className="flex justify-end pt-5">

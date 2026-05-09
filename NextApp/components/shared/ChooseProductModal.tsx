@@ -5,7 +5,7 @@ import { useCartStore } from '@/store/useCartStore';
 import { useUserStore } from '@/store/useUserStore';
 import { useTranslation } from 'react-i18next';
 
-const BASE_URL = 'https://pizza-liart-chi.vercel.app';
+import { BASE_URL } from '@/constants/Api';
 
 interface Props {
   product: any;

@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUserStore } from '@/store/useUserStore';
 import { useTranslation } from 'react-i18next';
 
-const BASE_URL = 'https://pizza-liart-chi.vercel.app';
+import { BASE_URL } from '@/constants/Api';
 
 export default function CourierScreen() {
   const insets = useSafeAreaInsets();

@@ -26,10 +26,20 @@ export const Categories: React.FC<Props> = ({ items, className }) => {
 
   return (
     <div className={cn('inline-flex gap-1 bg-gray-50 p-1 rounded-2xl overflow-x-auto scrollbar-hide', className)}>
-      {items.map(({ name, id }, index) => {
-        const isActive = categoryActiveId === id;
-        const translationKey = categoryMapping[name] || name;
-        const translatedName = translationKey.includes('.') ? t(translationKey) : name;
+      {items.map((cat, index) => {
+        const isActive = categoryActiveId === cat.id;
+        const currentLang = i18n.language;
+        
+        let translatedName = cat.name;
+        
+        if (currentLang === 'en' && cat.nameEn) {
+          translatedName = cat.nameEn;
+        } else if (currentLang === 'tg' && cat.nameTg) {
+          translatedName = cat.nameTg;
+        } else {
+          const translationKey = categoryMapping[cat.name] || cat.name;
+          translatedName = translationKey.includes('.') ? t(translationKey) : cat.name;
+        }
 
         return (
           <a
