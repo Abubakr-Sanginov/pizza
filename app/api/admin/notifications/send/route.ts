@@ -22,12 +22,29 @@ export async function POST(req: NextRequest) {
     }
 
     // Configure Web Push
-    if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+    const pubKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    const privKey = process.env.VAPID_PRIVATE_KEY;
+
+    console.log('[PUSH_CONFIG] Checking keys:', { 
+      hasPub: !!pubKey, 
+      hasPriv: !!privKey 
+    });
+
+    if (pubKey && privKey) {
       webpush.setVapidDetails(
         'mailto:sanginovabubakr2222@gmail.com',
-        process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-        process.env.VAPID_PRIVATE_KEY
+        pubKey,
+        privKey
       );
+    } else {
+      const missing = [];
+      if (!pubKey) missing.push('NEXT_PUBLIC_VAPID_PUBLIC_KEY');
+      if (!privKey) missing.push('VAPID_PRIVATE_KEY');
+      
+      return NextResponse.json({ 
+        success: false, 
+        error: `Missing VAPID keys: ${missing.join(', ')}. Check Vercel Environment Variables.` 
+      });
     }
 
     // Save notification to history
