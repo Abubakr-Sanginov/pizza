@@ -52,7 +52,7 @@ export const IngredientForm: React.FC<Props> = ({ initialData }) => {
   };
 
   return (
-    <div className="max-w-xl bg-white p-10 rounded-2xl border shadow-sm">
+    <div className="max-w-xl bg-card text-card-foreground p-10 rounded-2xl border border-border shadow-sm">
       <Title text={initialData ? 'Редактирование ингредиента' : 'Новый ингредиент'} size="md" className="font-bold mb-10" />
 
       <FormProvider {...form}>
@@ -60,13 +60,13 @@ export const IngredientForm: React.FC<Props> = ({ initialData }) => {
           <div>
             <label className="block text-sm font-medium mb-1">Название</label>
             <Input {...form.register('name')} placeholder="Сырный бортик..." />
-            {form.formState.errors.name && <p className="text-red-500 text-xs mt-1">{form.formState.errors.name.message}</p>}
+            {form.formState.errors.name && <p className="text-destructive text-xs mt-1">{form.formState.errors.name.message}</p>}
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-1">Цена (TJS)</label>
             <Input {...form.register('price')} type="number" />
-            {form.formState.errors.price && <p className="text-red-500 text-xs mt-1">{form.formState.errors.price.message}</p>}
+            {form.formState.errors.price && <p className="text-destructive text-xs mt-1">{form.formState.errors.price.message}</p>}
           </div>
 
           <div>
@@ -75,7 +75,7 @@ export const IngredientForm: React.FC<Props> = ({ initialData }) => {
               value={form.watch('imageUrl')}
               onChange={(url) => form.setValue('imageUrl', url)}
             />
-            {form.formState.errors.imageUrl && <p className="text-red-500 text-xs mt-1">{form.formState.errors.imageUrl.message}</p>}
+            {form.formState.errors.imageUrl && <p className="text-destructive text-xs mt-1">{form.formState.errors.imageUrl.message}</p>}
           </div>
 
           <div className="flex justify-end pt-5">

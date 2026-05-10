@@ -2,6 +2,7 @@ import { prisma } from '@/back/prisma/prisma-client';
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserSession } from '@/back/lib/get-user-session';
 import { OrderStatus } from '@prisma/client';
+import { notifyOrderStatus } from '@/back/lib/notify-order-status';
 
 export async function PATCH(
   req: NextRequest,
@@ -42,10 +43,18 @@ export async function PATCH(
       updateData.courierId = userId;
     }
 
+    const previous = await prisma.order.findUnique({ where: { id: orderId }, select: { status: true } });
+
     const order = await prisma.order.update({
       where: { id: orderId },
       data: updateData,
     });
+
+    if (previous && previous.status !== status) {
+      notifyOrderStatus(orderId, status).catch((e) =>
+        console.error('[notifyOrderStatus]', e),
+      );
+    }
 
     return NextResponse.json(order);
   } catch (error) {

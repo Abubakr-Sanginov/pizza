@@ -17,10 +17,10 @@ export const WhiteBlock: React.FC<React.PropsWithChildren<Props>> = ({
   children,
 }) => {
   return (
-    <div className={cn('bg-white rounded-3xl', className)}>
+    <div className={cn('glass rounded-[28px] shadow-soft', className)}>
       {title && (
-        <div className="flex items-center justify-between p-5 px-7 border-b border-gray-100">
-          <Title text={title} size="sm" className="font-bold" />
+        <div className="flex items-center justify-between p-5 px-7 border-b border-border/50">
+          <Title text={title} size="sm" className="font-extrabold tracking-tight" />
           {endAdornment}
         </div>
       )}

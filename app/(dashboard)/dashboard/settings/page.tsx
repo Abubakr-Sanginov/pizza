@@ -49,7 +49,7 @@ export default function SettingsPage() {
     <Container className="mt-10">
       <Title text="Настройки магазина" size="lg" className="font-extrabold mb-10" />
 
-      <div className="max-w-[500px] flex flex-col gap-8 bg-white p-10 rounded-2xl shadow-sm border">
+      <div className="max-w-[500px] flex flex-col gap-8 bg-card text-card-foreground p-10 rounded-2xl shadow-sm border border-border">
         <div className="flex flex-col gap-2">
           <label className="font-bold">Налог (%)</label>
           <Input
@@ -58,7 +58,7 @@ export default function SettingsPage() {
             onChange={(e) => setVatPrice(Number(e.target.value))}
             placeholder="Процент налога..."
           />
-          <p className="text-sm text-gray-400">Укажите процент налога (например, 15)</p>
+          <p className="text-sm text-muted-foreground">Укажите процент налога (например, 15)</p>
         </div>
 
         <div className="flex flex-col gap-2">
@@ -69,7 +69,7 @@ export default function SettingsPage() {
             onChange={(e) => setDeliveryPrice(Number(e.target.value))}
             placeholder="Стоимость доставки..."
           />
-          <p className="text-sm text-gray-400">Фиксированная сумма доставки для всех заказов</p>
+          <p className="text-sm text-muted-foreground">Фиксированная сумма доставки для всех заказов</p>
         </div>
 
         <Button

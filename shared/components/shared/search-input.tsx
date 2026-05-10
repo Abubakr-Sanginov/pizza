@@ -12,9 +12,10 @@ import { recordSearch } from '@/app/actions';
 
 interface Props {
   className?: string;
+  placeholder?: string;
 }
 
-export const SearchInput: React.FC<Props> = ({ className }) => {
+export const SearchInput: React.FC<Props> = ({ className, placeholder }) => {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [focused, setFocused] = React.useState(false);
   const [products, setProducts] = React.useState<Product[]>([]);
@@ -84,9 +85,9 @@ export const SearchInput: React.FC<Props> = ({ className }) => {
         className={cn('flex rounded-2xl flex-1 justify-between relative h-11 z-30', className)}>
         <Search className="absolute top-1/2 translate-y-[-50%] left-3 h-5 text-gray-400" />
         <input
-          className="rounded-2xl outline-none w-full bg-gray-100 pl-11 focus:bg-white transition-all duration-300"
+          className="rounded-2xl outline-none w-full bg-muted text-foreground placeholder:text-muted-foreground pl-11 focus:bg-card transition-all duration-300"
           type="text"
-          placeholder="Найти пиццу..."
+          placeholder={placeholder ?? 'Найти пиццу...'}
           onFocus={() => setFocused(true)}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -98,7 +99,7 @@ export const SearchInput: React.FC<Props> = ({ className }) => {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="absolute w-full bg-white rounded-xl py-2 top-12 shadow-2xl z-30 border border-gray-100 overflow-hidden"
+              className="absolute w-full bg-card text-card-foreground rounded-xl py-2 top-12 shadow-2xl z-30 border border-border overflow-hidden"
             >
               {searchQuery && products.length > 0 && (
                 <div className="max-h-[350px] overflow-y-auto">
@@ -106,7 +107,7 @@ export const SearchInput: React.FC<Props> = ({ className }) => {
                     <Link
                       onClick={() => onClickItem(product.name)}
                       key={product.id}
-                      className="flex items-center gap-3 w-full px-4 py-2 hover:bg-primary/5 transition-colors group"
+                      className="flex items-center gap-3 w-full px-4 py-2 hover:bg-muted transition-colors group"
                       href={`/product/${product.id}`}>
                       <img className="rounded-full h-10 w-10 object-cover" src={product.imageUrl} alt={product.name} />
                       <div className="flex flex-col">
@@ -119,7 +120,7 @@ export const SearchInput: React.FC<Props> = ({ className }) => {
               )}
 
               {searchQuery && products.length === 0 && (
-                <div className="px-4 py-8 text-center text-gray-400">
+                <div className="px-4 py-8 text-center text-muted-foreground">
                   <p>Ничего не найдено по запросу "{searchQuery}"</p>
                 </div>
               )}
@@ -128,7 +129,7 @@ export const SearchInput: React.FC<Props> = ({ className }) => {
                 <div>
                   {history.length > 0 && (
                     <div className="mb-4">
-                      <div className="flex items-center justify-between px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                      <div className="flex items-center justify-between px-4 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                         <span>Недавние запросы</span>
                         <button 
                           onClick={clearHistory}
@@ -141,15 +142,15 @@ export const SearchInput: React.FC<Props> = ({ className }) => {
                         <div
                           key={i}
                           onClick={() => setSearchQuery(item)}
-                          className="flex items-center justify-between gap-3 w-full px-4 py-2 hover:bg-gray-50 cursor-pointer group transition-colors"
+                          className="flex items-center justify-between gap-3 w-full px-4 py-2 hover:bg-muted cursor-pointer group transition-colors"
                         >
                           <div className="flex items-center gap-3">
-                            <Clock size={16} className="text-gray-400" />
-                            <span className="text-sm text-gray-700 group-hover:text-primary">{item}</span>
+                            <Clock size={16} className="text-muted-foreground" />
+                            <span className="text-sm text-foreground group-hover:text-primary">{item}</span>
                           </div>
-                          <X 
-                            size={14} 
-                            className="text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                          <X
+                            size={14}
+                            className="text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
                             onClick={(e) => removeHistoryItem(e, item)}
                           />
                         </div>
@@ -157,7 +158,7 @@ export const SearchInput: React.FC<Props> = ({ className }) => {
                     </div>
                   )}
 
-                  <div className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  <div className="px-4 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                     Популярное сейчас
                   </div>
                   <div className="grid grid-cols-1 gap-1 px-2">
@@ -169,12 +170,12 @@ export const SearchInput: React.FC<Props> = ({ className }) => {
                       <div
                         key={item.name}
                         onClick={() => setSearchQuery(item.name)}
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-primary/5 cursor-pointer group transition-colors"
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted cursor-pointer group transition-colors"
                       >
-                        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                           <Search size={14} />
                         </div>
-                        <span className="text-sm font-medium text-gray-700 group-hover:text-primary">{item.name}</span>
+                        <span className="text-sm font-medium text-foreground group-hover:text-primary">{item.name}</span>
                       </div>
                     ))}
                   </div>

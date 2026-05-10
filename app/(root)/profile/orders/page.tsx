@@ -17,12 +17,12 @@ const statusTranslations: Record<OrderStatus, string> = {
 };
 
 const statusColors: Record<OrderStatus, string> = {
-  PENDING: 'bg-yellow-100 text-yellow-800',
-  COOKING: 'bg-orange-100 text-orange-800',
-  READY: 'bg-blue-100 text-blue-800',
-  DELIVERING: 'bg-indigo-100 text-indigo-800',
-  SUCCEEDED: 'bg-green-100 text-green-800',
-  CANCELLED: 'bg-red-100 text-red-800',
+  PENDING: 'bg-yellow-500/15 text-yellow-800 dark:text-yellow-300',
+  COOKING: 'bg-orange-500/15 text-orange-800 dark:text-orange-300',
+  READY: 'bg-blue-500/15 text-blue-800 dark:text-blue-300',
+  DELIVERING: 'bg-indigo-500/15 text-indigo-800 dark:text-indigo-300',
+  SUCCEEDED: 'bg-green-500/15 text-green-800 dark:text-green-300',
+  CANCELLED: 'bg-red-500/15 text-red-800 dark:text-red-300',
 };
 
 export default async function UserOrdersPage() {
@@ -58,7 +58,7 @@ export default async function UserOrdersPage() {
 
       <div className="space-y-4">
         {orders.length === 0 ? (
-          <div className="text-center py-20 text-gray-500 bg-white rounded-2xl border shadow-sm">
+          <div className="text-center py-20 text-muted-foreground bg-card rounded-2xl border border-border shadow-sm">
             У вас пока нет заказов
           </div>
         ) : (
@@ -70,11 +70,11 @@ export default async function UserOrdersPage() {
             const willAutoDelete = (isCompleted || canDelete) && updatedAt < oneDayAgo;
 
             return (
-              <div key={order.id} className="bg-white p-4 md:p-6 rounded-2xl border shadow-sm hover:shadow-md transition-all">
+              <div key={order.id} className="bg-card text-card-foreground p-4 md:p-6 rounded-2xl border border-border shadow-sm hover:shadow-md transition-all">
                 <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
                   <div>
                     <div className="font-bold text-lg mb-1">Заказ #{order.id}</div>
-                    <div className="text-gray-500 text-sm">
+                    <div className="text-muted-foreground text-sm">
                       {new Date(order.createdAt).toLocaleString('ru-RU', {
                         day: 'numeric',
                         month: 'long',
@@ -97,14 +97,14 @@ export default async function UserOrdersPage() {
                           await deleteOrder(order.id);
                           revalidatePath('/profile/orders');
                         }}
-                        className="text-red-500 hover:text-red-600 hover:bg-red-50 p-2 h-auto"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10 p-2 h-auto"
                       />
                     )}
                   </div>
                 </div>
 
                 {willAutoDelete && (
-                  <div className="mt-2 text-xs text-gray-400">
+                  <div className="mt-2 text-xs text-muted-foreground">
                     Этот заказ будет автоматически удалён в ближайшее время
                   </div>
                 )}

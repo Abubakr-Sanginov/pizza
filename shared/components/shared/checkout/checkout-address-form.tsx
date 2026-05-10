@@ -44,7 +44,7 @@ export const CheckoutAddressForm: React.FC<Props> = ({ className, stores }) => {
           name="deliveryType"
           render={({ field }) => (
             <div className="flex flex-col md:flex-row gap-4 mb-5">
-              <label className="flex items-center gap-2 cursor-pointer bg-gray-100 p-3 rounded-md flex-1">
+              <label className="flex items-center gap-2 cursor-pointer bg-muted p-3 rounded-md flex-1">
                 <input
                   type="radio"
                   name="deliveryType"
@@ -55,7 +55,7 @@ export const CheckoutAddressForm: React.FC<Props> = ({ className, stores }) => {
                 />
                 <span className="font-medium text-sm md:text-base">{t('checkout.delivery')}</span>
               </label>
-              <label className="flex items-center gap-2 cursor-pointer bg-gray-100 p-3 rounded-md flex-1">
+              <label className="flex items-center gap-2 cursor-pointer bg-muted p-3 rounded-md flex-1">
                 <input
                   type="radio"
                   name="deliveryType"
@@ -116,7 +116,7 @@ export const CheckoutAddressForm: React.FC<Props> = ({ className, stores }) => {
                 onPositionChange={onMapPositionChange}
               />
               {watch('address') && (
-                <p className="mt-2 text-sm text-gray-500">{t('checkout.selectedAddress')}: {watch('address')}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{t('checkout.selectedAddress')}: {watch('address')}</p>
               )}
             </div>
           </>

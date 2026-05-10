@@ -28,7 +28,7 @@ export const CartDrawerItem: React.FC<Props> = React.memo(({
   return (
     <div
       className={cn(
-        'flex bg-white p-5 gap-6',
+        'flex glass rounded-3xl p-4 gap-5 mx-4 transition-opacity',
         {
           'opacity-50 pointer-events-none': disabled,
         },
@@ -36,21 +36,22 @@ export const CartDrawerItem: React.FC<Props> = React.memo(({
       )}>
       <CartItem.Image src={imageUrl} />
 
-      <div className="flex-1">
+      <div className="flex-1 min-w-0">
         <CartItem.Info name={name} details={details} />
 
-        <hr className="my-3" />
+        <hr className="my-3 border-border/50" />
 
         <div className="flex items-center justify-between">
           <CountButton onClick={(type) => onClickCountButton?.(id, quantity, type)} value={quantity} />
 
           <div className="flex items-center gap-3">
             <CartItem.Price value={price} />
-            <Trash2Icon
+            <button
+              type="button"
               onClick={() => onClickRemove?.(id)}
-              className="text-gray-400 cursor-pointer hover:text-gray-600"
-              size={16}
-            />
+              className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all">
+              <Trash2Icon size={16} />
+            </button>
           </div>
         </div>
       </div>

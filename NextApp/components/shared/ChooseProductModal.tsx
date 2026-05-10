@@ -6,6 +6,11 @@ import { useUserStore } from '@/store/useUserStore';
 import { useTranslation } from 'react-i18next';
 
 import { BASE_URL } from '@/constants/Api';
+import { useTheme, Theme } from '@/hooks/useTheme';
+import { gradients } from '@/constants/Colors';
+import { LinearGradient } from 'expo-linear-gradient';
+import { SpringPress, AmbientBackdrop } from '@/components/ui';
+import { BlurView } from 'expo-blur';
 
 interface Props {
   product: any;
@@ -17,6 +22,8 @@ interface Props {
 export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose, onAddToCart }) => {
   const user = useUserStore(state => state.user);
   const { t } = useTranslation();
+  const theme = useTheme();
+  const styles = useMemo(() => makeStyles(theme), [theme]);
   
   const SIZE_LABELS: Record<number, string> = {
     20: t('productModal.sizeSmall'),
@@ -139,8 +146,9 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
     <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.content}>
+          <AmbientBackdrop />
           <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-            <Ionicons name="close" size={28} color="#11181C" />
+            <Ionicons name="close" size={28} color={theme.text} />
           </TouchableOpacity>
 
           <View style={styles.tabHeader}>
@@ -231,7 +239,7 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                             style={[styles.ingredientCard, isSelected && styles.ingredientActive]}
                             onPress={() => toggleIngredient(item.id)}
                           >
-                            {isSelected && <Ionicons name="checkmark-circle" size={20} color="#ff7000" style={styles.checkIcon} />}
+                            {isSelected && <Ionicons name="checkmark-circle" size={20} color={theme.primary} style={styles.checkIcon} />}
                             <Image source={{ uri: item.imageUrl }} style={styles.ingredientImage} />
                             <Text style={styles.ingredientName}>{item.name}</Text>
                             <Text style={styles.ingredientPrice}>{item.price} TJS</Text>
@@ -261,21 +269,30 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                     <TextInput
                       style={styles.reviewInput}
                       placeholder={t('reviews.yourComment')}
+                      placeholderTextColor={theme.textSubtle}
                       multiline
                       value={comment}
                       onChangeText={setComment}
                     />
-                    <TouchableOpacity 
-                      style={[styles.submitReviewBtn, (!rating || submitting) && styles.submitReviewBtnDisabled]}
-                      onPress={submitReview}
-                      disabled={!rating || submitting}
-                    >
-                      {submitting ? (
-                        <ActivityIndicator color="white" size="small" />
+                    <SpringPress onPress={submitReview} disabled={!rating || submitting} scaleTo={0.96}>
+                      {!rating || submitting ? (
+                        <View style={[styles.submitReviewBtn, styles.submitReviewBtnDisabled]}>
+                          {submitting ? (
+                            <ActivityIndicator color="white" size="small" />
+                          ) : (
+                            <Text style={styles.submitReviewText}>{t('reviews.sendReview')}</Text>
+                          )}
+                        </View>
                       ) : (
-                        <Text style={styles.submitReviewText}>{t('reviews.sendReview')}</Text>
+                        <LinearGradient
+                          colors={(theme.mode === 'dark' ? gradients.dark : gradients.light).primary}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={styles.submitReviewBtn}>
+                          <Text style={styles.submitReviewText}>{t('reviews.sendReview')}</Text>
+                        </LinearGradient>
                       )}
-                    </TouchableOpacity>
+                    </SpringPress>
                   </View>
                 ) : (
                   <View style={styles.loginToReview}>
@@ -336,7 +353,7 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                             );
                           }}
                         >
-                          <Ionicons name="trash-outline" size={16} color="#ff4d4f" />
+                          <Ionicons name="trash-outline" size={16} color={theme.danger} />
                           <Text style={styles.deleteReviewText}>{t('reviews.delete')}</Text>
                         </TouchableOpacity>
                       )}
@@ -344,7 +361,7 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                   ))
                 ) : (
                   <View style={styles.emptyReviews}>
-                    <Ionicons name="chatbox-outline" size={60} color="#9BA1A6" />
+                    <Ionicons name="chatbox-outline" size={60} color={theme.textSubtle} />
                     <Text style={styles.emptyReviewsText}>{t('reviews.empty')}</Text>
                   </View>
                 )}
@@ -354,6 +371,24 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
 
           {tab === 'details' && (
             <View style={styles.footer}>
+              <BlurView
+                intensity={95}
+                tint={theme.mode === 'dark' ? 'dark' : 'light'}
+                experimentalBlurMethod="dimezisBlurView"
+                style={[StyleSheet.absoluteFill, {
+                  backgroundColor: theme.mode === 'dark' ? 'rgba(36,30,26,0.4)' : 'rgba(255,255,255,0.45)',
+                }]}
+              />
+              <LinearGradient
+                pointerEvents="none"
+                colors={[
+                  theme.mode === 'dark' ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.5)',
+                  'transparent',
+                ]}
+                start={{ x: 0.5, y: 0 }}
+                end={{ x: 0.5, y: 0.4 }}
+                style={[StyleSheet.absoluteFillObject, { borderTopLeftRadius: 40, borderTopRightRadius: 40 }]}
+              />
               <View style={styles.priceContainer}>
                 {currentItem?.priceOld && (
                   <Text style={styles.totalPriceOld}>
@@ -362,9 +397,15 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                 )}
                 <Text style={styles.totalPriceText}>{t('productModal.total')}: {totalPrice} TJS</Text>
               </View>
-              <TouchableOpacity style={styles.addBtn} onPress={handleAdd}>
-                <Text style={styles.addBtnText}>{t('productModal.addToCart')}</Text>
-              </TouchableOpacity>
+              <SpringPress onPress={handleAdd} scaleTo={0.96}>
+                <LinearGradient
+                  colors={(theme.mode === 'dark' ? gradients.dark : gradients.light).primary}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.addBtn}>
+                  <Text style={styles.addBtnText}>{t('productModal.addToCart')}</Text>
+                </LinearGradient>
+              </SpringPress>
             </View>
           )}
         </View>
@@ -373,170 +414,75 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
   );
 };
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'flex-end',
-  },
+const makeStyles = (t: Theme) => StyleSheet.create({
+  overlay: { flex: 1, backgroundColor: t.overlay, justifyContent: 'flex-end' },
   content: {
-    backgroundColor: '#fdf7f2',
     borderTopLeftRadius: 45,
     borderTopRightRadius: 45,
     height: '92%',
     paddingTop: 10,
+    overflow: 'hidden',
   },
   closeBtn: {
     position: 'absolute',
     top: 25,
     right: 25,
     zIndex: 10,
-    backgroundColor: 'white',
+    backgroundColor: t.surface,
     width: 44,
     height: 44,
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
+    shadowColor: t.shadow,
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 5,
   },
-  tabHeader: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 20,
-    marginTop: 15,
-    marginBottom: 10,
-  },
-  tabBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 15,
-  },
-  tabBtnActive: {
-    backgroundColor: '#fff7f0',
-  },
-  tabText: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#687076',
-  },
-  tabTextActive: {
-    color: '#ff7000',
-  },
-  scroll: {
-    padding: 20,
-    paddingBottom: 220,
-  },
-  imageContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 280,
-    marginTop: 0,
-  },
-  image: {
-    width: 260,
-    height: 260,
-    resizeMode: 'contain',
-  },
-  name: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: '#11181C',
-    textAlign: 'center',
-    marginTop: 15,
-  },
-  selectors: {
-    marginTop: 25,
-    gap: 12,
-  },
-  selectorRow: {
-    flexDirection: 'row',
-    backgroundColor: '#f3f4f6',
-    borderRadius: 20,
-    padding: 4,
-  },
-  selectorBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderRadius: 16,
-  },
+  tabHeader: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 15, marginBottom: 10 },
+  tabBtn: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 15 },
+  tabBtnActive: { backgroundColor: t.primarySoft },
+  tabText: { fontSize: 16, fontWeight: '800', color: t.textMuted },
+  tabTextActive: { color: t.primary },
+  scroll: { padding: 20, paddingBottom: 220 },
+  imageContainer: { alignItems: 'center', justifyContent: 'center', height: 280, marginTop: 0 },
+  image: { width: 260, height: 260, resizeMode: 'contain' },
+  name: { fontSize: 28, fontWeight: '900', color: t.text, textAlign: 'center', marginTop: 15 },
+  selectors: { marginTop: 25, gap: 12 },
+  selectorRow: { flexDirection: 'row', backgroundColor: t.surfaceMuted, borderRadius: 20, padding: 4 },
+  selectorBtn: { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: 16 },
   selectorBtnActive: {
-    backgroundColor: 'white',
-    shadowColor: '#000',
+    backgroundColor: t.surface,
+    shadowColor: t.shadow,
     shadowOpacity: 0.05,
     shadowRadius: 5,
     elevation: 2,
   },
-  selectorBtnDisabled: {
-    opacity: 0.25,
-  },
-  selectorText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#687076',
-  },
-  selectorTextActive: {
-    color: '#11181C',
-  },
-  selectorTextDisabled: {
-    color: '#9BA1A6',
-  },
-  ingredientsSection: {
-    marginTop: 30,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: '#11181C',
-    marginBottom: 15,
-  },
-  ingredientsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
+  selectorBtnDisabled: { opacity: 0.25 },
+  selectorText: { fontSize: 14, fontWeight: '800', color: t.textMuted },
+  selectorTextActive: { color: t.text },
+  selectorTextDisabled: { color: t.textSubtle },
+  ingredientsSection: { marginTop: 30 },
+  sectionTitle: { fontSize: 20, fontWeight: '900', color: t.text, marginBottom: 15 },
+  ingredientsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   ingredientCard: {
     width: (Dimensions.get('window').width - 60) / 3,
-    backgroundColor: 'white',
+    backgroundColor: t.surface,
     borderRadius: 25,
     padding: 12,
     alignItems: 'center',
     borderWidth: 2,
     borderColor: 'transparent',
-    shadowColor: '#ff7000',
-    shadowOpacity: 0.03,
+    shadowColor: t.shadow,
+    shadowOpacity: t.mode === 'dark' ? 0.3 : 0.03,
     shadowRadius: 10,
     elevation: 2,
   },
-  ingredientActive: {
-    borderColor: '#ff7000',
-  },
-  checkIcon: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-  },
-  ingredientImage: {
-    width: 60,
-    height: 60,
-    resizeMode: 'contain',
-  },
-  ingredientName: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#11181C',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  ingredientPrice: {
-    fontSize: 13,
-    fontWeight: '900',
-    color: '#11181C',
-    marginTop: 2,
-  },
+  ingredientActive: { borderColor: t.primary },
+  checkIcon: { position: 'absolute', top: 8, right: 8 },
+  ingredientImage: { width: 60, height: 60, resizeMode: 'contain' },
+  ingredientName: { fontSize: 12, fontWeight: '700', color: t.text, marginTop: 8, textAlign: 'center' },
+  ingredientPrice: { fontSize: 13, fontWeight: '900', color: t.text, marginTop: 2 },
   footer: {
     position: 'absolute',
     bottom: 0,
@@ -544,187 +490,111 @@ const styles = StyleSheet.create({
     right: 0,
     padding: 25,
     paddingBottom: Platform.OS === 'ios' ? 45 : 25,
-    backgroundColor: 'white',
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 20,
-    elevation: 10,
+    overflow: 'hidden',
+    shadowColor: t.mode === 'dark' ? '#000' : t.primary,
+    shadowOffset: { width: 0, height: -12 },
+    shadowOpacity: t.mode === 'dark' ? 0.45 : 0.1,
+    shadowRadius: 24,
+    elevation: 14,
   },
-  priceContainer: {
-    marginBottom: 15,
-    alignItems: 'center',
-  },
-  totalPriceOld: {
-    fontSize: 14,
-    color: '#9BA1A6',
-    textDecorationLine: 'line-through',
-    marginBottom: 2,
-  },
-  totalPriceText: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: '#11181C',
-  },
+  priceContainer: { marginBottom: 15, alignItems: 'center' },
+  totalPriceOld: { fontSize: 14, color: t.textSubtle, textDecorationLine: 'line-through', marginBottom: 2 },
+  totalPriceText: { fontSize: 20, fontWeight: '900', color: t.text },
   addBtn: {
-    backgroundColor: '#ff7000',
     height: 60,
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#ff7000',
-    shadowOpacity: 0.3,
-    shadowRadius: 15,
-    elevation: 8,
+    shadowColor: t.primary,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.45,
+    shadowRadius: 20,
+    elevation: 10,
   },
-  addBtnText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '900',
-  },
-  reviewsList: {
-    gap: 15,
-  },
+  addBtnText: { color: '#fff', fontSize: 18, fontWeight: '900', letterSpacing: 0.3 },
+  reviewsList: { gap: 15 },
   reviewCard: {
-    backgroundColor: 'white',
+    backgroundColor: t.surface,
     borderRadius: 25,
     padding: 15,
-    shadowColor: '#000',
-    shadowOpacity: 0.02,
+    shadowColor: t.shadow,
+    shadowOpacity: t.mode === 'dark' ? 0.3 : 0.02,
     shadowRadius: 10,
     elevation: 2,
   },
-  reviewHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
+  reviewHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   userAvatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#fff7f0',
+    backgroundColor: t.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#ff7000',
+    borderColor: t.primary,
   },
-  avatarText: {
-    color: '#ff7000',
-    fontWeight: '900',
-    fontSize: 16,
-  },
-  reviewMeta: {
-    flex: 1,
-    marginLeft: 10,
-  },
-  userName: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#11181C',
-  },
-  starRow: {
-    flexDirection: 'row',
-    gap: 2,
-    marginTop: 2,
-  },
-  reviewDate: {
-    fontSize: 11,
-    color: '#9BA1A6',
-  },
-  reviewText: {
-    fontSize: 14,
-    color: '#11181C',
-    lineHeight: 20,
-  },
+  avatarText: { color: t.primary, fontWeight: '900', fontSize: 16 },
+  reviewMeta: { flex: 1, marginLeft: 10 },
+  userName: { fontSize: 14, fontWeight: '800', color: t.text },
+  starRow: { flexDirection: 'row', gap: 2, marginTop: 2 },
+  reviewDate: { fontSize: 11, color: t.textSubtle },
+  reviewText: { fontSize: 14, color: t.text, lineHeight: 20 },
   addReviewForm: {
-    backgroundColor: 'white',
+    backgroundColor: t.surface,
     borderRadius: 25,
     padding: 20,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
+    shadowColor: t.shadow,
+    shadowOpacity: t.mode === 'dark' ? 0.3 : 0.05,
     shadowRadius: 10,
     elevation: 2,
   },
-  addReviewTitle: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#11181C',
-    marginBottom: 10,
-  },
-  starRowBig: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 15,
-  },
+  addReviewTitle: { fontSize: 18, fontWeight: '900', color: t.text, marginBottom: 10 },
+  starRowBig: { flexDirection: 'row', gap: 8, marginBottom: 15 },
   reviewInput: {
-    backgroundColor: '#f3f4f6',
+    backgroundColor: t.surfaceMuted,
     borderRadius: 15,
     padding: 15,
     minHeight: 100,
     fontSize: 14,
-    color: '#11181C',
+    color: t.text,
     textAlignVertical: 'top',
     marginBottom: 15,
   },
   submitReviewBtn: {
-    backgroundColor: '#ff7000',
+    backgroundColor: t.primary,
     borderRadius: 15,
     height: 50,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  submitReviewBtnDisabled: {
-    backgroundColor: '#9BA1A6',
-  },
-  submitReviewText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '900',
-  },
+  submitReviewBtnDisabled: { backgroundColor: t.textSubtle },
+  submitReviewText: { color: t.primaryContrast, fontSize: 16, fontWeight: '900' },
   loginToReview: {
     padding: 20,
-    backgroundColor: '#fff7f0',
+    backgroundColor: t.primarySoft,
     borderRadius: 25,
     marginBottom: 20,
     alignItems: 'center',
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: '#ff7000',
+    borderColor: t.primary,
   },
-  loginToReviewText: {
-    color: '#ff7000',
-    fontWeight: '700',
-  },
+  loginToReviewText: { color: t.primary, fontWeight: '700' },
   deleteReviewBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     marginTop: 10,
     alignSelf: 'flex-start',
-    backgroundColor: '#fff1f0',
+    backgroundColor: t.mode === 'dark' ? 'rgba(248,113,113,0.15)' : '#fff1f0',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 8,
   },
-  deleteReviewText: {
-    color: '#ff4d4f',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  emptyReviews: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 50,
-    gap: 15,
-  },
-  emptyReviewsText: {
-    fontSize: 14,
-    color: '#9BA1A6',
-    textAlign: 'center',
-    lineHeight: 20,
-    paddingHorizontal: 40,
-  },
+  deleteReviewText: { color: t.danger, fontSize: 12, fontWeight: '700' },
+  emptyReviews: { alignItems: 'center', justifyContent: 'center', paddingVertical: 50, gap: 15 },
+  emptyReviewsText: { fontSize: 14, color: t.textSubtle, textAlign: 'center', lineHeight: 20, paddingHorizontal: 40 },
 });

@@ -1,14 +1,18 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, RefreshControl, ActivityIndicator, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { View, Text, StyleSheet, FlatList, Image, RefreshControl, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 import { API_URL } from '@/constants/Api';
+import { useTheme, Theme } from '@/hooks/useTheme';
+import { AmbientBackdrop } from '@/components/ui';
 
 export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const theme = useTheme();
+  const styles = useMemo(() => makeStyles(theme), [theme]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -47,11 +51,11 @@ export default function NotificationsScreen() {
           })}
         </Text>
       </View>
-      
+
       {item.imageUrl && (
         <Image source={{ uri: item.imageUrl }} style={styles.image} />
       )}
-      
+
       <Text style={styles.body}>{item.body}</Text>
     </View>
   );
@@ -59,13 +63,14 @@ export default function NotificationsScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#ff7000" />
+        <ActivityIndicator size="large" color={theme.primary} />
       </View>
     );
   }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <AmbientBackdrop />
       <View style={styles.fixedHeader}>
         <Text style={styles.headerTitle}>{t('tabs.notifications')}</Text>
       </View>
@@ -76,11 +81,11 @@ export default function NotificationsScreen() {
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.list}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#ff7000']} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="notifications-off-outline" size={64} color="#ccc" />
+            <Ionicons name="notifications-off-outline" size={64} color={theme.textSubtle} />
             <Text style={styles.emptyText}>У вас пока нет уведомлений</Text>
           </View>
         }
@@ -89,41 +94,42 @@ export default function NotificationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (t: Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fdf7f2',
   },
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fdf7f2',
+    backgroundColor: t.background,
   },
   fixedHeader: {
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,112,0,0.05)',
+    paddingHorizontal: 22,
+    paddingVertical: 18,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: '900',
-    color: '#11181C',
+    color: t.text,
+    letterSpacing: -1,
   },
   list: {
     padding: 16,
     paddingBottom: 120,
   },
   notificationCard: {
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
+    backgroundColor: t.surface,
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 14,
+    shadowColor: t.mode === 'dark' ? '#000' : t.primary,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: t.mode === 'dark' ? 0.35 : 0.06,
+    shadowRadius: 18,
+    elevation: 3,
+    borderWidth: t.mode === 'dark' ? StyleSheet.hairlineWidth : 0,
+    borderColor: t.border,
   },
   header: {
     flexDirection: 'row',
@@ -134,17 +140,17 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#11181C',
+    color: t.text,
     flex: 1,
     marginRight: 10,
   },
   date: {
     fontSize: 12,
-    color: '#9BA1A6',
+    color: t.textSubtle,
   },
   body: {
     fontSize: 14,
-    color: '#687076',
+    color: t.textMuted,
     lineHeight: 20,
   },
   image: {
@@ -162,7 +168,7 @@ const styles = StyleSheet.create({
   emptyText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#9BA1A6',
+    color: t.textSubtle,
     fontWeight: '600',
   },
 });

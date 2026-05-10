@@ -36,7 +36,7 @@ export const RecentOrders: React.FC<Props> = async ({ className }) => {
           return (
             <div 
               key={order.id} 
-              className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 animate-in fade-in slide-in-from-right-5 duration-500"
+              className="bg-card text-card-foreground p-3 rounded-xl border border-border shadow-sm flex items-center gap-3 animate-in fade-in slide-in-from-right-5 duration-500"
               style={{ animationDelay: `${i * 100}ms` }}
             >
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
@@ -46,7 +46,7 @@ export const RecentOrders: React.FC<Props> = async ({ className }) => {
                 <span className="text-sm font-medium truncate">
                   {order.fullName.split(' ')[0]} купил {firstItem.productItem.product.name}
                 </span>
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-muted-foreground">
                   {new Date(order.createdAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>

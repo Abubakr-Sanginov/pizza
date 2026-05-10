@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,6 +6,10 @@ import { useUserStore } from '@/store/useUserStore';
 import { useTranslation } from 'react-i18next';
 
 import { BASE_URL } from '@/constants/Api';
+import { useTheme, Theme } from '@/hooks/useTheme';
+import { gradients } from '@/constants/Colors';
+import { LinearGradient } from 'expo-linear-gradient';
+import { SpringPress, AmbientBackdrop } from '@/components/ui';
 
 export default function CourierScreen() {
   const insets = useSafeAreaInsets();
@@ -14,6 +18,8 @@ export default function CourierScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const { t } = useTranslation();
+  const theme = useTheme();
+  const styles = useMemo(() => makeStyles(theme), [theme]);
 
   const fetchOrders = async () => {
     if (!user) return;
@@ -43,7 +49,7 @@ export default function CourierScreen() {
       const res = await fetch(`${BASE_URL}/api/orders/${orderId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, userId: user.id })
+        body: JSON.stringify({ status, userId: user?.id })
       });
       
       if (res.ok) {
@@ -60,13 +66,14 @@ export default function CourierScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#ff7000" />
+        <ActivityIndicator size="large" color={theme.primary} />
       </View>
     );
   }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <AmbientBackdrop />
       <View style={styles.header}>
         <Text style={styles.title}>{t('courier.title')}</Text>
         <Text style={styles.subtitle}>{t('courier.subtitle')}</Text>
@@ -74,27 +81,27 @@ export default function CourierScreen() {
 
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#ff7000']} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />}
       >
         {orders.length > 0 ? (
           orders.map((order) => (
             <View key={order.id} style={styles.orderCard}>
               <View style={styles.orderHeader}>
                 <Text style={styles.orderId}>{t('courier.order')} #{order.id}</Text>
-                <View style={[styles.statusBadge, { backgroundColor: order.status === 'READY' ? '#e6f7ff' : '#f6ffed' }]}>
-                  <Text style={[styles.statusText, { color: order.status === 'READY' ? '#1890ff' : '#52c41a' }]}>
+                <View style={[styles.statusBadge, { backgroundColor: order.status === 'READY' ? (theme.mode === 'dark' ? 'rgba(96,165,250,0.18)' : '#e6f7ff') : (theme.mode === 'dark' ? 'rgba(74,222,128,0.18)' : '#f6ffed') }]}>
+                  <Text style={[styles.statusText, { color: order.status === 'READY' ? (theme.mode === 'dark' ? '#60a5fa' : '#1890ff') : theme.success }]}>
                     {order.status === 'READY' ? t('courier.ready') : t('courier.delivering')}
                   </Text>
                 </View>
               </View>
 
               <View style={styles.infoRow}>
-                <Ionicons name="location-outline" size={16} color="#687076" />
+                <Ionicons name="location-outline" size={16} color={theme.textMuted} />
                 <Text style={styles.infoText}>{order.address}</Text>
               </View>
 
               <View style={styles.infoRow}>
-                <Ionicons name="call-outline" size={16} color="#687076" />
+                <Ionicons name="call-outline" size={16} color={theme.textMuted} />
                 <Text style={styles.infoText}>{order.phone}</Text>
               </View>
 
@@ -105,21 +112,27 @@ export default function CourierScreen() {
 
               <View style={styles.actions}>
                 {order.status === 'READY' ? (
-                  <TouchableOpacity 
-                    style={styles.actionBtn} 
-                    onPress={() => updateStatus(order.id, 'DELIVERING')}
-                  >
-                    <Ionicons name="bicycle" size={20} color="white" />
-                    <Text style={styles.actionBtnText}>{t('courier.takeOrder')}</Text>
-                  </TouchableOpacity>
+                  <SpringPress onPress={() => updateStatus(order.id, 'DELIVERING')} scaleTo={0.96}>
+                    <LinearGradient
+                      colors={(theme.mode === 'dark' ? gradients.dark : gradients.light).primary}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.actionBtn}>
+                      <Ionicons name="bicycle" size={20} color="white" />
+                      <Text style={styles.actionBtnText}>{t('courier.takeOrder')}</Text>
+                    </LinearGradient>
+                  </SpringPress>
                 ) : (
-                  <TouchableOpacity 
-                    style={[styles.actionBtn, { backgroundColor: '#52c41a' }]} 
-                    onPress={() => updateStatus(order.id, 'SUCCEEDED')}
-                  >
-                    <Ionicons name="checkmark-done" size={20} color="white" />
-                    <Text style={styles.actionBtnText}>{t('courier.delivered')}</Text>
-                  </TouchableOpacity>
+                  <SpringPress onPress={() => updateStatus(order.id, 'SUCCEEDED')} scaleTo={0.96}>
+                    <LinearGradient
+                      colors={['#22c55e', '#16a34a'] as const}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.actionBtn}>
+                      <Ionicons name="checkmark-done" size={20} color="white" />
+                      <Text style={styles.actionBtnText}>{t('courier.delivered')}</Text>
+                    </LinearGradient>
+                  </SpringPress>
                 )}
 
                 <TouchableOpacity 
@@ -146,7 +159,7 @@ export default function CourierScreen() {
           ))
         ) : (
           <View style={styles.empty}>
-            <Ionicons name="cafe-outline" size={64} color="#9BA1A6" />
+            <Ionicons name="cafe-outline" size={64} color={theme.textSubtle} />
             <Text style={styles.emptyText}>{t('courier.empty')}</Text>
           </View>
         )}
@@ -155,81 +168,44 @@ export default function CourierScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fdf7f2',
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+const makeStyles = (t: Theme) => StyleSheet.create({
+  container: { flex: 1 },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
-    padding: 20,
-    backgroundColor: 'white',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
+    padding: 24,
+    backgroundColor: t.surface,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    shadowColor: t.mode === 'dark' ? '#000' : t.primary,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: t.mode === 'dark' ? 0.4 : 0.08,
+    shadowRadius: 18,
+    elevation: 4,
+    borderBottomWidth: t.mode === 'dark' ? StyleSheet.hairlineWidth : 0,
+    borderColor: t.border,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: '#11181C',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#687076',
-    marginTop: 4,
-  },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 120,
-  },
+  title: { fontSize: 30, fontWeight: '900', color: t.text, letterSpacing: -0.8 },
+  subtitle: { fontSize: 14, color: t.textMuted, marginTop: 4 },
+  scrollContent: { padding: 20, paddingBottom: 120 },
   orderCard: {
-    backgroundColor: 'white',
-    borderRadius: 25,
-    padding: 20,
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
+    backgroundColor: t.surface,
+    borderRadius: 26,
+    padding: 22,
+    marginBottom: 14,
+    shadowColor: t.mode === 'dark' ? '#000' : t.primary,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: t.mode === 'dark' ? 0.4 : 0.06,
+    shadowRadius: 20,
+    elevation: 3,
+    borderWidth: t.mode === 'dark' ? StyleSheet.hairlineWidth : 0,
+    borderColor: t.border,
   },
-  orderHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  orderId: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#11181C',
-  },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 8,
-  },
-  infoText: {
-    fontSize: 14,
-    color: '#11181C',
-    flex: 1,
-  },
+  orderHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
+  orderId: { fontSize: 18, fontWeight: '800', color: t.text },
+  statusBadge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 10 },
+  statusText: { fontSize: 12, fontWeight: '800' },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
+  infoText: { fontSize: 14, color: t.text, flex: 1 },
   priceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -237,53 +213,28 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#f3f4f6',
+    borderTopColor: t.borderMuted,
   },
-  priceLabel: {
-    fontSize: 14,
-    color: '#687076',
-  },
-  priceValue: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#ff7000',
-  },
-  actions: {
-    marginTop: 20,
-  },
+  priceLabel: { fontSize: 14, color: t.textMuted },
+  priceValue: { fontSize: 18, fontWeight: '900', color: t.primary },
+  actions: { marginTop: 20 },
   actionBtn: {
-    backgroundColor: '#ff7000',
-    height: 50,
-    borderRadius: 15,
+    height: 54,
+    borderRadius: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
+    paddingHorizontal: 18,
+    shadowColor: t.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    elevation: 4,
   },
-  actionBtnText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  cancelBtn: {
-    marginTop: 10,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelBtnText: {
-    color: '#ff4d4f',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  empty: {
-    alignItems: 'center',
-    marginTop: 100,
-    gap: 15,
-  },
-  emptyText: {
-    color: '#9BA1A6',
-    fontSize: 16,
-    fontWeight: '700',
-  },
+  actionBtnText: { color: '#fff', fontSize: 16, fontWeight: '900', letterSpacing: 0.3 },
+  cancelBtn: { marginTop: 10, height: 40, alignItems: 'center', justifyContent: 'center' },
+  cancelBtnText: { color: t.danger, fontSize: 14, fontWeight: '600' },
+  empty: { alignItems: 'center', marginTop: 100, gap: 15 },
+  emptyText: { color: t.textSubtle, fontSize: 16, fontWeight: '700' },
 });

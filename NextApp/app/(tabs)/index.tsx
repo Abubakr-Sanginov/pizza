@@ -1,11 +1,16 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, RefreshControl, ActivityIndicator, TextInput, Modal, Dimensions, Animated, SectionList } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, RefreshControl, ActivityIndicator, TextInput, Modal, Dimensions, Animated, SectionList, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useCartStore } from '@/store/useCartStore';
 import { ChooseProductModal } from '@/components/shared/ChooseProductModal';
 import { useTranslation } from 'react-i18next';
 import { BASE_URL } from '@/constants/Api';
+import { useTheme, Theme } from '@/hooks/useTheme';
+import { gradients, motion } from '@/constants/Colors';
+import { SpringPress, LiquidGlassCard, LiquidGlassPill, AmbientBackdrop, ShimmerProductCard, Shimmer } from '@/components/ui';
 const { width, height } = Dimensions.get('window');
 
 export default function MenuScreen() {
@@ -29,6 +34,10 @@ export default function MenuScreen() {
   const storyProgress = useRef(new Animated.Value(0)).current;
 
   const { t, i18n } = useTranslation();
+  const cartItems = useCartStore(state => state.items);
+  const theme = useTheme();
+  const styles = useMemo(() => makeStyles(theme), [theme]);
+  const router = useRouter();
 
   const fetchData = async () => {
     try {
@@ -147,80 +156,145 @@ export default function MenuScreen() {
     const hasDiscount = item.items[0]?.priceOld && item.items[0].priceOld > item.items[0]?.price;
     const discountPercent = hasDiscount ? Math.round((1 - item.items[0].price / item.items[0].priceOld) * 100) : 0;
 
+    const productItemIds = new Set(item.items.map((it: any) => it.id));
+    const cartQuantityForProduct = cartItems
+      .filter((ci: any) => productItemIds.has(ci.productItemId ?? ci.productItem?.id))
+      .reduce((sum: number, ci: any) => sum + ci.quantity, 0);
+    const inCart = cartQuantityForProduct > 0;
+
+    const goToCart = (e: any) => {
+      e?.stopPropagation?.();
+      router.push('/two');
+    };
+
+    const grad = theme.mode === 'dark' ? gradients.dark : gradients.light;
+
     return (
-    <TouchableOpacity 
-      style={styles.productCard} 
-      activeOpacity={0.7}
-      onPress={() => handleProductPress(item)}
-    >
-      <View style={{ position: 'relative' }}>
-        <Image source={{ uri: item.imageUrl }} style={styles.productImage} />
-        {hasDiscount && (
-          <View style={styles.discountBadge}>
-            <Text style={styles.discountBadgeText}>-{discountPercent}%</Text>
+      <SpringPress onPress={() => handleProductPress(item)} scaleTo={0.97} style={styles.productCardWrap}>
+        <LiquidGlassCard rounded={28} shadow="md">
+          <View style={styles.productCard}>
+            <View style={styles.productImageWrap}>
+              <LinearGradient
+                colors={grad.surface}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <Image source={{ uri: item.imageUrl }} style={styles.productImage} />
+              {hasDiscount && (
+                <View style={styles.discountBadge}>
+                  <Text style={styles.discountBadgeText}>-{discountPercent}%</Text>
+                </View>
+              )}
+              {inCart && (
+                <View style={styles.cartBadge}>
+                  <Ionicons name="cart" size={12} color="white" />
+                  <Text style={styles.cartBadgeText}>{cartQuantityForProduct}</Text>
+                </View>
+              )}
+            </View>
+            <View style={styles.productInfo}>
+              <Text style={styles.productName}>{item.name}</Text>
+              <Text style={styles.productDescription} numberOfLines={2}>
+                {item.ingredients.map((i: any) => i.name).join(', ')}
+              </Text>
+              <View style={styles.productFooter}>
+                <View>
+                  {hasDiscount && (
+                    <Text style={styles.productPriceOld}>{item.items[0].priceOld} TJS</Text>
+                  )}
+                  <Text style={styles.productPrice}>
+                    {t('menu.from')} <Text style={styles.productPriceAmount}>{item.items[0]?.price}</Text> TJS
+                  </Text>
+                </View>
+                {inCart ? (
+                  <Pressable onPress={goToCart} style={styles.toCartBtnWrap}>
+                    <LinearGradient
+                      colors={grad.primary}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.toCartBtn}>
+                      <Ionicons name="cart" size={16} color="#fff" />
+                      <Text style={styles.toCartBtnText}>{t('menu.toCart')}</Text>
+                    </LinearGradient>
+                  </Pressable>
+                ) : (
+                  <View style={styles.addBtn}>
+                    <Ionicons name="add" size={20} color={theme.primary} />
+                  </View>
+                )}
+              </View>
+            </View>
           </View>
-        )}
-      </View>
-      <View style={styles.productInfo}>
-        <Text style={styles.productName}>{item.name}</Text>
-        <Text style={styles.productDescription}>
-          {item.ingredients.map((i: any) => i.name).join(', ')}
-        </Text>
-        <View style={styles.productFooter}>
-          <View>
-            {hasDiscount && (
-              <Text style={styles.productPriceOld}>{item.items[0].priceOld} TJS</Text>
-            )}
-            <Text style={styles.productPrice}>{t('menu.from')} {item.items[0]?.price} TJS</Text>
-          </View>
-          <View style={styles.addBtn}>
-            <Ionicons name="add" size={20} color="#ff7000" />
-          </View>
-        </View>
-      </View>
-    </TouchableOpacity>
+        </LiquidGlassCard>
+      </SpringPress>
     );
   };
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#ff7000" />
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <AmbientBackdrop />
+        <View style={[styles.fixedHeader, { paddingHorizontal: 22, paddingBottom: 12 }]}>
+          <Shimmer width={140} height={36} rounded={12} style={{ marginBottom: 18 }} />
+          <Shimmer width="100%" height={52} rounded={22} style={{ marginBottom: 16 }} />
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <Shimmer width={90} height={40} rounded={18} />
+            <Shimmer width={110} height={40} rounded={18} />
+            <Shimmer width={100} height={40} rounded={18} />
+          </View>
+        </View>
+        <View style={{ paddingHorizontal: 16, marginTop: 24 }}>
+          {[0, 1, 2, 3].map((i) => (
+            <ShimmerProductCard key={i} />
+          ))}
+        </View>
       </View>
     );
   }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <AmbientBackdrop />
       <View style={styles.fixedHeader}>
         <View style={styles.headerTop}>
-          <View>
-            <Text style={styles.headerTitle}>NEXT PIZZA</Text>
-            <Text style={styles.headerSubtitle}>{t('header.slogan')}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.headerKicker}>{t('header.slogan')}</Text>
+            <Text style={styles.headerTitle}>Next Pizza</Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 10 }}>
-            <TouchableOpacity style={styles.profileBtn} onPress={toggleLanguage}>
-              <Text style={{ fontWeight: '900', fontSize: 14, color: '#ff7000' }}>
-                {i18n.language.toUpperCase()}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.profileBtn}>
-              <Ionicons name="person-outline" size={24} color="#11181C" />
-            </TouchableOpacity>
+            <SpringPress onPress={toggleLanguage} scaleTo={0.9}>
+              <LiquidGlassCard rounded={22} shadow="sm" style={styles.profileBtnWrap}>
+                <View style={styles.profileBtn}>
+                  <Text style={{ fontWeight: '900', fontSize: 13, color: theme.primary }}>
+                    {i18n.language.toUpperCase()}
+                  </Text>
+                </View>
+              </LiquidGlassCard>
+            </SpringPress>
+            <SpringPress scaleTo={0.9}>
+              <LiquidGlassCard rounded={22} shadow="sm" style={styles.profileBtnWrap}>
+                <View style={styles.profileBtn}>
+                  <Ionicons name="person-outline" size={22} color={theme.text} />
+                </View>
+              </LiquidGlassCard>
+            </SpringPress>
           </View>
         </View>
 
-        <View style={styles.searchContainer}>
-          <Ionicons name="search-outline" size={20} color="#9BA1A6" style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder={t('header.searchPlaceholder')}
-            placeholderTextColor="#9BA1A6"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            clearButtonMode="while-editing"
-          />
-        </View>
+        <LiquidGlassCard rounded={22} shadow="sm" style={styles.searchContainer}>
+          <View style={styles.searchInner}>
+            <Ionicons name="search-outline" size={20} color={theme.textSubtle} style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder={t('header.searchPlaceholder')}
+              placeholderTextColor={theme.textSubtle}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              clearButtonMode="while-editing"
+            />
+          </View>
+        </LiquidGlassCard>
 
         {!searchQuery && (
           <View style={styles.stickyCategories}>
@@ -237,16 +311,29 @@ export default function MenuScreen() {
                   const translationKey = categoryMapping[cat.name] || cat.name;
                   translatedName = translationKey.includes('.') ? t(translationKey) : cat.name;
                 }
+                const isActive = activeCategory === cat.id;
+                const grad = theme.mode === 'dark' ? gradients.dark : gradients.light;
                 return (
-                  <TouchableOpacity
+                  <SpringPress
                     key={cat.id}
                     onPress={() => handleCategoryPress(cat.id, index)}
-                    style={[styles.categoryBtn, activeCategory === cat.id && styles.categoryBtnActive]}
-                  >
-                    <Text style={[styles.categoryText, activeCategory === cat.id && styles.categoryTextActive]}>
-                      {translatedName}
-                    </Text>
-                  </TouchableOpacity>
+                    scaleTo={0.94}>
+                    {isActive ? (
+                      <LinearGradient
+                        colors={grad.primary}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={[styles.categoryBtn, styles.categoryBtnActive]}>
+                        <Text style={[styles.categoryText, styles.categoryTextActive]}>
+                          {translatedName}
+                        </Text>
+                      </LinearGradient>
+                    ) : (
+                      <View style={styles.categoryBtn}>
+                        <Text style={styles.categoryText}>{translatedName}</Text>
+                      </View>
+                    )}
+                  </SpringPress>
                 );
               })}
             </ScrollView>
@@ -297,7 +384,7 @@ export default function MenuScreen() {
         renderItem={renderProduct}
         contentContainerStyle={styles.menuList}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#ff7000']} tintColor="#ff7000" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />
         }
       />
 
@@ -333,67 +420,60 @@ export default function MenuScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (t: Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fdf7f2',
   },
   fixedHeader: {
-    backgroundColor: '#fdf7f2',
     zIndex: 100,
-    paddingTop: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,112,0,0.05)',
+    paddingTop: 14,
+    paddingBottom: 4,
   },
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fdf7f2',
+    backgroundColor: t.background,
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15,
-    paddingHorizontal: 20,
+    marginBottom: 18,
+    paddingHorizontal: 22,
+  },
+  headerKicker: {
+    fontSize: 11,
+    color: t.textMuted,
+    fontWeight: '700',
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: '900',
-    color: '#11181C',
-    letterSpacing: 1,
+    color: t.text,
+    letterSpacing: -1.2,
+    marginTop: 2,
   },
-  headerSubtitle: {
-    fontSize: 12,
-    color: '#687076',
-    marginTop: -2,
+  profileBtnWrap: {
+    overflow: 'hidden',
   },
   profileBtn: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: 'white',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
   },
   searchContainer: {
+    marginHorizontal: 22,
+    marginBottom: 16,
+  },
+  searchInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    height: 50,
-    marginHorizontal: 20,
-    marginBottom: 15,
-    shadowColor: '#ff7000',
-    shadowOpacity: 0.05,
-    shadowRadius: 15,
-    elevation: 3,
+    paddingHorizontal: 16,
+    height: 52,
   },
   searchIcon: {
     marginRight: 10,
@@ -401,35 +481,42 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#11181C',
+    color: t.text,
     fontWeight: '600',
   },
   stickyCategories: {
     paddingBottom: 15,
   },
   categoriesScroll: {
-    paddingHorizontal: 15,
+    paddingHorizontal: 18,
     gap: 8,
   },
   categoryBtn: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 18,
     paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: 'white',
-    borderWidth: 1,
-    borderColor: '#f3f4f6',
+    borderRadius: 18,
+    backgroundColor: t.surface,
+    borderWidth: t.mode === 'dark' ? StyleSheet.hairlineWidth : 0,
+    borderColor: t.border,
+    shadowColor: t.mode === 'dark' ? '#000' : t.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: t.mode === 'dark' ? 0.25 : 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
   categoryBtnActive: {
-    backgroundColor: '#ff7000',
-    borderColor: '#ff7000',
+    shadowColor: t.primary,
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
   },
   categoryText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
-    color: '#11181C',
+    color: t.textMuted,
+    letterSpacing: 0.2,
   },
   categoryTextActive: {
-    color: 'white',
+    color: '#fff',
   },
   storiesContainer: {
     paddingHorizontal: 15,
@@ -443,40 +530,46 @@ const styles = StyleSheet.create({
     padding: 3,
     borderRadius: 22,
     borderWidth: 2,
-    borderColor: '#ff7000',
+    borderColor: t.primary,
   },
   storyThumb: {
     width: 70,
     height: 70,
     borderRadius: 18,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: t.surfaceMuted,
   },
   menuList: {
     paddingBottom: 150,
     paddingHorizontal: 16,
   },
   sectionTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '900',
-    color: '#11181C',
-    marginTop: 20,
-    marginBottom: 15,
+    color: t.text,
+    marginTop: 22,
+    marginBottom: 14,
     marginLeft: 4,
+    letterSpacing: -0.6,
+  },
+  productCardWrap: {
+    marginBottom: 14,
   },
   productCard: {
     flexDirection: 'row',
-    backgroundColor: 'white',
-    borderRadius: 30,
-    padding: 12,
-    marginBottom: 12,
-    shadowColor: '#ff7000',
-    shadowOpacity: 0.03,
-    shadowRadius: 15,
-    elevation: 2,
+    padding: 14,
   },
-  productImage: {
+  productImageWrap: {
     width: 120,
     height: 120,
+    borderRadius: 22,
+    overflow: 'hidden',
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  productImage: {
+    width: 110,
+    height: 110,
     resizeMode: 'contain',
   },
   productInfo: {
@@ -487,57 +580,114 @@ const styles = StyleSheet.create({
   },
   productName: {
     fontSize: 18,
-    fontWeight: '800',
-    color: '#11181C',
+    fontWeight: '900',
+    color: t.text,
+    letterSpacing: -0.3,
   },
   productDescription: {
     fontSize: 13,
-    color: '#687076',
+    color: t.textMuted,
     lineHeight: 18,
+    marginTop: 2,
   },
   productFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 10,
   },
   productPrice: {
-    fontSize: 16,
+    fontSize: 13,
+    color: t.textMuted,
+    fontWeight: '700',
+  },
+  productPriceAmount: {
+    fontSize: 17,
     fontWeight: '900',
-    color: '#11181C',
+    color: t.text,
   },
   productPriceOld: {
     fontSize: 12,
-    color: '#9BA1A6',
+    color: t.textSubtle,
     textDecorationLine: 'line-through',
     marginBottom: -2,
   },
   addBtn: {
-    backgroundColor: '#fff7f0',
+    backgroundColor: t.primarySoft,
     width: 36,
     height: 36,
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#ffeddb',
+    borderColor: t.mode === 'dark' ? 'transparent' : '#ffeddb',
+  },
+  addBtnActive: {
+    backgroundColor: t.primary,
+    borderColor: t.primary,
+  },
+  toCartBtnWrap: {
+    shadowColor: t.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 4,
+    borderRadius: 20,
+  },
+  toCartBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    height: 40,
+    borderRadius: 20,
+  },
+  toCartBtnText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 0.2,
+  },
+  cartBadge: {
+    position: 'absolute',
+    bottom: 4,
+    right: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: t.primary,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 12,
+    gap: 3,
+    shadowColor: t.primary,
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 4,
+    borderWidth: 1.5,
+    borderColor: t.surface,
+  },
+  cartBadgeText: {
+    color: t.primaryContrast,
+    fontSize: 11,
+    fontWeight: '900',
+    lineHeight: 13,
   },
   discountBadge: {
     position: 'absolute',
     top: 6,
     right: 6,
-    backgroundColor: '#ef4444',
+    backgroundColor: t.danger,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
     zIndex: 10,
-    shadowColor: '#ef4444',
+    shadowColor: t.danger,
     shadowOpacity: 0.4,
     shadowRadius: 6,
     elevation: 5,
   },
   discountBadgeText: {
-    color: 'white',
+    color: '#ffffff',
     fontSize: 12,
     fontWeight: '900',
   },

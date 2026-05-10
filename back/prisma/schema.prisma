@@ -159,13 +159,21 @@ model Order {
     lat      Float?
     lng      Float?
 
-    iikoOrderId String?
+    iikoOrderId        String?  @unique
+    iikoStatus         String?
+    iikoSyncedAt       DateTime?
+    iikoSyncError      String?
+    iikoSyncAttempts   Int      @default(0)
+    iikoCorrelationId  String?  @unique
 
     storeId Int?
     store   Store? @relation(fields: [storeId], references: [id])
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+
+    @@index([iikoStatus])
+    @@index([status, iikoSyncedAt])
 }
 
 model Store {

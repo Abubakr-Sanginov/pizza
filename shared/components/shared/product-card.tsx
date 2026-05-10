@@ -1,14 +1,17 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import React from 'react';
 import { Title } from './title';
 import { Button } from '../ui';
-import { Plus, Star } from 'lucide-react';
+import { Plus, ShoppingCart, Star } from 'lucide-react';
 import { Ingredient } from '@prisma/client';
 import { ReviewWithUser } from '@/@types/prisma';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { useCartStore } from '@/shared/store';
+import { cn } from '@/shared/lib/utils';
 
 interface Props {
   id: number;
@@ -31,69 +34,112 @@ export const ProductCard: React.FC<Props> = ({
   reviews = [],
   className,
 }) => {
-  const averageRating = reviews.length > 0 
-    ? (reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length).toFixed(1)
-    : 0;
+  const averageRating =
+    reviews.length > 0
+      ? (reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length).toFixed(1)
+      : 0;
   const { t } = useTranslation();
+  const router = useRouter();
+  const cartItems = useCartStore((state) => state.items);
+  const cartQuantity = cartItems
+    .filter((item) => item.productId === id)
+    .reduce((sum, item) => sum + item.quantity, 0);
+  const inCart = cartQuantity > 0;
+
+  const goToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push('/checkout');
+  };
 
   return (
-    <motion.div 
-      className={className}
-      initial={{ opacity: 0, y: 20 }}
+    <motion.div
+      className={cn('group', className)}
+      initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.4 }}
-    >
-      <Link href={`/product/${id}`}>
-        <motion.div 
-          className="flex justify-center p-6 bg-secondary rounded-lg h-[260px] relative group overflow-hidden"
-          whileHover={{ scale: 1.02 }}
-          transition={{ duration: 0.2 }}
-        >
-          <motion.img 
-            className="w-[215px] h-[215px] group-hover:rotate-6 transition-transform duration-300" 
-            src={imageUrl} 
-            alt={name} 
+      viewport={{ once: true, margin: '-50px' }}
+      transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}>
+      <Link href={`/product/${id}`} className="block lift">
+        {/* Image area */}
+        <div className="relative h-[280px] rounded-3xl bg-secondary text-secondary-foreground overflow-hidden shadow-soft group-hover:shadow-soft-lg transition-shadow">
+          {/* Soft glow behind pizza */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_hsl(22_100%_50%_/_0.08),_transparent_70%)]" />
+
+          <img
+            className="absolute inset-0 m-auto w-[230px] h-[230px] object-contain transition-transform duration-500 ease-out group-hover:scale-110 group-hover:rotate-[8deg]"
+            src={imageUrl}
+            alt={name}
           />
-          
+
+          {/* Discount badge */}
           {priceOld && priceOld > price && (
-            <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1.5 rounded-full shadow-lg z-10">
-              <span className="text-sm font-black">-{Math.round((1 - price / priceOld) * 100)}%</span>
+            <div className="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-soft z-10">
+              <span className="text-sm font-black tracking-tight">
+                −{Math.round((1 - price / priceOld) * 100)}%
+              </span>
             </div>
           )}
 
+          {/* Rating */}
           {reviews.length > 0 && (
-            <div className="absolute top-3 left-3 bg-white px-2 py-1 rounded-md shadow-sm flex items-center gap-1">
-              <Star size={14} className="text-yellow-400 fill-yellow-400" />
-              <span className="text-xs font-bold">{averageRating}</span>
-              <span className="text-xs text-gray-400">({reviews.length})</span>
+            <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full glass text-xs flex items-center gap-1.5">
+              <Star size={12} className="text-yellow-400 fill-yellow-400" />
+              <span className="font-bold leading-none">{averageRating}</span>
+              <span className="text-muted-foreground leading-none">({reviews.length})</span>
             </div>
           )}
-        </motion.div>
 
-        <Title text={name} size="sm" className="mb-1 mt-3 font-bold group-hover:text-primary transition-colors" />
+          {/* In-cart badge */}
+          {inCart && (
+            <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-gradient-to-r from-primary to-orange-500 text-white shadow-soft z-10">
+              <ShoppingCart size={13} strokeWidth={2.5} />
+              <span className="text-xs font-black leading-none">{cartQuantity}</span>
+            </div>
+          )}
+        </div>
 
-        <p className="text-sm text-gray-400">
-          {ingredients.map((ingredient) => ingredient.name).join(', ')}
-        </p>
+        {/* Title + ingredients */}
+        <div className="mt-4 px-1">
+          <Title
+            text={name}
+            size="sm"
+            className="font-extrabold leading-tight group-hover:text-primary transition-colors"
+          />
+          <p className="text-sm text-muted-foreground line-clamp-2 mt-1.5 leading-snug">
+            {ingredients.map((ingredient) => ingredient.name).join(' · ')}
+          </p>
+        </div>
 
-        <div className="flex justify-between items-center mt-4">
+        {/* Price + CTA */}
+        <div className="flex justify-between items-end mt-4 px-1">
           <div className="flex flex-col">
-            {priceOld && (
-              <span className="text-sm text-gray-400 line-through mb-[-2px]">
+            {priceOld && priceOld > price && (
+              <span className="text-xs text-muted-foreground line-through font-medium">
                 {priceOld} TJS
               </span>
             )}
-            <span className="text-[20px]">
-              {t('menu.from')} <b>{price} TJS</b>
+            <span className="text-[13px] text-muted-foreground font-medium">{t('menu.from')}</span>
+            <span className="text-2xl font-black text-foreground tracking-tight leading-none mt-0.5">
+              {price} <span className="text-base font-bold text-muted-foreground">TJS</span>
             </span>
           </div>
 
-          <motion.div whileTap={{ scale: 0.95 }}>
-            <Button variant="secondary" className="text-base font-bold">
-              <Plus size={20} className="mr-1" />
-              {t('menu.addBtn')}
-            </Button>
+          <motion.div whileTap={{ scale: 0.93 }}>
+            {inCart ? (
+              <Button
+                onClick={goToCart}
+                className="btn-gradient h-12 px-5 rounded-2xl text-sm font-extrabold gap-2 border-0">
+                <ShoppingCart size={16} />
+                {t('menu.toCart')}
+              </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                className="h-12 px-5 rounded-2xl text-sm font-extrabold gap-1.5 border-0 hover:bg-primary hover:text-primary-foreground transition-all">
+                <Plus size={18} strokeWidth={3} />
+                {t('menu.addBtn')}
+              </Button>
+            )}
           </motion.div>
         </div>
       </Link>

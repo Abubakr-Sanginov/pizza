@@ -39,7 +39,7 @@ export const ReviewForm: React.FC<Props> = ({ productId, onSuccess, className })
   };
 
   return (
-    <div className={cn('p-6 bg-gray-50 rounded-2xl', className)}>
+    <div className={cn('p-6 bg-muted rounded-2xl', className)}>
       <h3 className="text-lg font-bold mb-4">Оставить отзыв</h3>
 
       <div className="flex gap-2 mb-6">
@@ -59,7 +59,7 @@ export const ReviewForm: React.FC<Props> = ({ productId, onSuccess, className })
                   'transition-colors',
                   starValue <= (hover || rating)
                     ? 'text-yellow-400 fill-yellow-400'
-                    : 'text-gray-300',
+                    : 'text-muted-foreground/40',
                 )}
               />
             </button>
@@ -69,7 +69,7 @@ export const ReviewForm: React.FC<Props> = ({ productId, onSuccess, className })
 
       <Textarea
         placeholder="Поделитесь вашими впечатлениями о продукте..."
-        className="mb-4 bg-white border-gray-200 focus:ring-primary h-24"
+        className="mb-4 bg-card border-border focus:ring-primary h-24"
         value={comment}
         onChange={(e) => setComment(e.target.value)}
       />

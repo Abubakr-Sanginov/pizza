@@ -18,7 +18,7 @@ export const InfoBlock: React.FC<Props> = ({ className, title, text, imageUrl })
       <div className="flex flex-col">
         <div className="w-[445px]">
           <Title size="lg" text={title} className="font-extrabold" />
-          <p className="text-gray-400 text-lg">{text}</p>
+          <p className="text-muted-foreground text-lg">{text}</p>
         </div>
 
         <div className="flex gap-5 mt-11">
@@ -29,7 +29,7 @@ export const InfoBlock: React.FC<Props> = ({ className, title, text, imageUrl })
             </Button>
           </Link>
           <a href="">
-            <Button variant="outline" className="text-gray-500 border-gray-400 hover:bg-gray-50">
+            <Button variant="outline" className="text-muted-foreground hover:bg-muted">
               Обновить
             </Button>
           </a>

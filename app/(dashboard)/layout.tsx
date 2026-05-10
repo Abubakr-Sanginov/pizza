@@ -24,9 +24,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50 flex-col md:flex-row">
+    <div className="flex min-h-screen bg-muted flex-col md:flex-row">
       {/* Mobile Header */}
-      <div className="md:hidden flex items-center justify-between p-4 bg-white border-b sticky top-0 z-50">
+      <div className="md:hidden flex items-center justify-between p-4 bg-card border-b border-border sticky top-0 z-50">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Logo" width={30} height={30} />
           <span className="font-bold">Админка</span>

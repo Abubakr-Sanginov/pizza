@@ -4,6 +4,7 @@ import { prisma } from '@/back/prisma/prisma-client';
 import { OrderStatus, UserRole } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { getUserSession } from '@/back/lib/get-user-session';
+import { notifyOrderStatus } from '@/back/lib/notify-order-status';
 
 export async function updateOrderStatus(orderId: number, status: OrderStatus) {
   try {
@@ -50,6 +51,12 @@ export async function updateOrderStatus(orderId: number, status: OrderStatus) {
         status,
       },
     });
+
+    if (order.status !== status) {
+      notifyOrderStatus(orderId, status).catch((e) =>
+        console.error('[notifyOrderStatus]', e),
+      );
+    }
 
     // Если заказ стал готов, пробуем назначить курьера автоматически
     if (status === 'READY') {

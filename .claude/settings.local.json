@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(npx prisma *)",
+      "Bash(git stash *)",
+      "PowerShell(npx tsc --noEmit -p tsconfig.json 2>&1)"
+    ]
+  }
+}

@@ -28,26 +28,26 @@ export default async function StoriesPage() {
         </Link>
       </div>
 
-      <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+      <div className="bg-card text-card-foreground rounded-2xl border border-border shadow-sm overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-gray-50 border-b">
-              <th className="px-6 py-4 font-bold text-gray-600">ID</th>
-              <th className="px-6 py-4 font-bold text-gray-600">Превью</th>
-              <th className="px-6 py-4 font-bold text-gray-600">Кол-во слайдов</th>
-              <th className="px-6 py-4 font-bold text-gray-600">Дата создания</th>
-              <th className="px-6 py-4 font-bold text-gray-600 text-right">Действия</th>
+            <tr className="bg-muted border-b border-border">
+              <th className="px-6 py-4 font-bold text-muted-foreground">ID</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">Превью</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">Кол-во слайдов</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">Дата создания</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground text-right">Действия</th>
             </tr>
           </thead>
           <tbody>
             {stories.map((item) => (
-              <tr key={item.id} className="border-b last:border-b-0 hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 text-gray-500">#{item.id}</td>
+              <tr key={item.id} className="border-b border-border last:border-b-0 hover:bg-muted transition-colors">
+                <td className="px-6 py-4 text-muted-foreground">#{item.id}</td>
                 <td className="px-6 py-4">
-                  <img src={item.previewImageUrl} alt="Preview" className="w-12 h-16 object-cover rounded-md border" />
+                  <img src={item.previewImageUrl} alt="Preview" className="w-12 h-16 object-cover rounded-md border border-border" />
                 </td>
                 <td className="px-6 py-4 font-medium">{item.items.length} слайдов</td>
-                <td className="px-6 py-4 text-gray-400 text-sm">
+                <td className="px-6 py-4 text-muted-foreground text-sm">
                   {new Date(item.createdAt).toLocaleDateString('ru-RU')}
                 </td>
                 <td className="px-6 py-4 text-right">
@@ -59,7 +59,7 @@ export default async function StoriesPage() {
             ))}
             {stories.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-6 py-10 text-center text-gray-400">
+                <td colSpan={5} className="px-6 py-10 text-center text-muted-foreground">
                   Историй пока нет. Нажмите «Добавить историю», чтобы создать первую.
                 </td>
               </tr>

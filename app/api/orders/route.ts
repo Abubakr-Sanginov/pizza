@@ -4,7 +4,7 @@ import { OrderStatus } from '@prisma/client';
 import { sendEmail } from '@/back/lib/send-email';
 import { OrderSuccessTemplate } from '@/shared/components/shared/email-temapltes/order-success';
 import { sendOrderNotification } from '@/bot/service';
-import { IikoService } from '@/back/services/iiko-service';
+import { sendOrderToIiko } from '@/back/services/iiko';
 import React from 'react';
 
 export async function POST(req: NextRequest) {
@@ -149,15 +149,14 @@ export async function POST(req: NextRequest) {
 
     /* iiko Sync */
     try {
-      const iikoResult = await IikoService.syncOrderToIiko(order, userCart.items);
-      if (iikoResult) {
-        await prisma.order.update({
-          where: { id: order.id },
-          data: { iikoOrderId: iikoResult.order?.id }
-        });
+      const result = await sendOrderToIiko(order, userCart.items as any);
+      if (result.status === 'failed') {
+        console.warn(`[API_ORDER] iiko sync failed for order ${order.id}: ${result.reason}`);
+      } else if (result.status === 'skipped') {
+        console.info(`[API_ORDER] iiko skipped for order ${order.id}: ${result.reason}`);
       }
     } catch (e) {
-      console.log('[API_ORDER] iiko failed', e);
+      console.error('[API_ORDER] iiko crashed', e);
     }
 
     return NextResponse.json(order);

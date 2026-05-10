@@ -14,6 +14,7 @@ html {
 
 @layer base {
   :root {
+    --background: 0 0% 100%;
     --foreground: 20 14.3% 4.1%;
 
     --card: 0 0% 100%;
@@ -41,11 +42,149 @@ html {
     --input: 0 0% 90%;
     --ring: 24.6 95% 53.1%;
     --radius: 18px;
+
+    --surface-elevated: 0 0% 100%;
+    --scrollbar-track: 0 0% 100%;
+    --scrollbar-thumb: 20 6% 86%;
+  }
+
+  .dark {
+    --background: 20 14% 7%;
+    --foreground: 30 10% 95%;
+
+    --card: 24 10% 11%;
+    --card-foreground: 30 10% 95%;
+
+    --popover: 24 10% 11%;
+    --popover-foreground: 30 10% 95%;
+
+    --primary: 22 100% 55%;
+    --primary-foreground: 24 100% 6%;
+
+    --secondary: 24 10% 14%;
+    --secondary-foreground: 30 10% 92%;
+
+    --muted: 24 8% 16%;
+    --muted-foreground: 24 6% 64%;
+
+    --accent: 22 80% 22%;
+    --accent-foreground: 30 10% 95%;
+
+    --destructive: 0 70% 45%;
+    --destructive-foreground: 30 10% 95%;
+
+    --border: 24 8% 20%;
+    --input: 24 8% 20%;
+    --ring: 22 100% 55%;
+
+    --surface-elevated: 24 10% 14%;
+    --scrollbar-track: 24 10% 11%;
+    --scrollbar-thumb: 24 8% 28%;
   }
 }
 
 * {
   font-family: var(--font-nunito), sans-serif;
+}
+
+/* ==================== Liquid Glass utilities ==================== */
+.glass {
+  background: hsl(var(--card) / 0.55);
+  backdrop-filter: saturate(180%) blur(28px);
+  -webkit-backdrop-filter: saturate(180%) blur(28px);
+  border: 1px solid hsl(var(--border) / 0.6);
+}
+.dark .glass {
+  background: hsl(var(--card) / 0.45);
+  border-color: hsl(0 0% 100% / 0.06);
+}
+
+.glass-strong {
+  background: hsl(var(--card) / 0.78);
+  backdrop-filter: saturate(180%) blur(36px);
+  -webkit-backdrop-filter: saturate(180%) blur(36px);
+  border: 1px solid hsl(var(--border) / 0.6);
+}
+.dark .glass-strong {
+  background: hsl(var(--card) / 0.7);
+  border-color: hsl(0 0% 100% / 0.08);
+}
+
+/* Specular highlight on top of glass surfaces */
+.glass-highlight {
+  position: relative;
+  overflow: hidden;
+}
+.glass-highlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, hsl(0 0% 100% / 0.55) 0%, transparent 35%);
+}
+.dark .glass-highlight::before {
+  background: linear-gradient(180deg, hsl(0 0% 100% / 0.12) 0%, transparent 35%);
+}
+
+/* Premium gradient on key CTAs */
+.btn-gradient {
+  background: linear-gradient(135deg, #ff8a3d 0%, #ff5400 100%);
+  color: #fff;
+  box-shadow: 0 16px 32px -12px hsl(22 100% 50% / 0.45),
+              0 4px 8px -4px hsl(22 100% 50% / 0.4);
+  transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 220ms ease;
+}
+.btn-gradient:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 22px 40px -12px hsl(22 100% 50% / 0.55),
+              0 8px 16px -8px hsl(22 100% 50% / 0.5);
+}
+.btn-gradient:active {
+  transform: translateY(1px);
+}
+
+/* Premium shadow scale */
+.shadow-soft {
+  box-shadow: 0 1px 2px hsl(20 14% 7% / 0.04),
+              0 12px 32px -8px hsl(20 14% 7% / 0.08);
+}
+.shadow-soft-lg {
+  box-shadow: 0 1px 2px hsl(20 14% 7% / 0.05),
+              0 20px 48px -12px hsl(20 14% 7% / 0.14),
+              0 8px 16px -8px hsl(20 14% 7% / 0.08);
+}
+.dark .shadow-soft {
+  box-shadow: 0 1px 2px hsl(0 0% 0% / 0.5),
+              0 12px 32px -8px hsl(0 0% 0% / 0.5);
+}
+.dark .shadow-soft-lg {
+  box-shadow: 0 1px 2px hsl(0 0% 0% / 0.5),
+              0 20px 48px -12px hsl(0 0% 0% / 0.65),
+              0 8px 16px -8px hsl(0 0% 0% / 0.5);
+}
+
+/* Subtle ambient gradient for the main page */
+.ambient-bg {
+  background:
+    radial-gradient(1200px 600px at 0% 0%, hsl(22 100% 50% / 0.08), transparent 60%),
+    radial-gradient(900px 500px at 100% 100%, hsl(22 100% 50% / 0.06), transparent 55%),
+    hsl(var(--background));
+}
+.dark .ambient-bg {
+  background:
+    radial-gradient(1200px 600px at 0% 0%, hsl(22 100% 50% / 0.16), transparent 60%),
+    radial-gradient(900px 500px at 100% 100%, hsl(22 100% 50% / 0.12), transparent 55%),
+    hsl(var(--background));
+}
+
+/* Subtle hover lift on cards */
+.lift {
+  transition: transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 280ms ease;
+}
+.lift:hover {
+  transform: translateY(-3px);
 }
 
 .scrollbar::-webkit-scrollbar {
@@ -54,16 +193,16 @@ html {
 
 .scrollbar::-webkit-scrollbar-track {
   border-radius: 6px;
-  background: #fff;
+  background: hsl(var(--scrollbar-track));
 }
 
 .scrollbar::-webkit-scrollbar-thumb {
-  background: #dbdadd;
+  background: hsl(var(--scrollbar-thumb));
   border-radius: 6px;
 }
 
 .scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #dbdadd;
+  background: hsl(var(--scrollbar-thumb));
 }
 
 @layer utilities {
@@ -77,7 +216,7 @@ html {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground overflow-x-hidden;
+    @apply text-foreground overflow-x-hidden ambient-bg;
   }
 }
 

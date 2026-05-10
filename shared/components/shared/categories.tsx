@@ -25,13 +25,17 @@ export const Categories: React.FC<Props> = ({ items, className }) => {
   };
 
   return (
-    <div className={cn('inline-flex gap-1 bg-gray-50 p-1 rounded-2xl overflow-x-auto scrollbar-hide', className)}>
+    <div
+      className={cn(
+        'inline-flex gap-1 glass p-1 rounded-2xl overflow-x-auto scrollbar-hide',
+        className,
+      )}>
       {items.map((cat, index) => {
         const isActive = categoryActiveId === cat.id;
         const currentLang = i18n.language;
-        
+
         let translatedName = cat.name;
-        
+
         if (currentLang === 'en' && cat.nameEn) {
           translatedName = cat.nameEn;
         } else if (currentLang === 'tg' && cat.nameTg) {
@@ -44,20 +48,19 @@ export const Categories: React.FC<Props> = ({ items, className }) => {
         return (
           <a
             className={cn(
-              'flex items-center font-bold h-11 rounded-2xl px-5 relative transition-colors duration-300',
-              isActive ? 'text-primary' : 'text-gray-500 hover:text-primary',
+              'flex items-center font-bold h-10 rounded-xl px-5 relative transition-colors duration-300 whitespace-nowrap',
+              isActive ? 'text-white' : 'text-muted-foreground hover:text-foreground',
             )}
             href={`/#${cat.name}`}
-            key={index}
-          >
+            key={index}>
             {isActive && (
               <motion.div
                 layoutId="activeCategory"
-                className="absolute inset-0 bg-white rounded-2xl shadow-md shadow-gray-200"
-                transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                className="absolute inset-0 rounded-xl btn-gradient"
+                transition={{ type: 'spring', bounce: 0.2, duration: 0.55 }}
               />
             )}
-            <span className="relative z-10">{translatedName}</span>
+            <span className="relative z-10 text-sm tracking-tight">{translatedName}</span>
           </a>
         );
       })}

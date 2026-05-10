@@ -14,7 +14,7 @@ import { hashSync } from 'bcrypt';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { sendOrderNotification } from '@/bot/service';
-import { IikoService } from '@/back/services/iiko-service';
+import { sendOrderToIiko } from '@/back/services/iiko';
 
 export async function createOrder(data: CheckoutFormValues) {
   try {
@@ -171,16 +171,12 @@ export async function createOrder(data: CheckoutFormValues) {
 
     /* Синхронизация с iiko */
     try {
-       const iikoResult = await IikoService.syncOrderToIiko(order, userCart.items);
-       if (iikoResult) {
-          await prisma.order.update({
-             where: { id: order.id },
-             data: { iikoOrderId: iikoResult.order?.id }
-          });
-       }
+      const result = await sendOrderToIiko(order, userCart.items as any);
+      if (result.status === 'failed') {
+        console.warn(`[CreateOrder] iiko sync failed for order ${order.id}: ${result.reason}`);
+      }
     } catch (iikoError) {
-       console.error('[CreateOrder] iiko sync failed:', iikoError);
-       // Мы не прерываем основной процесс, если iiko упал, чтобы клиент не видел ошибку
+      console.error('[CreateOrder] iiko sync crashed:', iikoError);
     }
 
     revalidatePath('/dashboard/orders');

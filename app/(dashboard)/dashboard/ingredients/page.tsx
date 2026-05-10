@@ -25,30 +25,30 @@ export default async function IngredientsPage() {
         </Link>
       </div>
 
-      <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+      <div className="bg-card text-card-foreground rounded-2xl border border-border shadow-sm overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-gray-50 border-b">
-              <th className="px-6 py-4 font-bold text-gray-600">ID</th>
-              <th className="px-6 py-4 font-bold text-gray-600">Фото</th>
-              <th className="px-6 py-4 font-bold text-gray-600">Название</th>
-              <th className="px-6 py-4 font-bold text-gray-600">Цена</th>
-              <th className="px-6 py-4 font-bold text-gray-600 text-right">Действия</th>
+            <tr className="bg-muted border-b border-border">
+              <th className="px-6 py-4 font-bold text-muted-foreground">ID</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">Фото</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">Название</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">Цена</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground text-right">Действия</th>
             </tr>
           </thead>
           <tbody>
             {ingredients.map((item) => (
-              <tr key={item.id} className="border-b last:border-b-0 hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 text-gray-500">#{item.id}</td>
+              <tr key={item.id} className="border-b border-border last:border-b-0 hover:bg-muted transition-colors">
+                <td className="px-6 py-4 text-muted-foreground">#{item.id}</td>
                 <td className="px-6 py-4">
                   <img src={item.imageUrl} alt={item.name} className="w-12 h-12 object-cover rounded-lg" />
                 </td>
                 <td className="px-6 py-4 font-bold">{item.name}</td>
-                <td className="px-6 py-4 text-gray-600">{item.price} TJS</td>
+                <td className="px-6 py-4 text-muted-foreground">{item.price} TJS</td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-2">
                     <Link href={`/dashboard/ingredients/${item.id}`}>
-                      <Button variant="ghost" size="icon" className="text-blue-500 hover:bg-blue-50">
+                      <Button variant="ghost" size="icon" className="text-blue-500 hover:bg-blue-500/10 dark:text-blue-400">
                         <Edit size={18} />
                       </Button>
                     </Link>

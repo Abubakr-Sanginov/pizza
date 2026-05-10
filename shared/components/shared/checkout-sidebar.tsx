@@ -41,7 +41,7 @@ export const CheckoutSidebar: React.FC<Props> = ({
       <CheckoutItemDetails
         title={
           <div className="flex items-center">
-            <Package size={18} className="mr-2 text-gray-400" />
+            <Package size={18} className="mr-2 text-muted-foreground" />
             {t('checkout.cartPrice')}
           </div>
         }
@@ -50,7 +50,7 @@ export const CheckoutSidebar: React.FC<Props> = ({
       <CheckoutItemDetails
         title={
           <div className="flex items-center">
-            <Percent size={18} className="mr-2 text-gray-400" />
+            <Percent size={18} className="mr-2 text-muted-foreground" />
             {t('checkout.vat')}
           </div>
         }
@@ -59,7 +59,7 @@ export const CheckoutSidebar: React.FC<Props> = ({
       <CheckoutItemDetails
         title={
           <div className="flex items-center">
-            <Truck size={18} className="mr-2 text-gray-400" />
+            <Truck size={18} className="mr-2 text-muted-foreground" />
             {t('checkout.delivery')}
           </div>
         }

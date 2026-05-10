@@ -33,7 +33,7 @@ export const CourierSelector: React.FC<Props> = ({ orderId, couriers, initialCou
       value={courierId}
       onChange={(e) => handleAssign(e.target.value)}
       disabled={loading}
-      className="px-2 py-1 border rounded text-xs bg-white focus:ring-2 focus:ring-primary outline-none"
+      className="px-2 py-1 border border-border rounded text-xs bg-card text-card-foreground focus:ring-2 focus:ring-primary outline-none"
     >
       <option value="">Без курьера</option>
       {couriers.map((c) => (

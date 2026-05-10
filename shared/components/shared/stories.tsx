@@ -51,7 +51,7 @@ export const Stories: React.FC<Props> = ({ className }) => {
       <Container className={cn('flex items-center justify-between gap-2 my-10 overflow-x-auto scrollbar-hide p-2', className)}>
         {isLoading &&
           [...Array(6)].map((_, index) => (
-            <div key={index} className="w-[150px] md:w-[200px] h-[200px] md:h-[250px] bg-gray-200 rounded-md animate-pulse flex-shrink-0" />
+            <div key={index} className="w-[150px] md:w-[200px] h-[200px] md:h-[250px] bg-muted rounded-md animate-pulse flex-shrink-0" />
           ))}
 
         {stories.map((story, index) => (

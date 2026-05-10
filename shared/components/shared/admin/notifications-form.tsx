@@ -98,9 +98,9 @@ export const NotificationsForm: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-10 mt-10">
-      <div className="max-w-[600px] mx-auto w-full p-10 bg-white rounded-3xl shadow-sm border">
+      <div className="max-w-[600px] mx-auto w-full p-10 bg-card text-card-foreground rounded-3xl shadow-sm border border-border">
         <Title text="Рассылка уведомлений" size="md" className="font-bold mb-5" />
-        <p className="text-gray-400 mb-8">
+        <p className="text-muted-foreground mb-8">
           Введите заголовок и текст уведомления. Оно будет отправлено всем пользователям (на сайт и в мобильное приложение).
         </p>
 
@@ -164,14 +164,14 @@ export const NotificationsForm: React.FC = () => {
               </Button>
             </div>
             {imageUrl && (
-              <div className="relative w-full h-40 bg-gray-100 rounded-xl overflow-hidden border">
+              <div className="relative w-full h-40 bg-muted rounded-xl overflow-hidden border border-border">
                 <img src={imageUrl} alt="Preview" className="w-full h-full object-contain" />
                 <button
                   type="button"
                   onClick={() => setImageUrl('')}
-                  className="absolute top-2 right-2 bg-white/80 hover:bg-white rounded-full p-1 shadow-sm"
+                  className="absolute top-2 right-2 bg-card/80 hover:bg-card rounded-full p-1 shadow-sm"
                 >
-                  <X size={16} className="text-gray-600" />
+                  <X size={16} className="text-muted-foreground" />
                 </button>
               </div>
             )}
@@ -183,33 +183,33 @@ export const NotificationsForm: React.FC = () => {
         </form>
       </div>
 
-      <div className="max-w-[800px] mx-auto w-full p-10 bg-white rounded-3xl shadow-sm border mb-20">
+      <div className="max-w-[800px] mx-auto w-full p-10 bg-card text-card-foreground rounded-3xl shadow-sm border border-border mb-20">
         <Title text="История уведомлений" size="md" className="font-bold mb-5" />
         
         <div className="flex flex-col gap-4">
           {history.length === 0 ? (
-            <p className="text-gray-400 text-center py-10">История пуста</p>
+            <p className="text-muted-foreground text-center py-10">История пуста</p>
           ) : (
             history.map((item) => (
-              <div key={item.id} className="flex items-center gap-4 p-4 rounded-2xl border bg-gray-50/50">
+              <div key={item.id} className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-muted/50">
                 {item.imageUrl && (
                   <img src={item.imageUrl} alt="" className="w-12 h-12 object-cover rounded-lg" />
                 )}
                 <div className="flex-1 overflow-hidden">
                   <div className="flex items-center gap-2">
                     <h4 className="font-bold truncate">{item.title}</h4>
-                    <span className="text-[10px] text-gray-400 whitespace-nowrap">
+                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">
                       {new Date(item.createdAt).toLocaleDateString()}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-500 truncate">{item.body}</p>
+                  <p className="text-sm text-muted-foreground truncate">{item.body}</p>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className={cn(
                     'transition-all duration-200',
-                    deletingId === item.id ? 'text-white bg-red-500 hover:bg-red-600 w-20 rounded-xl' : 'text-red-500 hover:bg-red-50'
+                    deletingId === item.id ? 'text-destructive-foreground bg-destructive hover:bg-destructive/90 w-20 rounded-xl' : 'text-destructive hover:bg-destructive/10'
                   )}
                   onClick={() => onDelete(item.id)}
                 >

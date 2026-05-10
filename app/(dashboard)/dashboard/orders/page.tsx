@@ -28,25 +28,25 @@ export default async function DashboardOrdersPage() {
     <div>
       <Title text="Управление заказами" size="lg" className="font-bold mb-10" />
 
-      <div className="bg-white rounded-2xl border shadow-sm overflow-x-auto scrollbar-hide">
+      <div className="bg-card text-card-foreground rounded-2xl border border-border shadow-sm overflow-x-auto scrollbar-hide">
         <table className="w-full text-sm text-left">
-          <thead className="bg-gray-50 border-b">
+          <thead className="bg-muted border-b border-border">
             <tr>
-              <th className="px-6 py-4 font-semibold text-gray-600">ID Заказа</th>
-              <th className="px-6 py-4 font-semibold text-gray-600">Клиент</th>
-              <th className="px-6 py-4 font-semibold text-gray-600">Сумма</th>
-              <th className="px-6 py-4 font-semibold text-gray-600">Статус</th>
-              <th className="px-6 py-4 font-semibold text-gray-600">Курьер</th>
-              <th className="px-6 py-4 font-semibold text-gray-600 text-right">Действия</th>
+              <th className="px-6 py-4 font-semibold text-muted-foreground">ID Заказа</th>
+              <th className="px-6 py-4 font-semibold text-muted-foreground">Клиент</th>
+              <th className="px-6 py-4 font-semibold text-muted-foreground">Сумма</th>
+              <th className="px-6 py-4 font-semibold text-muted-foreground">Статус</th>
+              <th className="px-6 py-4 font-semibold text-muted-foreground">Курьер</th>
+              <th className="px-6 py-4 font-semibold text-muted-foreground text-right">Действия</th>
             </tr>
           </thead>
           <tbody>
             {orders.map((order) => (
-              <tr key={order.id} className="border-b hover:bg-gray-50/50">
+              <tr key={order.id} className="border-b border-border hover:bg-muted/50">
                 <td className="px-6 py-4 font-medium">#{order.id}</td>
                 <td className="px-6 py-4">
                   <div>{order.fullName}</div>
-                  <div className="text-gray-500 text-xs">{order.phone}</div>
+                  <div className="text-muted-foreground text-xs">{order.phone}</div>
                 </td>
                 <td className="px-6 py-4 font-medium">{order.totalAmount} TJS</td>
                 <td className="px-6 py-4">
@@ -74,7 +74,7 @@ export default async function DashboardOrdersPage() {
             ))}
             {orders.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
                   Заказов пока нет
                 </td>
               </tr>

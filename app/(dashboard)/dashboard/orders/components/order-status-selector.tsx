@@ -20,12 +20,12 @@ const statusTranslations: Record<OrderStatus, string> = {
 };
 
 const statusColors: Record<OrderStatus, string> = {
-  PENDING: 'bg-yellow-100 text-yellow-800',
-  COOKING: 'bg-orange-100 text-orange-800',
-  READY: 'bg-blue-100 text-blue-800',
-  DELIVERING: 'bg-indigo-100 text-indigo-800',
-  SUCCEEDED: 'bg-green-100 text-green-800',
-  CANCELLED: 'bg-red-100 text-red-800',
+  PENDING: 'bg-yellow-500/15 text-yellow-800 dark:text-yellow-300',
+  COOKING: 'bg-orange-500/15 text-orange-800 dark:text-orange-300',
+  READY: 'bg-blue-500/15 text-blue-800 dark:text-blue-300',
+  DELIVERING: 'bg-indigo-500/15 text-indigo-800 dark:text-indigo-300',
+  SUCCEEDED: 'bg-green-500/15 text-green-800 dark:text-green-300',
+  CANCELLED: 'bg-red-500/15 text-red-800 dark:text-red-300',
 };
 
 export const OrderStatusSelector: React.FC<Props> = ({ orderId, initialStatus }) => {
@@ -54,7 +54,7 @@ export const OrderStatusSelector: React.FC<Props> = ({ orderId, initialStatus })
       className={`px-3 py-1.5 rounded-lg text-sm font-medium border-0 cursor-pointer focus:ring-2 focus:ring-offset-1 focus:ring-primary ${statusColors[status]}`}
     >
       {Object.entries(statusTranslations).map(([key, label]) => (
-        <option key={key} value={key} className="bg-white text-black">
+        <option key={key} value={key} className="bg-card text-card-foreground">
           {label}
         </option>
       ))}

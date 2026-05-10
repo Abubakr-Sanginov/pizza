@@ -59,7 +59,7 @@ export default function CourierPage() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <Title text={t('courier.title')} size="lg" className="font-extrabold" />
-          <p className="text-gray-400">{t('courier.subtitle')}</p>
+          <p className="text-muted-foreground">{t('courier.subtitle')}</p>
         </div>
         <Button onClick={fetchOrders} variant="outline">{t('courier.update')}</Button>
       </div>
@@ -67,27 +67,27 @@ export default function CourierPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {orders.length > 0 ? (
           orders.map((order) => (
-            <div key={order.id} className="bg-white border rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div key={order.id} className="bg-card text-card-foreground border border-border rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between mb-4">
                 <span className="font-bold text-lg">{t('courier.orderNum')}{order.id}</span>
                 <div className={cn(
                   'px-3 py-1 rounded-full text-xs font-bold',
-                  order.status === 'READY' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-green-600'
+                  order.status === 'READY' ? 'bg-blue-500/15 text-blue-700 dark:text-blue-300' : 'bg-green-500/15 text-green-700 dark:text-green-300'
                 )}>
                   {order.status === 'READY' ? t('courier.readyToPick') : t('courier.delivering')}
                 </div>
               </div>
 
               <div className="space-y-3 mb-6">
-                <div className="flex items-start gap-3 text-sm text-gray-600">
-                  <MapPin size={18} className="text-gray-400 shrink-0" />
+                <div className="flex items-start gap-3 text-sm text-muted-foreground">
+                  <MapPin size={18} className="text-muted-foreground shrink-0" />
                   <span>{order.address}</span>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-gray-600">
-                  <Phone size={18} className="text-gray-400 shrink-0" />
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <Phone size={18} className="text-muted-foreground shrink-0" />
                   <span>{order.phone}</span>
                 </div>
-                <div className="flex items-center gap-3 text-sm font-bold text-orange-600">
+                <div className="flex items-center gap-3 text-sm font-bold text-primary">
                   <Package size={18} className="shrink-0" />
                   <span>{order.totalAmount} TJS</span>
                 </div>
@@ -113,9 +113,9 @@ export default function CourierPage() {
                   </Button>
                 )}
 
-                <Button 
+                <Button
                   variant="outline"
-                  className="w-full h-10 text-sm font-medium rounded-xl text-red-500 border-red-200 hover:bg-red-50"
+                  className="w-full h-10 text-sm font-medium rounded-xl text-destructive border-destructive/40 hover:bg-destructive/10"
                   onClick={() => {
                     if (confirm(t('courier.confirmCancel'))) {
                       updateStatus(order.id, OrderStatus.CANCELLED);
@@ -128,10 +128,10 @@ export default function CourierPage() {
             </div>
           ))
         ) : (
-          <div className="col-span-full py-20 text-center bg-gray-50 rounded-3xl border-2 border-dashed">
-            <Package className="mx-auto mb-4 text-gray-300" size={48} />
-            <p className="text-gray-400 font-medium text-lg">{t('courier.emptyTitle')}</p>
-            <p className="text-gray-400 text-sm">{t('courier.emptyText')}</p>
+          <div className="col-span-full py-20 text-center bg-muted rounded-3xl border-2 border-dashed border-border">
+            <Package className="mx-auto mb-4 text-muted-foreground/50" size={48} />
+            <p className="text-muted-foreground font-medium text-lg">{t('courier.emptyTitle')}</p>
+            <p className="text-muted-foreground text-sm">{t('courier.emptyText')}</p>
           </div>
         )}
       </div>

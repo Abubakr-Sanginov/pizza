@@ -14,13 +14,14 @@ import { ProfileButton } from './profile-button';
 import { AuthModal } from './modals';
 import { useTranslation } from 'react-i18next';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Button } from '../ui';
+import { useSession } from 'next-auth/react';
 
 const LanguageSelector = () => {
   const { i18n } = useTranslation();
 
   return (
     <Select value={i18n.language} onValueChange={(val) => i18n.changeLanguage(val)}>
-      <SelectTrigger className="w-[60px] h-[38px] bg-gray-50 border-none shadow-none focus:ring-0">
+      <SelectTrigger className="w-[60px] h-[38px] bg-muted border-none shadow-none focus:ring-0">
         <SelectValue placeholder="Lang" />
       </SelectTrigger>
       <SelectContent>
@@ -42,6 +43,10 @@ export const Header: React.FC<Props> = ({ hasSearch = true, hasCart = true, clas
   const router = useRouter();
   const [openAuthModal, setOpenAuthModal] = React.useState(false);
   const { t } = useTranslation();
+  const { data: session } = useSession();
+  const isCourier = session?.user?.role === 'COURIER';
+  const showSearch = hasSearch && !isCourier;
+  const showCart = hasCart && !isCourier;
 
   const searchParams = useSearchParams();
 
@@ -70,16 +75,25 @@ export const Header: React.FC<Props> = ({ hasSearch = true, hasCart = true, clas
   }, []);
 
   return (
-    <header className={cn('border-b', className)}>
-      <Container className="py-4 md:py-8">
+    <header
+      className={cn(
+        'sticky top-0 z-40 glass border-b border-border/40',
+        className,
+      )}>
+      <Container className="py-3 md:py-5">
         <div className="flex items-center justify-between gap-2">
           {/* Левая часть */}
-          <Link href="/">
+          <Link href="/" className="group">
             <div className="flex items-center gap-2 md:gap-4">
-              <Image src="/logo.png" alt="Logo" width={35} height={35} />
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Image src="/logo.png" alt="Logo" width={38} height={38} className="relative" />
+              </div>
               <div className="hidden sm:block">
-                <h1 className="text-lg md:text-2xl uppercase font-black leading-none">Next Pizza</h1>
-                <p className="text-[10px] md:text-sm text-gray-400 leading-3 hidden md:block mt-1">
+                <h1 className="text-lg md:text-2xl uppercase font-black leading-none tracking-tight">
+                  Next Pizza
+                </h1>
+                <p className="text-[10px] md:text-xs text-muted-foreground leading-3 hidden md:block mt-1.5 tracking-wider uppercase font-semibold">
                   {mounted && t('header.slogan')}
                 </p>
               </div>
@@ -87,33 +101,33 @@ export const Header: React.FC<Props> = ({ hasSearch = true, hasCart = true, clas
           </Link>
 
           {/* Поиск на десктопе */}
-          {hasSearch && (
+          {showSearch && (
             <div className="mx-2 md:mx-10 flex-1 hidden md:block">
               <SearchInput placeholder={t('header.searchPlaceholder')} />
             </div>
           )}
 
           {/* Правая часть */}
-          <div className="flex items-center gap-1 md:gap-3">
+          <div className="flex items-center gap-1 md:gap-2">
             <AuthModal open={openAuthModal} onClose={() => setOpenAuthModal(false)} />
 
             <LanguageSelector />
 
             <Link href="/notifications">
-              <Button variant="secondary" className="px-2 md:px-4">
-                <Bell size={20} className="text-gray-500" />
+              <Button variant="secondary" className="px-2 md:px-4 h-[42px] rounded-2xl">
+                <Bell size={18} className="text-muted-foreground" />
               </Button>
             </Link>
 
             <ProfileButton onClickSignIn={() => setOpenAuthModal(true)} />
 
-            {hasCart && <CartButton className="min-w-[50px] px-2 md:px-5" />}
+            {showCart && <CartButton className="min-w-[50px] px-2 md:px-5 h-[42px]" />}
           </div>
         </div>
 
         {/* Поиск на мобилке (второй ряд) */}
-        {hasSearch && (
-          <div className="mt-4 md:hidden">
+        {showSearch && (
+          <div className="mt-3 md:hidden">
             <SearchInput placeholder={t('header.searchPlaceholder')} />
           </div>
         )}

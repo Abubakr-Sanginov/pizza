@@ -97,7 +97,7 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
   };
 
   return (
-    <div className="max-w-4xl bg-white p-10 rounded-2xl border shadow-sm">
+    <div className="max-w-4xl bg-card text-card-foreground p-10 rounded-2xl border border-border shadow-sm">
       <Title text={initialData ? 'Редактирование' : 'Новый продукт'} size="md" className="font-bold mb-10" />
 
       <FormProvider {...form}>
@@ -107,7 +107,7 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
               <div>
                 <label className="block text-sm font-medium mb-1">Название</label>
                 <Input {...form.register('name')} placeholder="Пепперони..." />
-                {form.formState.errors.name && <p className="text-red-500 text-xs mt-1">{form.formState.errors.name.message}</p>}
+                {form.formState.errors.name && <p className="text-destructive text-xs mt-1">{form.formState.errors.name.message}</p>}
               </div>
 
               <div>
@@ -118,10 +118,10 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
                     onChange={(url) => form.setValue('imageUrl', url)}
                   />
                   {form.formState.errors.imageUrl && (
-                    <p className="text-red-500 text-xs">{form.formState.errors.imageUrl.message}</p>
+                    <p className="text-destructive text-xs">{form.formState.errors.imageUrl.message}</p>
                   )}
                   <div className="pt-2">
-                    <label className="block text-xs font-medium text-gray-400 mb-1">Или укажите прямую ссылку:</label>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Или укажите прямую ссылку:</label>
                     <Input {...form.register('imageUrl')} placeholder="https://..." />
                   </div>
                 </div>
@@ -131,7 +131,7 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
                 <label className="block text-sm font-medium mb-1">Категория</label>
                 <select
                   {...form.register('categoryId')}
-                  className="w-full h-10 px-3 rounded-md border bg-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                  className="w-full h-10 px-3 rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary">
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
@@ -143,7 +143,7 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
 
             <div className="space-y-5">
               <label className="block text-sm font-medium mb-3">Ингредиенты</label>
-              <div className="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto p-4 border rounded-md">
+              <div className="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto p-4 border border-border rounded-md">
                 {ingredients.map((ingredient) => (
                   <div key={ingredient.id} className="flex items-center gap-2">
                     <input
@@ -158,7 +158,7 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
                           form.setValue('ingredients', current.filter(id => id !== ingredient.id));
                         }
                       }}
-                      className="w-4 h-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                      className="w-4 h-4 text-primary focus:ring-primary border-border rounded"
                     />
                     <label htmlFor={`ing-${ingredient.id}`} className="text-sm cursor-pointer select-none">
                       {ingredient.name}
@@ -179,7 +179,7 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
 
             <div className="space-y-4">
               {fields.map((field, index) => (
-                <div key={field.id} className="flex items-end gap-5 p-5 border rounded-xl bg-gray-50">
+                <div key={field.id} className="flex items-end gap-5 p-5 border border-border rounded-xl bg-muted">
                   <div className="flex-1">
                     <label className="block text-xs font-medium mb-1">Цена (TJS)</label>
                     <Input {...form.register(`items.${index}.price`)} type="number" placeholder="390" />
@@ -192,7 +192,7 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
                     <label className="block text-xs font-medium mb-1">Размер</label>
                     <select
                       {...form.register(`items.${index}.size`)}
-                      className="w-full h-10 px-3 rounded-md border bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                      className="w-full h-10 px-3 rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm">
                       <option value="">— нет —</option>
                       <option value="20">20 см</option>
                       <option value="30">30 см</option>
@@ -203,13 +203,13 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
                     <label className="block text-xs font-medium mb-1">Тип теста</label>
                     <select
                       {...form.register(`items.${index}.pizzaType`)}
-                      className="w-full h-10 px-3 rounded-md border bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                      className="w-full h-10 px-3 rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary text-sm">
                       <option value="">— нет —</option>
                       <option value="1">Тонкое</option>
                       <option value="2">Традиционное</option>
                     </select>
                   </div>
-                  <Button type="button" variant="ghost" className="text-red-500 hover:bg-red-50" onClick={() => remove(index)}>
+                  <Button type="button" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => remove(index)}>
                     <Trash2 size={20} />
                   </Button>
                 </div>

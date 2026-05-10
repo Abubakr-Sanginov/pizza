@@ -15,11 +15,15 @@ const getCartToken = async () => {
 export interface CartItem {
   id: number;
   quantity: number;
+  productItemId: number;
   productItem: {
+    id: number;
     price: number;
     size: number | null;
     pizzaType: number | null;
+    productId: number;
     product: {
+      id: number;
       name: string;
       imageUrl: string;
     };

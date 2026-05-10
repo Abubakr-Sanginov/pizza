@@ -69,7 +69,7 @@ export const CheckboxFiltersGroup: React.FC<Props> = ({
           <Input
             onChange={onChangeSearchInput}
             placeholder={searchInputPlaceholder || t('filters.searchPlaceholder')}
-            className="bg-gray-50 border-none"
+            className="bg-muted border-none"
           />
         </div>
       )}
@@ -89,7 +89,7 @@ export const CheckboxFiltersGroup: React.FC<Props> = ({
       </div>
 
       {items.length > limit && (
-        <div className={showAll ? 'border-t border-t-neutral-100 mt-4' : ''}>
+        <div className={showAll ? 'border-t border-border mt-4' : ''}>
           <button onClick={() => setShowAll(!showAll)} className="text-primary mt-3">
             {showAll ? t('filters.hide') : `+ ${t('filters.showAll')}`}
           </button>

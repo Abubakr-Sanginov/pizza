@@ -1,7 +1,8 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { View as DefaultView, Text as DefaultText, StyleSheet, FlatList, Image, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, TextInput, RefreshControl, LayoutAnimation, Dimensions, ActivityIndicator, Keyboard, Alert } from 'react-native';
 import { useCartStore, getCartToken } from '@/store/useCartStore';
 import { useUserStore } from '@/store/useUserStore';
+import { useUiStore } from '@/store/useUiStore';
 import { Ionicons } from '@expo/vector-icons';
 import { AddressAutocomplete } from '@/components/shared/AddressAutocomplete';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,14 +13,32 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { BASE_URL } from '@/constants/Api';
+import { useTheme, Theme } from '@/hooks/useTheme';
+import { gradients } from '@/constants/Colors';
+import { LinearGradient } from 'expo-linear-gradient';
+import { SpringPress, LiquidGlassCard, AmbientBackdrop } from '@/components/ui';
 
 export default function CartScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useTranslation();
   const { items, totalAmount, loading, fetchCart, updateQuantity, removeItem } = useCartStore();
+  const theme = useTheme();
+  const styles = useMemo(() => makeStyles(theme), [theme]);
   const [refreshing, setRefreshing] = useState(false);
-  const [step, setStep] = useState(1); 
+  const [step, setStep] = useState(1);
+  const setTabBarHidden = useUiStore((s) => s.setTabBarHidden);
+
+  useEffect(() => {
+    setTabBarHidden(step === 2);
+    return () => setTabBarHidden(false);
+  }, [step, setTabBarHidden]);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => setTabBarHidden(false);
+    }, [setTabBarHidden]),
+  );
 
   // Order Details
   const [deliveryType, setDeliveryType] = useState<'DELIVERY' | 'PICKUP'>('DELIVERY');
@@ -251,20 +270,31 @@ export default function CartScreen() {
   if (items.length === 0 && !loading) {
     return (
       <DefaultView style={styles.center}>
-        <ScrollView 
+        <AmbientBackdrop />
+        <ScrollView
           contentContainerStyle={styles.centerScroll}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#ff7000']} tintColor="#ff7000" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />
           }
         >
           <DefaultView style={styles.emptyIconContainer}>
-            <Ionicons name="cart-outline" size={100} color="#ff7000" />
+            <LinearGradient
+              colors={(theme.mode === 'dark' ? gradients.dark : gradients.light).primarySoft}
+              style={StyleSheet.absoluteFill}
+            />
+            <Ionicons name="cart-outline" size={86} color={theme.primary} />
           </DefaultView>
           <DefaultText style={styles.emptyText}>{t('cart.empty')}</DefaultText>
           <DefaultText style={styles.emptySubText}>{t('cart.emptySubtitle')}</DefaultText>
-          <TouchableOpacity style={styles.goBackButton} onPress={() => router.replace('/')}>
-            <DefaultText style={styles.goBackText}>{t('cart.toMenu')}</DefaultText>
-          </TouchableOpacity>
+          <SpringPress onPress={() => router.replace('/')} scaleTo={0.95} style={{ marginTop: 30 }}>
+            <LinearGradient
+              colors={(theme.mode === 'dark' ? gradients.dark : gradients.light).primary}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.goBackButton}>
+              <DefaultText style={styles.goBackText}>{t('cart.toMenu')}</DefaultText>
+            </LinearGradient>
+          </SpringPress>
         </ScrollView>
       </DefaultView>
     );
@@ -272,13 +302,14 @@ export default function CartScreen() {
 
   return (
     <DefaultView style={styles.container}>
+      <AmbientBackdrop />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView 
           style={{ flex: 1 }}
           contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 10 }]}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#ff7000']} tintColor="#ff7000" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />
           }
         >
           {step === 1 ? (
@@ -286,7 +317,7 @@ export default function CartScreen() {
               <DefaultView style={styles.headerRow}>
                 <DefaultText style={styles.title}>{t('cart.title')}</DefaultText>
                 <TouchableOpacity onPress={onRefresh}>
-                  <Ionicons name="refresh-circle" size={32} color="#ff7000" />
+                  <Ionicons name="refresh-circle" size={32} color={theme.primary} />
                 </TouchableOpacity>
               </DefaultView>
 
@@ -307,17 +338,17 @@ export default function CartScreen() {
                       )}
                       <DefaultView style={styles.qtyControls}>
                         <TouchableOpacity onPress={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))} style={styles.qtyBtn}>
-                          <Ionicons name="remove" size={18} color="#11181C" />
+                          <Ionicons name="remove" size={18} color={theme.text} />
                         </TouchableOpacity>
                         <DefaultText style={styles.qtyVal}>{item.quantity}</DefaultText>
                         <TouchableOpacity onPress={() => updateQuantity(item.id, item.quantity + 1)} style={styles.qtyBtn}>
-                          <Ionicons name="add" size={18} color="#11181C" />
+                          <Ionicons name="add" size={18} color={theme.text} />
                         </TouchableOpacity>
                       </DefaultView>
                     </DefaultView>
                     <DefaultView style={styles.itemRight}>
                       <TouchableOpacity onPress={() => removeItem(item.id)} style={styles.deleteBtn}>
-                        <Ionicons name="trash-outline" size={20} color="#ff4d4f" />
+                        <Ionicons name="trash-outline" size={20} color={theme.danger} />
                       </TouchableOpacity>
                       <DefaultText style={styles.itemPrice}>{calcItemPrice(item)} TJS</DefaultText>
                     </DefaultView>
@@ -329,7 +360,7 @@ export default function CartScreen() {
             <>
               <DefaultView style={styles.headerRow}>
                 <TouchableOpacity onPress={prevStep} style={styles.backBtn}>
-                  <Ionicons name="chevron-back" size={30} color="#11181C" />
+                  <Ionicons name="chevron-back" size={30} color={theme.text} />
                 </TouchableOpacity>
                 <DefaultText style={styles.title}>{t('cart.checkout')}</DefaultText>
                 <DefaultView style={{ width: 30 }} />
@@ -337,26 +368,26 @@ export default function CartScreen() {
 
               <DefaultView style={styles.section}>
                 <DefaultView style={styles.sectionHeaderRow}>
-                  <Ionicons name="person-outline" size={22} color="#ff7000" />
+                  <Ionicons name="person-outline" size={22} color={theme.primary} />
                   <DefaultText style={styles.sectionHeader}>{t('cart.contactInfo')}</DefaultText>
                 </DefaultView>
                 <DefaultView style={styles.inputGrid}>
                   <DefaultView style={styles.inputGroup}>
                     <DefaultText style={styles.label}>{t('cart.firstName')}</DefaultText>
-                    <TextInput style={styles.input} value={firstName} onChangeText={setFirstName} placeholder="Фирдавс" placeholderTextColor="#9BA1A6" />
+                    <TextInput style={styles.input} value={firstName} onChangeText={setFirstName} placeholder="Фирдавс" placeholderTextColor={theme.textSubtle} />
                   </DefaultView>
                   <DefaultView style={styles.inputGroup}>
                     <DefaultText style={styles.label}>{t('cart.lastName')}</DefaultText>
-                    <TextInput style={styles.input} value={lastName} onChangeText={setLastName} placeholder="Рахимов" placeholderTextColor="#9BA1A6" />
+                    <TextInput style={styles.input} value={lastName} onChangeText={setLastName} placeholder="Рахимов" placeholderTextColor={theme.textSubtle} />
                   </DefaultView>
                 </DefaultView>
                 <DefaultView style={[styles.inputGroup, { marginTop: 15 }]}>
                   <DefaultText style={styles.label}>{t('auth.email')}</DefaultText>
-                  <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="example@gmail.com" keyboardType="email-address" placeholderTextColor="#9BA1A6" autoCapitalize="none" />
+                  <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="example@gmail.com" keyboardType="email-address" placeholderTextColor={theme.textSubtle} autoCapitalize="none" />
                 </DefaultView>
                 <DefaultView style={[styles.inputGroup, { marginTop: 15 }]}>
                   <DefaultText style={styles.label}>{t('courier.phone')}</DefaultText>
-                  <TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="+992 (XX) XXX-XX-XX" keyboardType="phone-pad" placeholderTextColor="#9BA1A6" />
+                  <TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="+992 (XX) XXX-XX-XX" keyboardType="phone-pad" placeholderTextColor={theme.textSubtle} />
                 </DefaultView>
               </DefaultView>
 
@@ -381,7 +412,7 @@ export default function CartScreen() {
                 {deliveryType === 'DELIVERY' ? (
                   <>
                     <DefaultView style={styles.sectionHeaderRow}>
-                      <Ionicons name="map-outline" size={22} color="#ff7000" />
+                      <Ionicons name="map-outline" size={22} color={theme.primary} />
                       <DefaultText style={styles.sectionHeader}>{t('cart.address')}</DefaultText>
                     </DefaultView>
                     
@@ -396,36 +427,36 @@ export default function CartScreen() {
                         onMessage={handleMapMessage}
                       />
                       <TouchableOpacity style={styles.locateBtn} onPress={locateUser} disabled={locating}>
-                        {locating ? <ActivityIndicator size="small" color="#ff7000" /> : <Ionicons name="navigate" size={20} color="#ff7000" />}
+                        {locating ? <ActivityIndicator size="small" color={theme.primary} /> : <Ionicons name="navigate" size={20} color={theme.primary} />}
                       </TouchableOpacity>
                     </DefaultView>
 
                     <DefaultView style={styles.inputGrid}>
                       <DefaultView style={styles.inputGroup}>
                         <DefaultText style={styles.label}>{t('cart.apartment')}</DefaultText>
-                        <TextInput style={styles.input} value={apartment} onChangeText={setApartment} placeholder="№" keyboardType="numeric" placeholderTextColor="#9BA1A6" />
+                        <TextInput style={styles.input} value={apartment} onChangeText={setApartment} placeholder="№" keyboardType="numeric" placeholderTextColor={theme.textSubtle} />
                       </DefaultView>
                       <DefaultView style={styles.inputGroup}>
                         <DefaultText style={styles.label}>{t('cart.entrance')}</DefaultText>
-                        <TextInput style={styles.input} value={entrance} onChangeText={setEntrance} placeholder="№" keyboardType="numeric" placeholderTextColor="#9BA1A6" />
+                        <TextInput style={styles.input} value={entrance} onChangeText={setEntrance} placeholder="№" keyboardType="numeric" placeholderTextColor={theme.textSubtle} />
                       </DefaultView>
                     </DefaultView>
 
                     <DefaultView style={styles.inputGrid}>
                       <DefaultView style={styles.inputGroup}>
                         <DefaultText style={styles.label}>{t('cart.floor')}</DefaultText>
-                        <TextInput style={styles.input} value={floor} onChangeText={setFloor} placeholder="№" keyboardType="numeric" placeholderTextColor="#9BA1A6" />
+                        <TextInput style={styles.input} value={floor} onChangeText={setFloor} placeholder="№" keyboardType="numeric" placeholderTextColor={theme.textSubtle} />
                       </DefaultView>
                       <DefaultView style={styles.inputGroup}>
                         <DefaultText style={styles.label}>{t('cart.doorCode')}</DefaultText>
-                        <TextInput style={styles.input} value={doorCode} onChangeText={setDoorCode} placeholder={t('cart.doorCode')} placeholderTextColor="#9BA1A6" />
+                        <TextInput style={styles.input} value={doorCode} onChangeText={setDoorCode} placeholder={t('cart.doorCode')} placeholderTextColor={theme.textSubtle} />
                       </DefaultView>
                     </DefaultView>
                   </>
                 ) : (
                   <>
                     <DefaultView style={styles.sectionHeaderRow}>
-                      <Ionicons name="storefront-outline" size={22} color="#ff7000" />
+                      <Ionicons name="storefront-outline" size={22} color={theme.primary} />
                       <DefaultText style={styles.sectionHeader}>{t('cart.selectStore')}</DefaultText>
                     </DefaultView>
                     {stores.map(store => (
@@ -435,13 +466,13 @@ export default function CartScreen() {
                         onPress={() => setSelectedStoreId(store.id)}
                       >
                         <DefaultView style={styles.storeIcon}>
-                          <Ionicons name="pizza" size={20} color="#ff7000" />
+                          <Ionicons name="pizza" size={20} color={theme.primary} />
                         </DefaultView>
                         <DefaultView style={styles.storeMeta}>
                           <DefaultText style={styles.storeName}>{store.name}</DefaultText>
                           <DefaultText style={styles.storeAddress}>{store.address}</DefaultText>
                         </DefaultView>
-                        {selectedStoreId === store.id && <Ionicons name="checkmark-circle" size={24} color="#ff7000" />}
+                        {selectedStoreId === store.id && <Ionicons name="checkmark-circle" size={24} color={theme.primary} />}
                       </TouchableOpacity>
                     ))}
                   </>
@@ -454,7 +485,7 @@ export default function CartScreen() {
                     value={comment} 
                     onChangeText={setComment} 
                     placeholder={t('cart.commentPlaceholder')}
-                    placeholderTextColor="#9BA1A6"
+                    placeholderTextColor={theme.textSubtle}
                     multiline
                   />
                 </DefaultView>
@@ -462,7 +493,7 @@ export default function CartScreen() {
 
               <DefaultView style={styles.section}>
                 <DefaultView style={styles.sectionHeaderRow}>
-                  <Ionicons name="receipt-outline" size={22} color="#ff7000" />
+                  <Ionicons name="receipt-outline" size={22} color={theme.primary} />
                   <DefaultText style={styles.sectionHeader}>{t('cart.orderDetails')}</DefaultText>
                 </DefaultView>
                 
@@ -484,13 +515,13 @@ export default function CartScreen() {
 
               <DefaultView style={styles.section}>
                 <DefaultView style={styles.sectionHeaderRow}>
-                  <Ionicons name="card-outline" size={22} color="#ff7000" />
+                  <Ionicons name="card-outline" size={22} color={theme.primary} />
                   <DefaultText style={styles.sectionHeader}>{t('cart.payment')}</DefaultText>
                 </DefaultView>
                 <TouchableOpacity style={styles.paymentMethod}>
-                  <Ionicons name="wallet-outline" size={24} color="#ff7000" />
+                  <Ionicons name="wallet-outline" size={24} color={theme.primary} />
                   <DefaultText style={styles.paymentText}>{t('cart.cash')}</DefaultText>
-                  <Ionicons name="checkmark-circle" size={24} color="#ff7000" />
+                  <Ionicons name="checkmark-circle" size={24} color={theme.primary} />
                 </TouchableOpacity>
               </DefaultView>
             </>
@@ -506,23 +537,27 @@ export default function CartScreen() {
                 <DefaultText style={styles.totalLabel}>{t('cart.total')}</DefaultText>
                 <DefaultText style={styles.totalAmount}>{finalTotal.toFixed(0)} TJS</DefaultText>
               </DefaultView>
-              <TouchableOpacity 
-                style={styles.mainButton} 
+              <SpringPress
                 onPress={step === 1 ? nextStep : onSubmitOrder}
-                activeOpacity={0.8}
                 disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <ActivityIndicator color="white" />
-                ) : (
-                  <>
-                    <DefaultText style={styles.mainButtonText}>
-                      {step === 1 ? t('cart.toCheckout') : t('cart.order')}
-                    </DefaultText>
-                    <Ionicons name="arrow-forward" size={20} color="white" />
-                  </>
-                )}
-              </TouchableOpacity>
+                scaleTo={0.96}>
+                <LinearGradient
+                  colors={(theme.mode === 'dark' ? gradients.dark : gradients.light).primary}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.mainButton}>
+                  {isSubmitting ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <>
+                      <DefaultText style={styles.mainButtonText}>
+                        {step === 1 ? t('cart.toCheckout') : t('cart.order')}
+                      </DefaultText>
+                      <Ionicons name="arrow-forward" size={20} color="white" />
+                    </>
+                  )}
+                </LinearGradient>
+              </SpringPress>
             </DefaultView>
           </DefaultView>
         )}
@@ -531,14 +566,9 @@ export default function CartScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fdf7f2',
-  },
-  scrollContent: {
-    padding: 16,
-  },
+const makeStyles = (t: Theme) => StyleSheet.create({
+  container: { flex: 1 },
+  scrollContent: { padding: 16 },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -546,104 +576,56 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingHorizontal: 4,
   },
-  title: {
-    fontSize: 34,
-    fontWeight: '900',
-    color: '#11181C',
-    letterSpacing: -1.5,
-  },
-  backBtn: {
-    padding: 4,
-  },
-  itemsList: {
-    gap: 12,
-  },
+  title: { fontSize: 34, fontWeight: '900', color: t.text, letterSpacing: -1.4 },
+  backBtn: { padding: 4 },
+  itemsList: { gap: 12 },
   cartItemCard: {
     flexDirection: 'row',
-    backgroundColor: 'white',
-    borderRadius: 35,
-    padding: 12,
-    shadowColor: '#ff7000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.04,
-    shadowRadius: 12,
+    backgroundColor: t.surface,
+    borderRadius: 28,
+    padding: 14,
+    shadowColor: t.mode === 'dark' ? '#000' : t.primary,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: t.mode === 'dark' ? 0.4 : 0.06,
+    shadowRadius: 18,
     elevation: 4,
+    borderWidth: t.mode === 'dark' ? StyleSheet.hairlineWidth : 0,
+    borderColor: t.border,
   },
-  itemThumb: {
-    width: 80,
-    height: 80,
-    borderRadius: 25,
-    backgroundColor: '#fff7f0',
-  },
-  itemMeta: {
-    flex: 1,
-    marginLeft: 12,
-    justifyContent: 'center',
-  },
-  itemName: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#11181C',
-    lineHeight: 18,
-  },
-  itemSpec: {
-    fontSize: 12,
-    color: '#687076',
-    marginTop: 2,
-  },
-  itemIngredients: {
-    fontSize: 11,
-    color: '#ff7000',
-    marginTop: 2,
-    marginBottom: 6,
-  },
+  itemThumb: { width: 80, height: 80, borderRadius: 25, backgroundColor: t.primarySoft },
+  itemMeta: { flex: 1, marginLeft: 12, justifyContent: 'center' },
+  itemName: { fontSize: 16, fontWeight: '800', color: t.text, lineHeight: 18 },
+  itemSpec: { fontSize: 12, color: t.textMuted, marginTop: 2 },
+  itemIngredients: { fontSize: 11, color: t.primary, marginTop: 2, marginBottom: 6 },
   qtyControls: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f3f4f6',
+    backgroundColor: t.surfaceMuted,
     borderRadius: 14,
     padding: 2,
     alignSelf: 'flex-start',
   },
-  qtyBtn: {
-    width: 30,
-    height: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  qtyVal: {
-    fontSize: 14,
-    fontWeight: '800',
-    paddingHorizontal: 8,
-    color: '#11181C',
-  },
-  itemRight: {
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    paddingVertical: 4,
-  },
-  deleteBtn: {
-    padding: 4,
-  },
-  itemPrice: {
-    fontSize: 16,
-    fontWeight: '900',
-    color: '#11181C',
-  },
+  qtyBtn: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
+  qtyVal: { fontSize: 14, fontWeight: '800', paddingHorizontal: 8, color: t.text },
+  itemRight: { justifyContent: 'space-between', alignItems: 'flex-end', paddingVertical: 4 },
+  deleteBtn: { padding: 4 },
+  itemPrice: { fontSize: 16, fontWeight: '900', color: t.text },
   section: {
-    backgroundColor: 'white',
-    borderRadius: 35,
-    padding: 20,
+    backgroundColor: t.surface,
+    borderRadius: 28,
+    padding: 22,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: t.mode === 'dark' ? '#000' : t.primary,
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.03,
+    shadowOpacity: t.mode === 'dark' ? 0.35 : 0.05,
     shadowRadius: 20,
     elevation: 2,
+    borderWidth: t.mode === 'dark' ? StyleSheet.hairlineWidth : 0,
+    borderColor: t.border,
   },
   deliveryToggle: {
     flexDirection: 'row',
-    backgroundColor: '#f3f4f6',
+    backgroundColor: t.surfaceMuted,
     padding: 6,
     borderRadius: 22,
     marginBottom: 20,
@@ -658,188 +640,114 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   toggleBtnActive: {
-    backgroundColor: '#ff7000',
-    shadowColor: '#ff7000',
+    backgroundColor: t.primary,
+    shadowColor: t.primary,
     shadowOpacity: 0.2,
     shadowRadius: 10,
     elevation: 4,
   },
-  toggleText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#687076',
-  },
-  toggleTextActive: {
-    color: 'white',
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 15,
-  },
-  sectionHeader: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#11181C',
-  },
-  priceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  priceLabel: {
-    fontSize: 14,
-    color: '#687076',
-    fontWeight: '700',
-  },
-  priceVal: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#11181C',
-  },
+  toggleText: { fontSize: 14, fontWeight: '800', color: t.textMuted },
+  toggleTextActive: { color: t.primaryContrast },
+  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 15 },
+  sectionHeader: { fontSize: 18, fontWeight: '900', color: t.text },
+  priceRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+  priceLabel: { fontSize: 14, color: t.textMuted, fontWeight: '700' },
+  priceVal: { fontSize: 15, fontWeight: '800', color: t.text },
   mapWrapper: {
     height: 220,
     borderRadius: 30,
     overflow: 'hidden',
     marginTop: 15,
     borderWidth: 1,
-    borderColor: '#f3f4f6',
+    borderColor: t.borderMuted,
     position: 'relative',
   },
-  mapWeb: {
-    flex: 1,
-  },
+  mapWeb: { flex: 1 },
   locateBtn: {
     position: 'absolute',
     bottom: 15,
     right: 15,
-    backgroundColor: 'white',
+    backgroundColor: t.surface,
     width: 44,
     height: 44,
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
+    shadowColor: t.shadow,
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 5,
   },
-  inputGrid: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 15,
-  },
-  inputGroup: {
-    flex: 1,
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#687076',
-    marginBottom: 6,
-    marginLeft: 4,
-  },
+  inputGrid: { flexDirection: 'row', gap: 12, marginTop: 15 },
+  inputGroup: { flex: 1 },
+  label: { fontSize: 12, fontWeight: '800', color: t.textMuted, marginBottom: 6, marginLeft: 4 },
   input: {
     height: 50,
-    backgroundColor: '#f9fafb',
+    backgroundColor: t.inputBg,
     borderRadius: 16,
     paddingHorizontal: 16,
     fontSize: 14,
-    color: '#11181C',
+    color: t.text,
     borderWidth: 1,
-    borderColor: '#f3f4f6',
+    borderColor: t.borderMuted,
   },
   storeCard: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 15,
     borderRadius: 22,
-    backgroundColor: '#f9fafb',
+    backgroundColor: t.inputBg,
     borderWidth: 2,
     borderColor: 'transparent',
     marginBottom: 10,
   },
-  storeCardActive: {
-    borderColor: '#ff7000',
-    backgroundColor: '#fff7f0',
-  },
+  storeCardActive: { borderColor: t.primary, backgroundColor: t.primarySoft },
   storeIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'white',
+    backgroundColor: t.surface,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
+    shadowColor: t.shadow,
     shadowOpacity: 0.05,
     shadowRadius: 5,
   },
-  storeMeta: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  storeName: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#11181C',
-  },
-  storeAddress: {
-    fontSize: 12,
-    color: '#687076',
-    marginTop: 2,
-  },
+  storeMeta: { flex: 1, marginLeft: 12 },
+  storeName: { fontSize: 15, fontWeight: '800', color: t.text },
+  storeAddress: { fontSize: 12, color: t.textMuted, marginTop: 2 },
   paymentMethod: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff7f0',
+    backgroundColor: t.primarySoft,
     padding: 16,
     borderRadius: 22,
     gap: 12,
     borderWidth: 1,
-    borderColor: '#ff7000',
+    borderColor: t.primary,
   },
-  paymentText: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#11181C',
-  },
+  paymentText: { flex: 1, fontSize: 15, fontWeight: '800', color: t.text },
   footer: {
     position: 'absolute',
     left: 16,
     right: 16,
-    backgroundColor: 'white',
-    borderRadius: 35,
+    backgroundColor: t.surface,
+    borderRadius: 32,
     padding: 16,
-    shadowColor: '#ff7000',
-    shadowOffset: { width: 0, height: -10 },
-    shadowOpacity: 0.08,
-    shadowRadius: 15,
-    elevation: 15,
-    borderWidth: 1,
-    borderColor: '#ffffff',
+    shadowColor: t.mode === 'dark' ? '#000' : t.primary,
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: t.mode === 'dark' ? 0.5 : 0.16,
+    shadowRadius: 24,
+    elevation: 16,
+    borderWidth: t.mode === 'dark' ? StyleSheet.hairlineWidth : 0,
+    borderColor: t.border,
   },
-  footerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  totalBlock: {
-    flex: 1,
-  },
-  totalLabel: {
-    fontSize: 13,
-    color: '#687076',
-    fontWeight: '700',
-  },
-  totalAmount: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: '#11181C',
-  },
+  footerContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  totalBlock: { flex: 1 },
+  totalLabel: { fontSize: 13, color: t.textMuted, fontWeight: '700' },
+  totalAmount: { fontSize: 24, fontWeight: '900', color: t.text },
   mainButton: {
-    backgroundColor: '#ff7000',
+    backgroundColor: t.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -847,65 +755,46 @@ const styles = StyleSheet.create({
     height: 54,
     borderRadius: 20,
     gap: 6,
-    shadowColor: '#ff7000',
+    shadowColor: t.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
   },
-  mainButtonText: {
-    color: 'white',
-    fontSize: 15,
-    fontWeight: '900',
-  },
-  center: {
-    flex: 1,
-    backgroundColor: '#fdf7f2',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  mainButtonText: { color: t.primaryContrast, fontSize: 15, fontWeight: '900' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   centerScroll: {
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 40,
-    backgroundColor: '#fdf7f2',
   },
   emptyIconContainer: {
     width: 160,
     height: 160,
     borderRadius: 80,
-    backgroundColor: 'white',
+    backgroundColor: t.surface,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
-    shadowColor: '#ff7000',
-    shadowOpacity: 0.08,
-    shadowRadius: 25,
+    marginBottom: 24,
+    shadowColor: t.primary,
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: t.mode === 'dark' ? 0.5 : 0.18,
+    shadowRadius: 28,
+    elevation: 8,
+    overflow: 'hidden',
   },
-  emptyText: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: '#11181C',
-    textAlign: 'center',
-  },
-  emptySubText: {
-    fontSize: 15,
-    color: '#687076',
-    textAlign: 'center',
-    marginTop: 8,
-    lineHeight: 20,
-  },
+  emptyText: { fontSize: 24, fontWeight: '900', color: t.text, textAlign: 'center' },
+  emptySubText: { fontSize: 15, color: t.textMuted, textAlign: 'center', marginTop: 8, lineHeight: 20 },
   goBackButton: {
-    marginTop: 30,
-    backgroundColor: '#ff7000',
-    paddingHorizontal: 35,
-    paddingVertical: 16,
-    borderRadius: 22,
+    paddingHorizontal: 38,
+    paddingVertical: 18,
+    borderRadius: 24,
+    shadowColor: t.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 14,
+    elevation: 6,
   },
-  goBackText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '900',
-  },
+  goBackText: { color: '#fff', fontSize: 16, fontWeight: '900', letterSpacing: 0.3 },
 });

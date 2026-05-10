@@ -39,7 +39,7 @@ export const DashboardSidebar: React.FC<Props> = ({ className }) => {
   const items = isCourier ? courierItems : adminItems;
 
   return (
-    <div className={cn('flex flex-col w-64 bg-white border-r h-screen sticky top-0 p-5', className)}>
+    <div className={cn('flex flex-col w-64 bg-card text-card-foreground border-r border-border h-screen sticky top-0 p-5', className)}>
       <div className="flex items-center gap-3 mb-10 px-2">
         <img src="/logo.png" alt="Logo" width={30} height={30} />
         <span className="text-xl font-bold">{isCourier ? 'Курьер' : 'Админка'}</span>
@@ -54,7 +54,7 @@ export const DashboardSidebar: React.FC<Props> = ({ className }) => {
               href={item.href}
               className={cn(
                 'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors',
-                isActive ? 'bg-orange-50 text-orange-600 font-bold' : 'text-gray-600 hover:bg-gray-50',
+                isActive ? 'bg-primary/10 text-primary font-bold' : 'text-muted-foreground hover:bg-muted',
               )}>
               <item.icon size={20} />
               <span className="font-medium">{item.title}</span>
@@ -63,10 +63,10 @@ export const DashboardSidebar: React.FC<Props> = ({ className }) => {
         })}
       </nav>
 
-      <div className="pt-5 border-t">
+      <div className="pt-5 border-t border-border">
         <Link
           href="/"
-          className="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+          className="flex items-center gap-3 px-3 py-2 text-muted-foreground hover:bg-muted rounded-lg transition-colors">
           <ArrowLeft size={20} />
           <span className="font-medium">На сайт</span>
         </Link>

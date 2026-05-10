@@ -68,10 +68,10 @@ export const ChoosePizzaForm: React.FC<Props> = ({
     <div className={cn(className, 'flex flex-col lg:flex-row flex-1')}>
       <PizzaImage imageUrl={imageUrl} size={size} className="lg:static md:flex items-center justify-center flex-1 w-full" />
 
-      <div className="w-full lg:w-[490px] bg-[#f7f6f5] p-7">
+      <div className="w-full lg:w-[490px] bg-secondary text-secondary-foreground p-7">
         <Title text={name} size="md" className="font-extrabold mb-1" />
 
-        <p className="text-gray-400">{textDetaills}</p>
+        <p className="text-muted-foreground">{textDetaills}</p>
 
         <div className="flex flex-col gap-4 mt-5">
           <GroupVariants
@@ -87,7 +87,7 @@ export const ChoosePizzaForm: React.FC<Props> = ({
           />
         </div>
 
-        <div className="bg-gray-50 p-5 rounded-md h-[420px] overflow-auto scrollbar mt-5">
+        <div className="bg-muted p-5 rounded-md h-[420px] overflow-auto scrollbar mt-5">
           <div className="grid grid-cols-3 gap-3">
             {ingredients.map((ingredient) => (
               <IngredientItem

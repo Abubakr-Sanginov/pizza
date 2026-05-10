@@ -1,98 +1,54 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUserStore } from '@/store/useUserStore';
+import { useCartStore } from '@/store/useCartStore';
 import { useTranslation } from 'react-i18next';
+import { CustomTabBar } from '@/components/CustomTabBar';
+import { useTheme } from '@/hooks/useTheme';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-  const insets = useSafeAreaInsets();
   const user = useUserStore(state => state.user);
   const { t } = useTranslation();
+  const fetchCart = useCartStore(state => state.fetchCart);
+  const isCourier = user?.role === 'COURIER';
+  const theme = useTheme();
+
+  useEffect(() => {
+    if (!isCourier) fetchCart();
+  }, [fetchCart, isCourier]);
 
   return (
     <Tabs
+      tabBar={(props) => <CustomTabBar {...props} />}
+      initialRouteName={isCourier ? 'courier' : 'index'}
       screenOptions={{
-        tabBarActiveTintColor: Colors.light.primary,
-        tabBarInactiveTintColor: '#9BA1A6',
         headerShown: false,
-        tabBarStyle: {
-          backgroundColor: 'rgba(253, 247, 242, 0.95)', // Glass effect
-          borderTopWidth: 0,
-          height: 70,
-          paddingBottom: insets.bottom > 0 ? insets.bottom / 2 : 10,
-          paddingTop: 15,
-          position: 'absolute',
-          bottom: 45,
-          left: 20,
-          right: 20,
-          borderRadius: 35,
-          elevation: 20,
-          shadowColor: '#ff7000',
-          shadowOffset: { width: 0, height: -10 },
-          shadowOpacity: 0.1,
-          shadowRadius: 20,
-          borderWidth: 1,
-          borderColor: '#ffffff',
-        },
-        tabBarLabelStyle: {
-          fontSize: 13,
-          fontWeight: '900',
-          marginTop: 4,
-        },
-        tabBarIconStyle: {
-          marginBottom: 0,
-        },
+        animation: 'fade',
+        sceneStyle: { backgroundColor: theme.background },
+        lazy: false,
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: t('tabs.menu'),
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'pizza' : 'pizza-outline'} size={24} color={color} />
-          ),
+          href: isCourier ? null : '/',
         }}
       />
       <Tabs.Screen
         name="two"
         options={{
           title: t('tabs.cart'),
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'cart' : 'cart-outline'} size={24} color={color} />
-          ),
+          href: isCourier ? null : '/two',
         }}
       />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: t('tabs.profile'),
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'person' : 'person-outline'} size={24} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="notifications"
-        options={{
-          title: t('tabs.notifications'),
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'notifications' : 'notifications-outline'} size={24} color={color} />
-          ),
-        }}
-      />
+      <Tabs.Screen name="profile" options={{ title: t('tabs.profile') }} />
+      <Tabs.Screen name="notifications" options={{ title: t('tabs.notifications') }} />
       <Tabs.Screen
         name="courier"
         options={{
           title: t('tabs.courier'),
-          href: user?.role === 'COURIER' ? '/courier' : null,
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'bicycle' : 'bicycle-outline'} size={24} color={color} />
-          ),
+          href: isCourier ? '/courier' : null,
         }}
       />
     </Tabs>

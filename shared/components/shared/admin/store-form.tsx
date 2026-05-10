@@ -58,7 +58,7 @@ export const StoreForm: React.FC<Props> = ({ initialData }) => {
   };
 
   return (
-    <div className="max-w-xl bg-white p-10 rounded-2xl border shadow-sm">
+    <div className="max-w-xl bg-card text-card-foreground p-10 rounded-2xl border border-border shadow-sm">
       <Title text={initialData ? 'Редактирование заведения' : 'Новое заведение'} size="md" className="font-bold mb-10" />
 
       <FormProvider {...form}>
@@ -66,25 +66,25 @@ export const StoreForm: React.FC<Props> = ({ initialData }) => {
           <div>
             <label className="block text-sm font-medium mb-1">Название заведения</label>
             <Input {...form.register('name')} placeholder="Пиццерия на Рудаки" />
-            {form.formState.errors.name && <p className="text-red-500 text-xs mt-1">{form.formState.errors.name.message}</p>}
+            {form.formState.errors.name && <p className="text-destructive text-xs mt-1">{form.formState.errors.name.message}</p>}
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-1">Адрес</label>
             <Input {...form.register('address')} placeholder="пр. Рудаки, 10..." />
-            {form.formState.errors.address && <p className="text-red-500 text-xs mt-1">{form.formState.errors.address.message}</p>}
+            {form.formState.errors.address && <p className="text-destructive text-xs mt-1">{form.formState.errors.address.message}</p>}
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-1">Телефон (необязательно)</label>
             <Input {...form.register('phone')} placeholder="+992..." />
-            {form.formState.errors.phone && <p className="text-red-500 text-xs mt-1">{form.formState.errors.phone.message}</p>}
+            {form.formState.errors.phone && <p className="text-destructive text-xs mt-1">{form.formState.errors.phone.message}</p>}
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-1 text-primary font-bold">Telegram Username Хозяина (без @)</label>
             <Input {...form.register('ownerUsername')} placeholder="kto_to" />
-            <p className="text-[10px] text-gray-400 mt-1">Пользователь должен сначала написать боту /start. Оповещения будут приходить именно ему.</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Пользователь должен сначала написать боту /start. Оповещения будут приходить именно ему.</p>
           </div>
 
           <div className="grid grid-cols-2 gap-5">

@@ -37,29 +37,38 @@ export const CartDrawer: React.FC<React.PropsWithChildren> = ({ children }) => {
     <Sheet>
       <SheetTrigger asChild>{children}</SheetTrigger>
 
-      <SheetContent className="flex flex-col justify-between pb-0 bg-[#F4F1EE]">
+      <SheetContent className="flex flex-col justify-between pb-0 glass-strong border-l border-border/50 ambient-bg">
         <div className={cn('flex flex-col h-full', !totalAmount && 'justify-center')}>
           {totalAmount > 0 && (
-            <SheetHeader>
-              <SheetTitle>
-                {t('cart.itemsInCart')} <span className="font-bold">{items.length} {t('cart.itemsCount')}</span>
+            <SheetHeader className="pb-2">
+              <SheetTitle className="text-2xl font-black tracking-tight">
+                В корзине{' '}
+                <span className="bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">
+                  {items.length} {t('cart.itemsCount')}
+                </span>
               </SheetTitle>
             </SheetHeader>
           )}
 
           {!totalAmount && (
             <div className="flex flex-col items-center justify-center w-72 mx-auto">
-              <div className="mb-5 p-10 bg-white rounded-3xl border shadow-sm">
+              <div className="mb-6 p-10 glass rounded-[32px] shadow-soft-lg">
                 <Image src="/assets/images/empty-box.png" alt="Empty cart" width={120} height={120} />
               </div>
-              <Title size="sm" text={t('cart.emptyTitle')} className="text-center font-bold my-2" />
-              <p className="text-center text-neutral-500 mb-8 leading-relaxed">
+              <Title
+                size="sm"
+                text={t('cart.emptyTitle')}
+                className="text-center font-black my-2 tracking-tight"
+              />
+              <p className="text-center text-muted-foreground mb-8 leading-relaxed">
                 {t('cart.emptyText')}
               </p>
 
               <SheetClose>
-                <Button className="w-56 h-12 text-base font-bold shadow-md hover:shadow-lg transition-all" size="lg">
-                  <ArrowLeft className="w-5 mr-4" />
+                <Button
+                  className="w-56 h-12 text-base font-extrabold rounded-2xl btn-gradient border-0"
+                  size="lg">
+                  <ArrowLeft className="w-5 mr-3" />
                   {t('cart.back')}
                 </Button>
               </SheetClose>
@@ -68,9 +77,9 @@ export const CartDrawer: React.FC<React.PropsWithChildren> = ({ children }) => {
 
           {totalAmount > 0 && (
             <>
-              <div className="-mx-6 mt-5 overflow-auto flex-1">
+              <div className="-mx-6 mt-4 overflow-auto flex-1 px-2 scrollbar">
                 {items.map((item) => (
-                  <div key={item.id} className="mb-2">
+                  <div key={item.id} className="mb-3">
                     <CartDrawerItem
                       id={item.id}
                       imageUrl={item.imageUrl}
@@ -91,15 +100,18 @@ export const CartDrawer: React.FC<React.PropsWithChildren> = ({ children }) => {
                 ))}
               </div>
 
-              <SheetFooter className="-mx-6 bg-white p-8">
+              <SheetFooter className="-mx-6 glass-strong border-t border-border/50 p-7">
                 <div className="w-full">
-                  <div className="flex mb-4">
-                    <span className="flex flex-1 text-lg text-neutral-500">
+                  <div className="flex items-baseline mb-5">
+                    <span className="flex items-baseline flex-1 text-base text-muted-foreground font-medium">
                       {t('cart.total')}
-                      <div className="flex-1 border-b border-dashed border-b-neutral-200 relative -top-1 mx-2" />
+                      <div className="flex-1 border-b border-dashed border-border/60 relative -top-1 mx-3" />
                     </span>
 
-                    <span className="font-bold text-lg">{totalAmount} TJS</span>
+                    <span className="font-black text-2xl tracking-tight">
+                      {totalAmount}{' '}
+                      <span className="text-base text-muted-foreground font-bold">TJS</span>
+                    </span>
                   </div>
 
                   <Link href="/checkout">
@@ -107,9 +119,9 @@ export const CartDrawer: React.FC<React.PropsWithChildren> = ({ children }) => {
                       onClick={() => setRedirecting(true)}
                       loading={redirecting}
                       type="submit"
-                      className="w-full h-12 text-base">
+                      className="w-full h-14 text-base rounded-2xl btn-gradient border-0 font-extrabold gap-2">
                       {t('cart.checkout')}
-                      <ArrowRight className="w-5 ml-2" />
+                      <ArrowRight className="w-5" strokeWidth={2.5} />
                     </Button>
                   </Link>
                 </div>

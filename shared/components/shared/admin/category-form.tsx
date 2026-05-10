@@ -51,7 +51,7 @@ export const CategoryForm: React.FC<Props> = ({ initialData }) => {
   };
 
   return (
-    <div className="max-w-xl bg-white p-10 rounded-2xl border shadow-sm">
+    <div className="max-w-xl bg-card text-card-foreground p-10 rounded-2xl border border-border shadow-sm">
       <Title text={initialData ? 'Редактирование категории' : 'Новая категория'} size="md" className="font-bold mb-10" />
 
       <FormProvider {...form}>
@@ -59,7 +59,7 @@ export const CategoryForm: React.FC<Props> = ({ initialData }) => {
           <div>
             <label className="block text-sm font-medium mb-1">Название (RU)</label>
             <Input {...form.register('name')} placeholder="Пиццы..." />
-            {form.formState.errors.name && <p className="text-red-500 text-xs mt-1">{form.formState.errors.name.message}</p>}
+            {form.formState.errors.name && <p className="text-destructive text-xs mt-1">{form.formState.errors.name.message}</p>}
           </div>
 
           <div>

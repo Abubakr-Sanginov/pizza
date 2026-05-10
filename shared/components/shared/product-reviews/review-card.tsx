@@ -14,17 +14,17 @@ interface Props {
 
 export const ReviewCard: React.FC<Props> = ({ fullName, rating, comment, createdAt, className, canDelete, onDelete }) => {
   return (
-    <div className={cn('p-5 bg-white rounded-xl border border-gray-100 shadow-sm relative', className)}>
+    <div className={cn('p-5 bg-card text-card-foreground rounded-xl border border-border shadow-sm relative', className)}>
       <div className="flex items-center justify-between mb-3">
         <span className="font-bold">{fullName}</span>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-400">
+          <span className="text-sm text-muted-foreground">
             {new Date(createdAt).toLocaleDateString('ru-RU')}
           </span>
           {canDelete && (
-            <button 
+            <button
               onClick={onDelete}
-              className="text-gray-400 hover:text-red-500 transition-colors"
+              className="text-muted-foreground hover:text-destructive transition-colors"
               title="Удалить отзыв"
             >
               <Trash2 size={16} />
@@ -38,12 +38,12 @@ export const ReviewCard: React.FC<Props> = ({ fullName, rating, comment, created
           <Star
             key={i}
             size={16}
-            className={cn(i < rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200')}
+            className={cn(i < rating ? 'text-yellow-400 fill-yellow-400' : 'text-muted')}
           />
         ))}
       </div>
 
-      {comment && <p className="text-gray-600 leading-relaxed">{comment}</p>}
+      {comment && <p className="text-muted-foreground leading-relaxed">{comment}</p>}
     </div>
   );
 };

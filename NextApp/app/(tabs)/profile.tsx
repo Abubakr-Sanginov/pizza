@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, Image, LayoutAnimation, RefreshControl, Platform, KeyboardAvoidingView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,11 +8,17 @@ import * as Linking from 'expo-linking';
 import { useTranslation } from 'react-i18next';
 
 import { BASE_URL } from '@/constants/Api';
+import { useTheme, Theme } from '@/hooks/useTheme';
+import { gradients } from '@/constants/Colors';
+import { LinearGradient } from 'expo-linear-gradient';
+import { SpringPress, AmbientBackdrop, LiquidGlassCard } from '@/components/ui';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { user, setUser, logout } = useUserStore();
   const { t } = useTranslation();
+  const theme = useTheme();
+  const styles = useMemo(() => makeStyles(theme), [theme]);
   
   const [isLogin, setIsLogin] = useState(true);
   const [step, setStep] = useState<'auth' | 'verify'>('auth');
@@ -217,21 +223,27 @@ export default function ProfileScreen() {
   if (user) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
-        <ScrollView 
+        <AmbientBackdrop />
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#ff7000']} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />}
         >
           <View style={styles.profileHeader}>
             <View style={styles.headerTop}>
               <View style={styles.avatarLarge}>
-                <Text style={styles.avatarTextLarge}>{user.fullName[0]}</Text>
+                <LinearGradient
+                  colors={(theme.mode === 'dark' ? gradients.dark : gradients.light).primary}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                />
+                <Text style={[styles.avatarTextLarge, { color: '#fff' }]}>{user.fullName[0]}</Text>
               </View>
-              <TouchableOpacity 
-                style={styles.editBtn} 
-                onPress={() => setIsEditing(!isEditing)}
-              >
-                <Ionicons name={isEditing ? "close" : "create-outline"} size={22} color="#ff7000" />
-              </TouchableOpacity>
+              <SpringPress onPress={() => setIsEditing(!isEditing)} scaleTo={0.9}>
+                <View style={styles.editBtn}>
+                  <Ionicons name={isEditing ? 'close' : 'create-outline'} size={22} color={theme.primary} />
+                </View>
+              </SpringPress>
             </View>
 
             {isEditing ? (
@@ -263,26 +275,28 @@ export default function ProfileScreen() {
                     secureTextEntry
                   />
                 </View>
-                <TouchableOpacity 
-                  style={styles.saveBtn} 
-                  onPress={handleUpdateProfile}
-                  disabled={loading}
-                >
-                  {loading ? <ActivityIndicator color="white" /> : <Text style={styles.saveBtnText}>{t('profile.save')}</Text>}
-                </TouchableOpacity>
+                <SpringPress onPress={handleUpdateProfile} disabled={loading} scaleTo={0.96}>
+                  <LinearGradient
+                    colors={(theme.mode === 'dark' ? gradients.dark : gradients.light).primary}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.saveBtn}>
+                    {loading ? <ActivityIndicator color="white" /> : <Text style={styles.saveBtnText}>{t('profile.save')}</Text>}
+                  </LinearGradient>
+                </SpringPress>
               </View>
             ) : (
               <>
                 <Text style={styles.userNameLarge}>{user.fullName}</Text>
                 <Text style={styles.userEmailLarge}>{user.email}</Text>
-                <View style={{ marginTop: 10, backgroundColor: '#fff7f0', paddingHorizontal: 15, paddingVertical: 5, borderRadius: 10 }}>
-                  <Text style={{ color: '#ff7000', fontWeight: 'bold' }}>{t('profile.role')}: {user.role}</Text>
+                <View style={{ marginTop: 10, backgroundColor: theme.primarySoft, paddingHorizontal: 15, paddingVertical: 5, borderRadius: 10 }}>
+                  <Text style={{ color: theme.primary, fontWeight: 'bold' }}>{t('profile.role')}: {user.role}</Text>
                 </View>
               </>
             )}
             
             <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
-              <Ionicons name="log-out-outline" size={20} color="#ff4d4f" />
+              <Ionicons name="log-out-outline" size={20} color={theme.danger} />
               <Text style={styles.logoutText}>{t('profile.logout')}</Text>
             </TouchableOpacity>
           </View>
@@ -294,8 +308,8 @@ export default function ProfileScreen() {
                 <View key={order.id} style={styles.orderCard}>
                   <View style={styles.orderHeader}>
                     <Text style={styles.orderId}>{t('courier.order')} #{order.id}</Text>
-                    <View style={[styles.statusBadge, { backgroundColor: order.status === 'SUCCEEDED' ? '#f6ffed' : '#fff7e6' }]}>
-                      <Text style={[styles.statusText, { color: order.status === 'SUCCEEDED' ? '#52c41a' : '#faad14' }]}>
+                    <View style={[styles.statusBadge, { backgroundColor: order.status === 'SUCCEEDED' ? (theme.mode === 'dark' ? 'rgba(74,222,128,0.15)' : '#f6ffed') : (theme.mode === 'dark' ? 'rgba(251,191,36,0.15)' : '#fff7e6') }]}>
+                      <Text style={[styles.statusText, { color: order.status === 'SUCCEEDED' ? theme.success : theme.warning }]}>
                         {order.status === 'SUCCEEDED' ? t('profile.orderStatus.succeeded') : t('profile.orderStatus.processing')}
                       </Text>
                     </View>
@@ -310,7 +324,7 @@ export default function ProfileScreen() {
               ))
             ) : (
               <View style={styles.emptyOrders}>
-                <Ionicons name="receipt-outline" size={60} color="#9BA1A6" />
+                <Ionicons name="receipt-outline" size={60} color={theme.textSubtle} />
                 <Text style={styles.emptyOrdersText}>{t('profile.emptyOrders')}</Text>
               </View>
             )}
@@ -322,6 +336,7 @@ export default function ProfileScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <AmbientBackdrop />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.authScroll}>
           <View style={styles.authHeader}>
@@ -368,11 +383,17 @@ export default function ProfileScreen() {
                 />
               </View>
 
-              <TouchableOpacity style={styles.mainBtn} onPress={handleAuth} disabled={loading}>
-                {loading ? <ActivityIndicator color="white" /> : (
-                  <Text style={styles.mainBtnText}>{isLogin ? t('auth.loginBtn') : t('auth.registerBtn')}</Text>
-                )}
-              </TouchableOpacity>
+              <SpringPress onPress={handleAuth} disabled={loading} scaleTo={0.96}>
+                <LinearGradient
+                  colors={(theme.mode === 'dark' ? gradients.dark : gradients.light).primary}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.mainBtn}>
+                  {loading ? <ActivityIndicator color="white" /> : (
+                    <Text style={styles.mainBtnText}>{isLogin ? t('auth.loginBtn') : t('auth.registerBtn')}</Text>
+                  )}
+                </LinearGradient>
+              </SpringPress>
 
               <View style={styles.dividerRow}>
                 <View style={styles.line} />
@@ -382,14 +403,14 @@ export default function ProfileScreen() {
 
               <View style={styles.socialRow}>
                 <TouchableOpacity 
-                  style={[styles.socialBtn, { borderColor: '#e0e0e0' }]} 
+                  style={[styles.socialBtn, { borderColor: theme.border }]}
                   onPress={() => handleSocialLogin('google')}
                 >
                   <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/2991/2991148.png' }} style={styles.socialIcon} />
                   <Text style={styles.socialBtnText}>Google</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
-                  style={[styles.socialBtn, { borderColor: '#181717', backgroundColor: '#181717' }]} 
+                  style={[styles.socialBtn, { borderColor: theme.text, backgroundColor: theme.text }]}
                   onPress={() => handleSocialLogin('github')}
                 >
                   <Ionicons name="logo-github" size={24} color="white" />
@@ -438,65 +459,50 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fdf7f2',
-  },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 200,
-  },
+const makeStyles = (t: Theme) => StyleSheet.create({
+  container: { flex: 1 },
+  scrollContent: { padding: 20, paddingBottom: 200 },
   profileHeader: {
     alignItems: 'center',
-    backgroundColor: 'white',
-    padding: 30,
-    borderRadius: 40,
-    shadowColor: '#ff7000',
-    shadowOpacity: 0.05,
-    shadowRadius: 20,
-    elevation: 5,
+    backgroundColor: t.surface,
+    padding: 32,
+    borderRadius: 32,
+    shadowColor: t.mode === 'dark' ? '#000' : t.primary,
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: t.mode === 'dark' ? 0.45 : 0.08,
+    shadowRadius: 24,
+    elevation: 6,
+    borderWidth: t.mode === 'dark' ? StyleSheet.hairlineWidth : 0,
+    borderColor: t.border,
   },
   avatarLarge: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#fff7f0',
+    width: 104,
+    height: 104,
+    borderRadius: 52,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#ff7000',
     marginBottom: 15,
+    overflow: 'hidden',
+    shadowColor: t.primary,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.4,
+    shadowRadius: 18,
+    elevation: 6,
   },
-  avatarTextLarge: {
-    fontSize: 40,
-    fontWeight: '900',
-    color: '#ff7000',
-  },
-  userNameLarge: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: '#11181C',
-  },
-  userEmailLarge: {
-    fontSize: 14,
-    color: '#687076',
-    marginTop: 4,
-  },
+  avatarTextLarge: { fontSize: 42, fontWeight: '900', color: '#fff', letterSpacing: -1 },
+  userNameLarge: { fontSize: 26, fontWeight: '900', color: t.text, letterSpacing: -0.6 },
+  userEmailLarge: { fontSize: 14, color: t.textMuted, marginTop: 4 },
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 20,
-    backgroundColor: '#fff1f0',
+    backgroundColor: t.mode === 'dark' ? 'rgba(248,113,113,0.15)' : '#fff1f0',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 15,
     gap: 8,
   },
-  logoutText: {
-    color: '#ff4d4f',
-    fontWeight: '800',
-  },
+  logoutText: { color: t.danger, fontWeight: '800' },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -508,214 +514,100 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 0,
     top: 0,
-    backgroundColor: '#fff7f0',
+    backgroundColor: t.primarySoft,
     padding: 10,
     borderRadius: 15,
   },
-  editForm: {
-    width: '100%',
-    marginTop: 20,
-    gap: 15,
-  },
-  editInputGroup: {
-    gap: 5,
-  },
-  editLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#687076',
-    marginLeft: 5,
-  },
+  editForm: { width: '100%', marginTop: 20, gap: 15 },
+  editInputGroup: { gap: 5 },
+  editLabel: { fontSize: 12, fontWeight: '700', color: t.textMuted, marginLeft: 5 },
   editInput: {
-    backgroundColor: '#f3f4f6',
+    backgroundColor: t.surfaceMuted,
     height: 50,
     borderRadius: 15,
     paddingHorizontal: 15,
     fontSize: 15,
-    color: '#11181C',
+    color: t.text,
   },
   saveBtn: {
-    backgroundColor: '#ff7000',
-    height: 55,
-    borderRadius: 18,
+    height: 56,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 10,
+    paddingHorizontal: 24,
+    shadowColor: t.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 14,
+    elevation: 6,
   },
-  saveBtnText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '900',
-  },
-  ordersSection: {
-    marginTop: 30,
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#11181C',
-    marginBottom: 20,
-  },
+  saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '900', letterSpacing: 0.3 },
+  ordersSection: { marginTop: 30 },
+  sectionTitle: { fontSize: 22, fontWeight: '900', color: t.text, marginBottom: 20 },
   orderCard: {
-    backgroundColor: 'white',
-    borderRadius: 30,
-    padding: 20,
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOpacity: 0.02,
-    shadowRadius: 10,
-    elevation: 2,
+    backgroundColor: t.surface,
+    borderRadius: 26,
+    padding: 22,
+    marginBottom: 14,
+    shadowColor: t.mode === 'dark' ? '#000' : t.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: t.mode === 'dark' ? 0.35 : 0.05,
+    shadowRadius: 18,
+    elevation: 3,
+    borderWidth: t.mode === 'dark' ? StyleSheet.hairlineWidth : 0,
+    borderColor: t.border,
   },
-  orderHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  orderId: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#11181C',
-  },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  orderDate: {
-    fontSize: 12,
-    color: '#687076',
-    marginTop: 4,
-  },
-  orderPrice: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#ff7000',
-    marginTop: 10,
-  },
-  orderDivider: {
-    height: 1,
-    backgroundColor: '#f3f4f6',
-    marginVertical: 12,
-  },
-  orderItems: {
-    fontSize: 13,
-    color: '#687076',
-  },
-  emptyOrders: {
-    alignItems: 'center',
-    paddingVertical: 60,
-    gap: 15,
-  },
-  emptyOrdersText: {
-    color: '#9BA1A6',
-    fontWeight: '700',
-  },
-  authScroll: {
-    padding: 30,
-    paddingTop: 60,
-    paddingBottom: 200, // Even more space for tab bar
-  },
-  authHeader: {
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  logo: {
-    width: 60,
-    height: 60,
-    marginBottom: 20,
-  },
-  authTitle: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: '#11181C',
-    textAlign: 'center',
-  },
-  authSubtitle: {
-    fontSize: 14,
-    color: '#687076',
-    textAlign: 'center',
-    marginTop: 8,
-    lineHeight: 20,
-  },
-  form: {
-    gap: 15,
-  },
-  inputGroup: {
-    gap: 8,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#11181C',
-    marginLeft: 5,
-  },
+  orderHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  orderId: { fontSize: 16, fontWeight: '800', color: t.text },
+  statusBadge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 10 },
+  statusText: { fontSize: 12, fontWeight: '800' },
+  orderDate: { fontSize: 12, color: t.textMuted, marginTop: 4 },
+  orderPrice: { fontSize: 18, fontWeight: '900', color: t.primary, marginTop: 10 },
+  orderDivider: { height: 1, backgroundColor: t.borderMuted, marginVertical: 12 },
+  orderItems: { fontSize: 13, color: t.textMuted },
+  emptyOrders: { alignItems: 'center', paddingVertical: 60, gap: 15 },
+  emptyOrdersText: { color: t.textSubtle, fontWeight: '700' },
+  authScroll: { padding: 30, paddingTop: 60, paddingBottom: 200 },
+  authHeader: { alignItems: 'center', marginBottom: 30 },
+  logo: { width: 60, height: 60, marginBottom: 20 },
+  authTitle: { fontSize: 30, fontWeight: '900', color: t.text, textAlign: 'center', letterSpacing: -0.8 },
+  authSubtitle: { fontSize: 14, color: t.textMuted, textAlign: 'center', marginTop: 8, lineHeight: 20 },
+  form: { gap: 15 },
+  inputGroup: { gap: 8 },
+  label: { fontSize: 14, fontWeight: '800', color: t.text, marginLeft: 5 },
   input: {
-    backgroundColor: 'white',
+    backgroundColor: t.surface,
     height: 60,
     borderRadius: 20,
     paddingHorizontal: 20,
     fontSize: 16,
-    color: '#11181C',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
+    color: t.text,
+    shadowColor: t.shadow,
+    shadowOpacity: t.mode === 'dark' ? 0.3 : 0.05,
     shadowRadius: 10,
     elevation: 2,
   },
-  codeInput: {
-    textAlign: 'center',
-    fontSize: 24,
-    fontWeight: '800',
-    letterSpacing: 5,
-  },
+  codeInput: { textAlign: 'center', fontSize: 24, fontWeight: '800', letterSpacing: 5 },
   mainBtn: {
-    backgroundColor: '#ff7000',
     height: 60,
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 10, // Adjusted margin
-    shadowColor: '#ff7000',
-    shadowOpacity: 0.3,
-    shadowRadius: 15,
-    elevation: 8,
+    marginTop: 10,
+    shadowColor: t.primary,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.45,
+    shadowRadius: 20,
+    elevation: 10,
   },
-  mainBtnText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '900',
-  },
-  switchBtn: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  switchText: {
-    color: '#687076',
-    fontWeight: '700',
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
-    gap: 10,
-  },
-  line: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#e0e0e0',
-  },
-  dividerText: {
-    fontSize: 12,
-    color: '#9BA1A6',
-    fontWeight: '700',
-  },
-  socialRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
+  mainBtnText: { color: '#fff', fontSize: 18, fontWeight: '900', letterSpacing: 0.3 },
+  switchBtn: { marginTop: 20, alignItems: 'center' },
+  switchText: { color: t.textMuted, fontWeight: '700' },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 20, gap: 10 },
+  line: { flex: 1, height: 1, backgroundColor: t.border },
+  dividerText: { fontSize: 12, color: t.textSubtle, fontWeight: '700' },
+  socialRow: { flexDirection: 'row', gap: 12 },
   socialBtn: {
     flex: 1,
     flexDirection: 'row',
@@ -726,13 +618,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: 10,
   },
-  socialIcon: {
-    width: 24,
-    height: 24,
-  },
-  socialBtnText: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#11181C',
-  },
+  socialIcon: { width: 24, height: 24 },
+  socialBtnText: { fontSize: 15, fontWeight: '800', color: t.text },
 });

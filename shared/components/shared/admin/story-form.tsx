@@ -63,7 +63,7 @@ export const StoryForm: React.FC<Props> = ({ initialData }) => {
   };
 
   return (
-    <div className="max-w-4xl bg-white p-10 rounded-2xl border shadow-sm">
+    <div className="max-w-4xl bg-card text-card-foreground p-10 rounded-2xl border border-border shadow-sm">
       <Title text={initialData ? 'Редактирование' : 'Новая история'} size="md" className="font-bold mb-10" />
 
       <FormProvider {...form}>
@@ -77,10 +77,10 @@ export const StoryForm: React.FC<Props> = ({ initialData }) => {
                   onChange={(url) => form.setValue('previewImageUrl', url)}
                 />
                 {form.formState.errors.previewImageUrl && (
-                  <p className="text-red-500 text-xs">{form.formState.errors.previewImageUrl.message}</p>
+                  <p className="text-destructive text-xs">{form.formState.errors.previewImageUrl.message}</p>
                 )}
                 <div className="pt-2">
-                  <label className="block text-xs font-medium text-gray-400 mb-1">Или укажите прямую ссылку:</label>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Или укажите прямую ссылку:</label>
                   <Input {...form.register('previewImageUrl')} placeholder="https://..." />
                 </div>
               </div>
@@ -97,13 +97,13 @@ export const StoryForm: React.FC<Props> = ({ initialData }) => {
 
             <div className="space-y-6">
               {fields.map((field, index) => (
-                <div key={field.id} className="flex flex-col gap-4 p-6 border rounded-xl bg-gray-50 relative group">
+                <div key={field.id} className="flex flex-col gap-4 p-6 border border-border rounded-xl bg-muted relative group">
                   <div className="flex justify-between items-start">
-                    <span className="text-sm font-bold text-gray-400">Слайд #{index + 1}</span>
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
-                      className="text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity" 
+                    <span className="text-sm font-bold text-muted-foreground">Слайд #{index + 1}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
                       onClick={() => remove(index)}>
                       <Trash2 size={20} />
                     </Button>
@@ -118,7 +118,7 @@ export const StoryForm: React.FC<Props> = ({ initialData }) => {
                        <label className="block text-xs font-medium text-gray-400">Прямая ссылка на слайд:</label>
                        <Input {...form.register(`items.${index}.sourceUrl`)} placeholder="https://..." />
                        {form.formState.errors.items?.[index]?.sourceUrl && (
-                        <p className="text-red-500 text-xs">{form.formState.errors.items[index]?.sourceUrl?.message}</p>
+                        <p className="text-destructive text-xs">{form.formState.errors.items[index]?.sourceUrl?.message}</p>
                       )}
                     </div>
                   </div>

@@ -38,10 +38,10 @@ export const ProductReviews: React.FC<Props> = ({ productId, reviews, className 
   };
 
   return (
-    <div className={cn('p-8 border-t bg-white', className)}>
+    <div className={cn('p-8 border-t border-border bg-card text-card-foreground', className)}>
       <div className="flex items-center gap-3 mb-8">
         <Title text="Отзывы" size="md" className="font-extrabold" />
-        <span className="text-gray-400 font-medium">({reviews.length})</span>
+        <span className="text-muted-foreground font-medium">({reviews.length})</span>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -62,7 +62,7 @@ export const ProductReviews: React.FC<Props> = ({ productId, reviews, className 
               );
             })
           ) : (
-            <div className="flex flex-col items-center justify-center h-40 bg-gray-50 rounded-2xl text-gray-400">
+            <div className="flex flex-col items-center justify-center h-40 bg-muted rounded-2xl text-muted-foreground">
               <p>Отзывов пока нет</p>
               <p className="text-sm">Будьте первым, кто оставит отзыв!</p>
             </div>
@@ -73,9 +73,9 @@ export const ProductReviews: React.FC<Props> = ({ productId, reviews, className 
           {session ? (
             <ReviewForm productId={productId} />
           ) : (
-            <div className="p-8 bg-orange-50 border border-orange-100 rounded-2xl text-center">
-              <p className="text-orange-900 font-bold mb-2">Хотите оставить отзыв?</p>
-              <p className="text-orange-800 text-sm">
+            <div className="p-8 bg-primary/10 border border-primary/20 rounded-2xl text-center">
+              <p className="text-primary font-bold mb-2">Хотите оставить отзыв?</p>
+              <p className="text-primary/80 text-sm">
                 Войдите в аккаунт, чтобы поделиться своим мнением о продукте.
               </p>
             </div>

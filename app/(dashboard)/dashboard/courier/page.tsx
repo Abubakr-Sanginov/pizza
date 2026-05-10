@@ -31,21 +31,21 @@ export default async function CourierDashboardPage() {
 
       <div className="grid grid-cols-1 gap-6">
         {orders.map((order) => (
-          <div key={order.id} className="bg-white rounded-2xl border shadow-sm p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div key={order.id} className="bg-card text-card-foreground rounded-2xl border border-border shadow-sm p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
                 <span className="font-bold text-lg text-primary">Заказ #{order.id}</span>
-                <span className="text-gray-500 text-sm">| {new Date(order.createdAt).toLocaleString('ru-RU')}</span>
+                <span className="text-muted-foreground text-sm">| {new Date(order.createdAt).toLocaleString('ru-RU')}</span>
               </div>
-              
-              <div className="space-y-1 text-sm text-gray-600">
+
+              <div className="space-y-1 text-sm text-muted-foreground">
                 <p><span className="font-semibold">Адрес:</span> {order.address || 'Не указан'}</p>
                 {order.entrance && <p><span className="font-semibold">Подъезд:</span> {order.entrance}</p>}
                 {order.floor && <p><span className="font-semibold">Этаж:</span> {order.floor}</p>}
                 {order.apartment && <p><span className="font-semibold">Кв/Офис:</span> {order.apartment}</p>}
                 <p><span className="font-semibold">Клиент:</span> {order.fullName}</p>
                 <p><span className="font-semibold">Тел:</span> {order.phone}</p>
-                {order.comment && <p className="mt-2 p-2 bg-gray-50 rounded italic text-gray-500">&quot;{order.comment}&quot;</p>}
+                {order.comment && <p className="mt-2 p-2 bg-muted rounded italic text-muted-foreground">&quot;{order.comment}&quot;</p>}
               </div>
             </div>
 
@@ -60,7 +60,7 @@ export default async function CourierDashboardPage() {
         ))}
 
         {orders.length === 0 && (
-          <div className="text-center py-20 bg-white rounded-2xl border shadow-sm text-gray-500">
+          <div className="text-center py-20 bg-card text-card-foreground rounded-2xl border border-border shadow-sm text-muted-foreground">
              <p className="text-lg">У вас пока нет активных доставок.</p>
              <p className="text-sm">Ожидайте назначения новых заказов.</p>
           </div>

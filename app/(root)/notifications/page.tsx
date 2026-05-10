@@ -22,25 +22,25 @@ export default async function NotificationsPage() {
 
       <div className="flex flex-col gap-5 max-w-[800px] mx-auto">
         {notifications.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-3xl border border-dashed text-gray-400">
+          <div className="text-center py-20 bg-card text-card-foreground rounded-3xl border border-dashed border-border text-muted-foreground">
             У вас пока нет уведомлений
           </div>
         ) : (
           notifications.map((item) => (
-            <div key={item.id} className="bg-white p-6 rounded-3xl shadow-sm border flex gap-6">
+            <div key={item.id} className="bg-card text-card-foreground p-6 rounded-3xl shadow-sm border border-border flex gap-6">
               {item.imageUrl && (
                 <div className="w-24 h-24 flex-shrink-0">
-                  <img 
-                    src={item.imageUrl} 
-                    alt={item.title} 
-                    className="w-full h-full object-cover rounded-2xl" 
+                  <img
+                    src={item.imageUrl}
+                    alt={item.title}
+                    className="w-full h-full object-cover rounded-2xl"
                   />
                 </div>
               )}
               <div className="flex-1">
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="text-xl font-bold">{item.title}</h3>
-                  <span className="text-sm text-gray-400">
+                  <span className="text-sm text-muted-foreground">
                     {item.createdAt.toLocaleDateString('ru-RU', {
                       day: 'numeric',
                       month: 'long',
@@ -49,7 +49,7 @@ export default async function NotificationsPage() {
                     })}
                   </span>
                 </div>
-                <p className="text-gray-600 leading-relaxed">{item.body}</p>
+                <p className="text-muted-foreground leading-relaxed">{item.body}</p>
               </div>
             </div>
           ))

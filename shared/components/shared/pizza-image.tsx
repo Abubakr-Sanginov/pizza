@@ -35,14 +35,14 @@ export const PizzaImage: React.FC<Props> = ({ imageUrl, size, className }) => {
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1, duration: 0.5 }}
-          className="absolute border-dashed border-2 rounded-full border-gray-200 w-[260px] h-[260px] md:w-[450px] md:h-[450px] z-0" 
+          className="absolute border-dashed border-2 rounded-full border-border w-[260px] h-[260px] md:w-[450px] md:h-[450px] z-0"
           style={{ gridArea: '1/1' }}
         />
         <motion.div 
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          className="absolute border-dotted border-2 rounded-full border-gray-100 w-[210px] h-[210px] md:w-[380px] md:h-[380px] z-0" 
+          className="absolute border-dotted border-2 rounded-full border-border w-[210px] h-[210px] md:w-[380px] md:h-[380px] z-0"
           style={{ gridArea: '1/1' }}
         />
       </div>
