@@ -13,27 +13,60 @@ export async function PATCH(
     const { status, userId: bodyUserId } = await req.json();
     const orderId = Number(params.id);
 
-    let userId: number;
-    let userRole: string;
+    if (!Number.isFinite(orderId) || orderId <= 0) {
+      return NextResponse.json({ message: 'Неверный orderId' }, { status: 400 });
+    }
+    const allowed = Object.values(OrderStatus);
+    if (!allowed.includes(status)) {
+      return NextResponse.json({ message: 'Неверный статус' }, { status: 400 });
+    }
+
+    let userId: number | null = null;
+    let userRole: string | null = null;
 
     if (session) {
       userId = Number(session.id);
       userRole = session.role;
     } else if (bodyUserId) {
-      const user = await prisma.user.findUnique({
-        where: { id: Number(bodyUserId) }
-      });
-      if (!user) {
-        return NextResponse.json({ message: 'Пользователь не найден' }, { status: 404 });
+      // Mobile fallback: must present cartToken bound to that user
+      const token = req.cookies.get('cartToken')?.value || req.headers.get('x-cart-token');
+      if (token) {
+        const cart = await prisma.cart.findFirst({
+          where: { token, userId: Number(bodyUserId) },
+          select: { userId: true },
+        });
+        if (cart?.userId) {
+          const user = await prisma.user.findUnique({ where: { id: cart.userId } });
+          if (user) {
+            userId = user.id;
+            userRole = user.role;
+          }
+        }
       }
-      userId = user.id;
-      userRole = user.role;
-    } else {
-      return NextResponse.json({ message: 'Нет доступа' }, { status: 403 });
+    }
+
+    if (!userId || !userRole) {
+      return NextResponse.json({ message: 'Нет доступа' }, { status: 401 });
     }
 
     if (userRole !== 'COURIER' && userRole !== 'ADMIN') {
-      return NextResponse.json({ message: 'Нет доступа' }, { status: 403 });
+      return NextResponse.json({ message: 'Нет прав' }, { status: 403 });
+    }
+
+    // Courier can only update orders they're assigned to
+    if (userRole === 'COURIER') {
+      const target = await prisma.order.findUnique({
+        where: { id: orderId },
+        select: { courierId: true, status: true },
+      });
+      if (!target) {
+        return NextResponse.json({ message: 'Заказ не найден' }, { status: 404 });
+      }
+      const canTakeReady = target.courierId === null && target.status === 'READY' && status === 'DELIVERING';
+      const ownsOrder = target.courierId === userId;
+      if (!canTakeReady && !ownsOrder) {
+        return NextResponse.json({ message: 'Нет прав на этот заказ' }, { status: 403 });
+      }
     }
 
     const updateData: any = { status };

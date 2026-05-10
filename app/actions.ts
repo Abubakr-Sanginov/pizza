@@ -2,11 +2,9 @@
 
 import React from 'react';
 import { prisma } from '@/back/prisma/prisma-client';
-import { PayOrderTemplate } from '@/shared/components';
 import { OrderSuccessTemplate } from '@/shared/components/shared/email-temapltes/order-success';
 import { VerificationUserTemplate } from '@/shared/components/shared/email-temapltes/verification-user';
 import { CheckoutFormValues } from '@/shared/constants';
-import { createPayment } from '@/back/lib/creat-payment';
 import { sendEmail } from '@/back/lib/send-email';
 import { getUserSession } from '@/back/lib/get-user-session';
 import { OrderStatus, Prisma } from '@prisma/client';

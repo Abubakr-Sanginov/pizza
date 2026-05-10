@@ -107,6 +107,7 @@
     "error": "Error",
     "statusUpdateError": "Failed to update status",
     "networkError": "Network problem",
+    "phone": "Phone",
     "priceLabel": "To pay:",
     "update": "Update",
     "orderNum": "Order #",

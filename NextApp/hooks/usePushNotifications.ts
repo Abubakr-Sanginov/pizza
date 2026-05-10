@@ -122,7 +122,6 @@ export const usePushNotifications = (): PushNotificationState => {
               allowAlert: true,
               allowBadge: true,
               allowSound: true,
-              allowAnnouncements: true,
               provideAppNotificationSettings: false,
               allowProvisional: false,
             },

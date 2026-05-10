@@ -215,7 +215,9 @@ export default function MenuScreen() {
                       end={{ x: 1, y: 1 }}
                       style={styles.toCartBtn}>
                       <Ionicons name="cart" size={16} color="#fff" />
-                      <Text style={styles.toCartBtnText}>{t('menu.toCart')}</Text>
+                      <Text style={styles.toCartBtnText} numberOfLines={1}>
+                        {t('menu.toCart')}
+                      </Text>
                     </LinearGradient>
                   </Pressable>
                 ) : (
@@ -633,6 +635,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     shadowRadius: 10,
     elevation: 4,
     borderRadius: 20,
+    flexShrink: 0,
   },
   toCartBtn: {
     flexDirection: 'row',
@@ -641,12 +644,15 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     paddingHorizontal: 14,
     height: 40,
     borderRadius: 20,
+    minWidth: 130,
+    justifyContent: 'center',
   },
   toCartBtnText: {
     color: '#fff',
     fontSize: 13,
     fontWeight: '900',
     letterSpacing: 0.2,
+    flexShrink: 0,
   },
   cartBadge: {
     position: 'absolute',

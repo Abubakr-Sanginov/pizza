@@ -5,15 +5,16 @@ import { prisma } from '@/back/prisma/prisma-client';
 
 const expo = new Expo();
 
-const VAPID_PUB =
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
-  'BHjNmaZUTX9bX3hatdV8Q7mK3ezc0B2Xp33EGQNux_AES54o4HBllLsPErzSQ2ZLIJ6kW-_GyUACfJjtl_Oxe3w';
-const VAPID_PRIV =
-  process.env.VAPID_PRIVATE_KEY || 'qm4bmZqoUmJE6PPB9LQBzvwR4197ud82ft4wBoT2OrM';
-const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:sanginovabubakr2222@gmail.com';
+const VAPID_PUB = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+const VAPID_PRIV = process.env.VAPID_PRIVATE_KEY;
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:no-reply@example.com';
 
 if (VAPID_PUB && VAPID_PRIV) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUB, VAPID_PRIV);
+} else {
+  console.warn(
+    '[push] VAPID keys missing — web push disabled. Set NEXT_PUBLIC_VAPID_PUBLIC_KEY + VAPID_PRIVATE_KEY in env.',
+  );
 }
 
 export interface SendPushPayload {

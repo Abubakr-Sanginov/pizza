@@ -1,26 +1,41 @@
 import { prisma } from '@/back/prisma/prisma-client';
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+
 import { getUserSession } from '@/back/lib/get-user-session';
+
+const ReviewBody = z.object({
+  productId: z.coerce.number().int().positive(),
+  rating: z.coerce.number().int().min(1).max(5),
+  comment: z.string().trim().max(1000).optional().default(''),
+});
 
 export async function POST(req: NextRequest) {
   try {
     const session = await getUserSession();
-
     if (!session) {
       return NextResponse.json({ message: 'Вы не авторизованы' }, { status: 401 });
     }
 
-    const data = await req.json();
+    const parsed = ReviewBody.safeParse(await req.json().catch(() => null));
+    if (!parsed.success) {
+      return NextResponse.json(
+        { message: parsed.error.issues[0]?.message ?? 'Bad request' },
+        { status: 400 },
+      );
+    }
+    const { productId, rating, comment } = parsed.data;
 
-    if (!data.productId || !data.rating) {
-      return NextResponse.json({ message: 'Не все поля заполнены' }, { status: 400 });
+    const product = await prisma.product.findUnique({ where: { id: productId } });
+    if (!product) {
+      return NextResponse.json({ message: 'Товар не найден' }, { status: 404 });
     }
 
     const review = await prisma.review.create({
       data: {
-        rating: Number(data.rating),
-        comment: data.comment || '',
-        product: { connect: { id: Number(data.productId) } },
+        rating,
+        comment,
+        product: { connect: { id: productId } },
         user: { connect: { id: Number(session.id) } },
       },
     });

@@ -33,7 +33,7 @@ export const DeleteButton: React.FC<Props> = ({ id, deleteAction, entityName = '
     <Button
       variant="ghost"
       size="icon"
-      className="text-red-500 hover:bg-red-50"
+      className="text-destructive hover:bg-destructive/10"
       disabled={loading}
       onClick={handleDelete}>
       <Trash2 size={18} className={loading ? 'animate-spin' : ''} />

@@ -75,7 +75,6 @@ export const LiquidGlassCard: React.FC<CardProps> = ({
         <BlurView
           intensity={intensity}
           tint={resolvedTint}
-          experimentalBlurMethod="dimezisBlurView"
           style={[StyleSheet.absoluteFill, { backgroundColor: theme.mode === 'dark' ? 'rgba(36,30,26,0.35)' : 'rgba(255,255,255,0.4)' }]}
         />
         <GlassEdges rounded={rounded} theme={theme} />
@@ -180,8 +179,7 @@ export const LiquidGlassButton: React.FC<ButtonProps> = ({
             <BlurView
               intensity={95}
               tint={theme.mode === 'dark' ? 'dark' : 'light'}
-              experimentalBlurMethod="dimezisBlurView"
-              style={[StyleSheet.absoluteFill, { backgroundColor: theme.mode === 'dark' ? 'rgba(36,30,26,0.35)' : 'rgba(255,255,255,0.4)' }]}
+                  style={[StyleSheet.absoluteFill, { backgroundColor: theme.mode === 'dark' ? 'rgba(36,30,26,0.35)' : 'rgba(255,255,255,0.4)' }]}
             />
           ) : null}
 
@@ -246,8 +244,7 @@ export const LiquidGlassPill: React.FC<PillProps> = ({ active, onPress, label, s
             <BlurView
               intensity={85}
               tint={theme.mode === 'dark' ? 'dark' : 'light'}
-              experimentalBlurMethod="dimezisBlurView"
-              style={[StyleSheet.absoluteFill, { backgroundColor: theme.mode === 'dark' ? 'rgba(36,30,26,0.35)' : 'rgba(255,255,255,0.4)' }]}
+                  style={[StyleSheet.absoluteFill, { backgroundColor: theme.mode === 'dark' ? 'rgba(36,30,26,0.35)' : 'rgba(255,255,255,0.4)' }]}
             />
           )}
 

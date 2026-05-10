@@ -1,20 +1,30 @@
-﻿import { prisma } from '@/back/prisma/prisma-client';
-import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/back/prisma/prisma-client';
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 
+import { authOptions } from '@/shared/constants/auth-options';
+
+/**
+ * Listing users is admin-only. Passwords are never exposed.
+ * Public sign-up goes through /api/auth/register.
+ */
 export async function GET() {
-  // SELECT * FROM users WHERE email = 'emasd'
-  const users = await prisma.user.findMany();
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      role: true,
+      verified: true,
+      createdAt: true,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
 
   return NextResponse.json(users);
 }
-
-export async function POST(req: NextRequest) {
-  const data = await req.json();
-
-  const user = await prisma.user.create({
-    data,
-  });
-
-  return NextResponse.json(user);
-}
-

@@ -48,7 +48,6 @@ export const GlassCard: React.FC<Props> = ({
     <BlurView
       tint={theme.mode === 'dark' ? 'dark' : 'light'}
       intensity={intensity}
-      experimentalBlurMethod="dimezisBlurView"
       {...(rest as any)}
       style={[
         styles.glass,

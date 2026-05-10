@@ -9,24 +9,33 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const queryUserId = searchParams.get('userId');
 
-    let userId: number;
-    let userRole: string;
+    let userId: number | null = null;
+    let userRole: string | null = null;
 
     if (session) {
       userId = Number(session.id);
       userRole = session.role;
     } else if (queryUserId) {
-      // Для мобильного приложения проверяем пользователя в БД
-      const user = await prisma.user.findUnique({
-        where: { id: Number(queryUserId) }
-      });
-      if (!user) {
-        return NextResponse.json({ message: 'Пользователь не найден' }, { status: 404 });
+      // Mobile fallback: must include the cart token bound to this user.
+      // Without it, anyone could pass any userId and read courier orders.
+      const token = req.cookies.get('cartToken')?.value || req.headers.get('x-cart-token');
+      if (token) {
+        const cart = await prisma.cart.findFirst({
+          where: { token, userId: Number(queryUserId) },
+          select: { userId: true },
+        });
+        if (cart?.userId) {
+          const user = await prisma.user.findUnique({ where: { id: cart.userId } });
+          if (user) {
+            userId = user.id;
+            userRole = user.role;
+          }
+        }
       }
-      userId = user.id;
-      userRole = user.role;
-    } else {
-      return NextResponse.json({ message: 'Нет доступа' }, { status: 403 });
+    }
+
+    if (!userId || !userRole) {
+      return NextResponse.json({ message: 'Нет доступа' }, { status: 401 });
     }
 
     if (userRole !== 'COURIER' && userRole !== 'ADMIN') {

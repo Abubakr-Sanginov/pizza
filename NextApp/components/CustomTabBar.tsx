@@ -55,7 +55,6 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = React.memo(
             <BlurView
               intensity={95}
               tint={theme.mode === 'dark' ? 'dark' : 'light'}
-              experimentalBlurMethod="dimezisBlurView"
               style={[StyleSheet.absoluteFill, {
                 backgroundColor: theme.mode === 'dark' ? 'rgba(36,30,26,0.4)' : 'rgba(255,255,255,0.45)',
               }]}

@@ -44,7 +44,7 @@ export const ProfileButton: React.FC<Props> = ({ className, onClickSignIn }) => 
           </Link>
           {session.user.role === 'COURIER' && (
             <Link href="/courier">
-              <Button variant="secondary" className="flex items-center gap-2 px-2 md:px-4 border-orange-500 border text-orange-600 hover:bg-orange-50">
+              <Button variant="secondary" className="flex items-center gap-2 px-2 md:px-4 border border-primary text-primary hover:bg-primary/10">
                 <span className="hidden md:inline">{mounted && t('courier.title')}</span>
                 <Package size={16} className="md:hidden" />
               </Button>

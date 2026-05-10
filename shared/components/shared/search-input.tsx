@@ -83,7 +83,7 @@ export const SearchInput: React.FC<Props> = ({ className, placeholder }) => {
       <div
         ref={ref}
         className={cn('flex rounded-2xl flex-1 justify-between relative h-11 z-30', className)}>
-        <Search className="absolute top-1/2 translate-y-[-50%] left-3 h-5 text-gray-400" />
+        <Search className="absolute top-1/2 translate-y-[-50%] left-3 h-5 text-muted-foreground" />
         <input
           className="rounded-2xl outline-none w-full bg-muted text-foreground placeholder:text-muted-foreground pl-11 focus:bg-card transition-all duration-300"
           type="text"
@@ -112,7 +112,7 @@ export const SearchInput: React.FC<Props> = ({ className, placeholder }) => {
                       <img className="rounded-full h-10 w-10 object-cover" src={product.imageUrl} alt={product.name} />
                       <div className="flex flex-col">
                         <span className="font-medium group-hover:text-primary transition-colors">{product.name}</span>
-                        <span className="text-xs text-gray-400">Популярный выбор</span>
+                        <span className="text-xs text-muted-foreground">Популярный выбор</span>
                       </div>
                     </Link>
                   ))}

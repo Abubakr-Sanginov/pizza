@@ -115,7 +115,7 @@ export const StoryForm: React.FC<Props> = ({ initialData }) => {
                       onChange={(url) => form.setValue(`items.${index}.sourceUrl`, url)}
                     />
                     <div className="flex-1 space-y-2">
-                       <label className="block text-xs font-medium text-gray-400">Прямая ссылка на слайд:</label>
+                       <label className="block text-xs font-medium text-muted-foreground">Прямая ссылка на слайд:</label>
                        <Input {...form.register(`items.${index}.sourceUrl`)} placeholder="https://..." />
                        {form.formState.errors.items?.[index]?.sourceUrl && (
                         <p className="text-destructive text-xs">{form.formState.errors.items[index]?.sourceUrl?.message}</p>

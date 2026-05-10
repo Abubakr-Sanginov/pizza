@@ -107,6 +107,7 @@
     "error": "Ошибка",
     "statusUpdateError": "Не удалось обновить статус",
     "networkError": "Ошибка сети",
+    "phone": "Телефон",
     "priceLabel": "К оплате:",
     "update": "Обновить",
     "orderNum": "Заказ №",
