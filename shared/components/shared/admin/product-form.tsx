@@ -12,12 +12,14 @@ import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { Plus, Trash2 } from 'lucide-react';
 import { UploadButton } from './upload-button';
+import { ALL_PRODUCT_TAGS, PRODUCT_TAGS } from '@/shared/constants';
 
 const productSchema = z.object({
   name: z.string().min(2, 'Минимум 2 символа'),
   imageUrl: z.string().min(1, 'Загрузите изображение'),
   categoryId: z.string(),
   ingredients: z.array(z.number()),
+  tags: z.array(z.string()).default([]),
   items: z.array(z.object({
     id: z.number().optional(),
     price: z.coerce.number().min(1, 'Минимум 1 TJS'),
@@ -47,6 +49,7 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
       imageUrl: initialData?.imageUrl || '',
       categoryId: String(initialData?.categoryId || categories[0]?.id || ''),
       ingredients: initialData?.ingredients.map((i) => i.id) || [],
+      tags: ((initialData as any)?.tags as string[] | undefined) ?? [],
       items: initialData?.items.map(item => ({
         id: item.id,
         price: item.priceOld && item.priceOld > item.price ? item.priceOld : item.price,
@@ -69,6 +72,7 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
         imageUrl: values.imageUrl,
         categoryId: Number(values.categoryId),
         ingredientIds: values.ingredients,
+        tags: values.tags,
         items: values.items.map((item) => {
           const discount = item.discount || 0;
           const originalPrice = item.price;
@@ -165,6 +169,37 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
                     </label>
                   </div>
                 ))}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-3">Метки (диета / аллергены)</label>
+                <div className="flex flex-wrap gap-2">
+                  {ALL_PRODUCT_TAGS.map((tag) => {
+                    const meta = PRODUCT_TAGS[tag];
+                    const selected = form.watch('tags').includes(tag);
+                    return (
+                      <button
+                        type="button"
+                        key={tag}
+                        onClick={() => {
+                          const current = form.getValues('tags');
+                          if (selected) {
+                            form.setValue('tags', current.filter((t) => t !== tag));
+                          } else {
+                            form.setValue('tags', [...current, tag]);
+                          }
+                        }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                          selected
+                            ? `${meta.className} ring-2 ring-offset-1 ring-offset-card ring-primary/40`
+                            : 'border-border text-muted-foreground hover:bg-muted'
+                        }`}>
+                        <span>{meta.emoji}</span>
+                        <span>{meta.label.ru}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>

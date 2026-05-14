@@ -5,13 +5,15 @@ import { useRouter } from 'next/navigation';
 import React from 'react';
 import { Title } from './title';
 import { Button } from '../ui';
-import { Plus, ShoppingCart, Star } from 'lucide-react';
+import { Heart, Plus, ShoppingCart, Star } from 'lucide-react';
 import { Ingredient } from '@prisma/client';
 import { ReviewWithUser } from '@/@types/prisma';
 import { motion } from 'framer-motion';
+import { useSession } from 'next-auth/react';
 import { useTranslation } from 'react-i18next';
-import { useCartStore } from '@/shared/store';
+import { useCartStore, useFavoritesStore } from '@/shared/store';
 import { cn } from '@/shared/lib/utils';
+import { ProductTagBadges } from './product-tag-badges';
 
 interface Props {
   id: number;
@@ -21,6 +23,7 @@ interface Props {
   imageUrl: string;
   ingredients: Ingredient[];
   reviews?: ReviewWithUser[];
+  tags?: string[];
   className?: string;
 }
 
@@ -32,6 +35,7 @@ export const ProductCard: React.FC<Props> = ({
   imageUrl,
   ingredients,
   reviews = [],
+  tags = [],
   className,
 }) => {
   const averageRating =
@@ -40,16 +44,30 @@ export const ProductCard: React.FC<Props> = ({
       : 0;
   const { t } = useTranslation();
   const router = useRouter();
+  const { data: session } = useSession();
   const cartItems = useCartStore((state) => state.items);
   const cartQuantity = cartItems
     .filter((item) => item.productId === id)
     .reduce((sum, item) => sum + item.quantity, 0);
   const inCart = cartQuantity > 0;
 
+  const favorited = useFavoritesStore((s) => s.ids.has(id));
+  const toggleFavorite = useFavoritesStore((s) => s.toggle);
+
   const goToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     router.push('/checkout');
+  };
+
+  const onHeartClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!session) {
+      router.push('/not-auth');
+      return;
+    }
+    toggleFavorite(id);
   };
 
   return (
@@ -89,6 +107,22 @@ export const ProductCard: React.FC<Props> = ({
             </div>
           )}
 
+          {/* Favorite heart — bottom-left to not collide with discount */}
+          <button
+            type="button"
+            onClick={onHeartClick}
+            aria-label={favorited ? 'Удалить из избранного' : 'Добавить в избранное'}
+            className={cn(
+              'absolute bottom-3 left-3 w-9 h-9 rounded-full glass flex items-center justify-center transition-transform z-10 active:scale-90',
+              favorited && 'text-rose-500',
+            )}>
+            <Heart
+              size={16}
+              strokeWidth={2.5}
+              className={favorited ? 'fill-rose-500 text-rose-500' : 'text-foreground'}
+            />
+          </button>
+
           {/* In-cart badge */}
           {inCart && (
             <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-gradient-to-r from-primary to-orange-500 text-white shadow-soft z-10">
@@ -105,6 +139,7 @@ export const ProductCard: React.FC<Props> = ({
             size="sm"
             className="font-extrabold leading-tight group-hover:text-primary transition-colors"
           />
+          {tags.length > 0 && <ProductTagBadges tags={tags} className="mt-2" max={3} />}
           <p className="text-sm text-muted-foreground line-clamp-2 mt-1.5 leading-snug">
             {ingredients.map((ingredient) => ingredient.name).join(' · ')}
           </p>

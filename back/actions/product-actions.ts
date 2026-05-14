@@ -17,6 +17,7 @@ interface ProductInput {
   categoryId: number;
   ingredientIds: number[];
   items: ProductItemInput[];
+  tags?: string[];
 }
 
 export async function createProduct(data: ProductInput) {
@@ -25,6 +26,7 @@ export async function createProduct(data: ProductInput) {
       data: {
         name: data.name,
         imageUrl: data.imageUrl,
+        tags: data.tags ?? [],
         category: { connect: { id: data.categoryId } },
         ingredients: {
           connect: data.ingredientIds.map((id) => ({ id })),
@@ -37,7 +39,7 @@ export async function createProduct(data: ProductInput) {
             pizzaType: item.pizzaType || null,
           })),
         },
-      },
+      } as any,
     });
 
     revalidatePath('/dashboard/products');
@@ -70,6 +72,7 @@ export async function updateProduct(id: number, data: ProductInput) {
       data: {
         name: data.name,
         imageUrl: data.imageUrl,
+        tags: data.tags ?? [],
         category: { connect: { id: data.categoryId } },
         ingredients: {
           set: data.ingredientIds.map((id) => ({ id })),
@@ -82,7 +85,7 @@ export async function updateProduct(id: number, data: ProductInput) {
             pizzaType: item.pizzaType || null,
           })),
         },
-      },
+      } as any,
     });
 
     revalidatePath('/dashboard/products');

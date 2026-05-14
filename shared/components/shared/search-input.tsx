@@ -3,7 +3,7 @@
 import { cn } from '@/shared/lib/utils';
 import { Api } from '@/back/services/api-client';
 import { Product } from '@prisma/client';
-import { Search, Clock, X } from 'lucide-react';
+import { Search, Clock, X, SearchX } from 'lucide-react';
 import Link from 'next/link';
 import React from 'react';
 import { useClickAway, useDebounce } from 'react-use';
@@ -120,8 +120,14 @@ export const SearchInput: React.FC<Props> = ({ className, placeholder }) => {
               )}
 
               {searchQuery && products.length === 0 && (
-                <div className="px-4 py-8 text-center text-muted-foreground">
-                  <p>Ничего не найдено по запросу "{searchQuery}"</p>
+                <div className="px-6 py-8 flex flex-col items-center text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-muted to-muted/40 ring-2 ring-border flex items-center justify-center mb-3">
+                    <SearchX size={24} className="text-muted-foreground" strokeWidth={2.2} />
+                  </div>
+                  <p className="font-bold mb-1">Ничего не нашли</p>
+                  <p className="text-sm text-muted-foreground">
+                    По запросу «<span className="text-foreground font-semibold">{searchQuery}</span>» пусто. Попробуйте иначе.
+                  </p>
                 </div>
               )}
 

@@ -1,29 +1,13 @@
 import { prisma } from '@/back/prisma/prisma-client';
-import { Title, Container, DeleteButton } from '@/shared/components/shared';
+import { Title, Container, DeleteButton, EmptyState, OrderStatusTracker } from '@/shared/components/shared';
+import { RepeatOrderButton } from '@/shared/components/shared/repeat-order-button';
 import { getUserSession } from '@/back/lib/get-user-session';
 import { redirect } from 'next/navigation';
 import { OrderStatus } from '@prisma/client';
 import Link from 'next/link';
 import { deleteOrder } from '@/back/actions/order-actions';
 import { revalidatePath } from 'next/cache';
-
-const statusTranslations: Record<OrderStatus, string> = {
-  PENDING: 'В ожидании',
-  COOKING: 'Готовится',
-  READY: 'Готов',
-  DELIVERING: 'В доставке',
-  SUCCEEDED: 'Выполнен',
-  CANCELLED: 'Отменен',
-};
-
-const statusColors: Record<OrderStatus, string> = {
-  PENDING: 'bg-yellow-500/15 text-yellow-800 dark:text-yellow-300',
-  COOKING: 'bg-orange-500/15 text-orange-800 dark:text-orange-300',
-  READY: 'bg-blue-500/15 text-blue-800 dark:text-blue-300',
-  DELIVERING: 'bg-indigo-500/15 text-indigo-800 dark:text-indigo-300',
-  SUCCEEDED: 'bg-green-500/15 text-green-800 dark:text-green-300',
-  CANCELLED: 'bg-red-500/15 text-red-800 dark:text-red-300',
-};
+import { Package } from 'lucide-react';
 
 export default async function UserOrdersPage() {
   const session = await getUserSession();
@@ -58,9 +42,14 @@ export default async function UserOrdersPage() {
 
       <div className="space-y-4">
         {orders.length === 0 ? (
-          <div className="text-center py-20 text-muted-foreground bg-card rounded-2xl border border-border shadow-sm">
-            У вас пока нет заказов
-          </div>
+          <EmptyState
+            icon={Package}
+            iconAccent="primary"
+            title="У вас пока нет заказов"
+            description="Когда вы оформите первый заказ — он появится здесь. Можно будет повторить заказ в один клик."
+            actionLabel="Перейти к меню"
+            actionHref="/"
+          />
         ) : (
           orders.map((order) => {
             const canDelete = order.status === OrderStatus.CANCELLED;
@@ -85,11 +74,9 @@ export default async function UserOrdersPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 md:gap-6">
+                  <div className="flex items-center gap-3 md:gap-6 flex-wrap">
                     <div className="text-xl font-bold">{order.totalAmount} TJS</div>
-                    <div className={`px-4 py-1.5 rounded-full text-sm font-semibold ${statusColors[order.status]}`}>
-                      {statusTranslations[order.status]}
-                    </div>
+                    <RepeatOrderButton orderId={order.id} className="h-9 px-3 text-sm rounded-xl" />
                     {canDelete && (
                       <DeleteButton
                         onDelete={async () => {
@@ -103,8 +90,12 @@ export default async function UserOrdersPage() {
                   </div>
                 </div>
 
+                <div className="mt-5 pt-5 border-t border-border">
+                  <OrderStatusTracker status={order.status} deliveryType={order.deliveryType} />
+                </div>
+
                 {willAutoDelete && (
-                  <div className="mt-2 text-xs text-muted-foreground">
+                  <div className="mt-3 text-xs text-muted-foreground">
                     Этот заказ будет автоматически удалён в ближайшее время
                   </div>
                 )}

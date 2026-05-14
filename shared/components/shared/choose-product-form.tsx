@@ -5,6 +5,7 @@ import React from 'react';
 import { Title } from './title';
 import { Button } from '../ui';
 import { useTranslation } from 'react-i18next';
+import { ProductTagBadges } from './product-tag-badges';
 
 interface Props {
   imageUrl: string;
@@ -13,6 +14,7 @@ interface Props {
   loading?: boolean;
   onSubmit?: VoidFunction;
   className?: string;
+  tags?: string[];
 }
 
 /**
@@ -25,6 +27,7 @@ export const ChooseProductForm: React.FC<Props> = ({
   onSubmit,
   className,
   loading,
+  tags,
 }) => {
   const { t } = useTranslation();
 
@@ -40,6 +43,8 @@ export const ChooseProductForm: React.FC<Props> = ({
 
       <div className="w-full lg:w-[490px] bg-secondary text-secondary-foreground p-7 flex flex-col justify-between">
         <Title text={name} size="md" className="font-extrabold mb-1" />
+
+        {tags && tags.length > 0 && <ProductTagBadges tags={tags} size="md" className="mb-3" />}
 
         <Button
           loading={loading}

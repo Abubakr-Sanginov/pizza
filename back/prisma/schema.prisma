@@ -30,9 +30,47 @@ model User {
     pushTokens       PushToken[]
 
     reviews          Review[]
+    favorites        Favorite[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+}
+
+model Favorite {
+    id Int @id @default(autoincrement())
+
+    user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId Int
+
+    product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+    productId Int
+
+    createdAt DateTime @default(now())
+
+    @@unique([userId, productId])
+    @@index([userId])
+}
+
+model PromoCode {
+    id Int @id @default(autoincrement())
+
+    code        String           @unique
+    description String?
+    type        PromoDiscountType @default(PERCENT)
+    discount    Int               // % when PERCENT, TJS when FIXED
+    minAmount   Int               @default(0)
+    usageLimit  Int?              // null = unlimited
+    usedCount   Int               @default(0)
+    expiresAt   DateTime?
+    active      Boolean           @default(true)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+enum PromoDiscountType {
+    PERCENT
+    FIXED
 }
 
 model Category {
@@ -52,6 +90,9 @@ model Product {
     name     String
     imageUrl String
 
+    // Dietary / allergen tags: VEGAN, VEGETARIAN, SPICY, GLUTEN_FREE, LACTOSE_FREE, NEW, HIT
+    tags     String[] @default([])
+
     ingredients Ingredient[]
     items       ProductItem[]
 
@@ -59,6 +100,7 @@ model Product {
     categoryId Int
 
     reviews    Review[]
+    favorites  Favorite[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -141,6 +183,8 @@ model Order {
     token String
 
     totalAmount Int
+    discount    Int     @default(0)
+    promoCode   String?
     status      OrderStatus
 
     items Json

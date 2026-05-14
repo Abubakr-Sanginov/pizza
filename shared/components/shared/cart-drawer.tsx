@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 
 import {
   Sheet,
@@ -14,9 +13,10 @@ import {
 } from '@/shared/components/ui/sheet';
 import Link from 'next/link';
 import { Button } from '../ui';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ShoppingBag } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { CartDrawerItem } from './cart-drawer-item';
+import { CartCrossSell } from './cart-cross-sell';
 import { getCartItemDetails } from '@/shared/lib';
 import { PizzaSize, PizzaType } from '@/shared/constants/pizza';
 import { Title } from './title';
@@ -51,20 +51,25 @@ export const CartDrawer: React.FC<React.PropsWithChildren> = ({ children }) => {
           )}
 
           {!totalAmount && (
-            <div className="flex flex-col items-center justify-center w-72 mx-auto">
-              <div className="mb-6 p-10 glass rounded-[32px] shadow-soft-lg">
-                <Image src="/assets/images/empty-box.png" alt="Empty cart" width={120} height={120} />
+            <div className="flex flex-col items-center justify-center w-80 mx-auto">
+              <div className="relative mb-6">
+                <div className="w-28 h-28 rounded-[32px] bg-gradient-to-br from-primary/20 to-orange-500/10 ring-4 ring-primary/20 flex items-center justify-center shadow-soft-lg">
+                  <ShoppingBag className="w-12 h-12 text-primary" strokeWidth={2} />
+                </div>
+                <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-gradient-to-br from-primary to-orange-500 text-white flex items-center justify-center font-black text-sm shadow-soft animate-pulse">
+                  0
+                </div>
               </div>
               <Title
                 size="sm"
                 text={t('cart.emptyTitle')}
-                className="text-center font-black my-2 tracking-tight"
+                className="text-center font-black mb-2 tracking-tight"
               />
               <p className="text-center text-muted-foreground mb-8 leading-relaxed">
                 {t('cart.emptyText')}
               </p>
 
-              <SheetClose>
+              <SheetClose asChild>
                 <Button
                   className="w-56 h-12 text-base font-extrabold rounded-2xl btn-gradient border-0"
                   size="lg">
@@ -98,6 +103,10 @@ export const CartDrawer: React.FC<React.PropsWithChildren> = ({ children }) => {
                     />
                   </div>
                 ))}
+              </div>
+
+              <div className="-mx-6 py-4 border-t border-border/40">
+                <CartCrossSell />
               </div>
 
               <SheetFooter className="-mx-6 glass-strong border-t border-border/50 p-7">

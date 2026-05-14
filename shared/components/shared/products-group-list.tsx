@@ -72,6 +72,7 @@ export const ProductsGroupList: React.FC<Props> = ({
             priceOld={product.items[0].priceOld}
             ingredients={product.ingredients}
             reviews={product.reviews}
+            tags={(product as any).tags ?? []}
           />
         ))}
       </div>

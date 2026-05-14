@@ -10,7 +10,8 @@ import { useTranslation } from 'react-i18next';
 import { BASE_URL } from '@/constants/Api';
 import { useTheme, Theme } from '@/hooks/useTheme';
 import { gradients, motion } from '@/constants/Colors';
-import { SpringPress, LiquidGlassCard, LiquidGlassPill, AmbientBackdrop, ShimmerProductCard, Shimmer } from '@/components/ui';
+import { SpringPress, LiquidGlassCard, LiquidGlassPill, AmbientBackdrop, ShimmerProductCard, Shimmer, TagBadges } from '@/components/ui';
+import { RecentlyViewed } from '@/components/shared/RecentlyViewed';
 const { width, height } = Dimensions.get('window');
 
 export default function MenuScreen() {
@@ -195,6 +196,12 @@ export default function MenuScreen() {
             </View>
             <View style={styles.productInfo}>
               <Text style={styles.productName}>{item.name}</Text>
+              <TagBadges
+                tags={item.tags}
+                lang={i18n.language}
+                dark={theme.mode === 'dark'}
+                max={2}
+              />
               <Text style={styles.productDescription} numberOfLines={2}>
                 {item.ingredients.map((i: any) => i.name).join(', ')}
               </Text>
@@ -360,14 +367,14 @@ export default function MenuScreen() {
         ListHeaderComponent={
           <>
             {stories.length > 0 && (
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false} 
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.storiesContainer}
               >
                 {stories.map((story) => (
-                  <TouchableOpacity 
-                    key={story.id} 
+                  <TouchableOpacity
+                    key={story.id}
                     style={styles.storyThumbWrapper}
                     onPress={() => openStory(story)}
                   >
@@ -378,6 +385,7 @@ export default function MenuScreen() {
                 ))}
               </ScrollView>
             )}
+            <RecentlyViewed onPress={handleProductPress} refreshToken={modalVisible} />
           </>
         }
         renderSectionHeader={({ section: { name } }) => (

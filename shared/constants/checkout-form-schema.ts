@@ -15,6 +15,7 @@ export const checkoutFormSchema = z.object({
   comment: z.string().optional(),
   lat: z.number().optional(),
   lng: z.number().optional(),
+  promoCode: z.string().optional(),
 }).superRefine((data, ctx) => {
   if (data.deliveryType === 'DELIVERY' && (!data.address || data.address.trim().length < 5)) {
     ctx.addIssue({

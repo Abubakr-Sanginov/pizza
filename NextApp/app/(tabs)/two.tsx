@@ -17,6 +17,8 @@ import { useTheme, Theme } from '@/hooks/useTheme';
 import { gradients } from '@/constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SpringPress, LiquidGlassCard, AmbientBackdrop } from '@/components/ui';
+import { OrderSuccessModal } from '@/components/shared/OrderSuccessModal';
+import { CartCrossSell } from '@/components/shared/CartCrossSell';
 
 export default function CartScreen() {
   const insets = useSafeAreaInsets();
@@ -58,6 +60,7 @@ export default function CartScreen() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState(user?.email || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successOrder, setSuccessOrder] = useState<{ id: number; total: number; eta: number } | null>(null);
 
   // Map/Stores state
   const [stores, setStores] = useState<any[]>([]);
@@ -169,9 +172,14 @@ export default function CartScreen() {
         throw new Error(err.error || t('courier.error'));
       }
 
-      Alert.alert(t('cart.success'));
+      const created = await res.json().catch(() => null);
+      const orderId = created?.id ?? created?.order?.id ?? 0;
       clearCart();
-      router.replace('/profile');
+      setSuccessOrder({
+        id: orderId,
+        total: Math.round(finalTotal),
+        eta: deliveryType === 'PICKUP' ? 20 : 45,
+      });
     } catch (e: any) {
       Alert.alert(e.message);
     } finally {
@@ -355,6 +363,8 @@ export default function CartScreen() {
                   </DefaultView>
                 ))}
               </DefaultView>
+
+              <CartCrossSell />
             </>
           ) : (
             <>
@@ -562,6 +572,17 @@ export default function CartScreen() {
           </DefaultView>
         )}
       </KeyboardAvoidingView>
+
+      <OrderSuccessModal
+        visible={!!successOrder}
+        orderId={successOrder?.id}
+        totalAmount={successOrder?.total}
+        etaMinutes={successOrder?.eta}
+        onClose={() => {
+          setSuccessOrder(null);
+          router.replace('/profile');
+        }}
+      />
     </DefaultView>
   );
 }

@@ -12,6 +12,7 @@ import { useTheme, Theme } from '@/hooks/useTheme';
 import { gradients } from '@/constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SpringPress, AmbientBackdrop, LiquidGlassCard } from '@/components/ui';
+import { OrderStatusTracker } from '@/components/shared/OrderStatusTracker';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -308,17 +309,25 @@ export default function ProfileScreen() {
                 <View key={order.id} style={styles.orderCard}>
                   <View style={styles.orderHeader}>
                     <Text style={styles.orderId}>{t('courier.order')} #{order.id}</Text>
-                    <View style={[styles.statusBadge, { backgroundColor: order.status === 'SUCCEEDED' ? (theme.mode === 'dark' ? 'rgba(74,222,128,0.15)' : '#f6ffed') : (theme.mode === 'dark' ? 'rgba(251,191,36,0.15)' : '#fff7e6') }]}>
-                      <Text style={[styles.statusText, { color: order.status === 'SUCCEEDED' ? theme.success : theme.warning }]}>
-                        {order.status === 'SUCCEEDED' ? t('profile.orderStatus.succeeded') : t('profile.orderStatus.processing')}
-                      </Text>
-                    </View>
+                    <Text style={styles.orderPrice}>{order.totalAmount} TJS</Text>
                   </View>
                   <Text style={styles.orderDate}>{new Date(order.createdAt).toLocaleDateString()}</Text>
-                  <Text style={styles.orderPrice}>{order.totalAmount} TJS</Text>
+                  <View style={{ marginTop: 12, marginBottom: 6 }}>
+                    <OrderStatusTracker
+                      status={order.status}
+                      deliveryType={order.deliveryType}
+                    />
+                  </View>
                   <View style={styles.orderDivider} />
-                  <Text style={styles.orderItems}>
-                    {JSON.parse(order.items).map((i: any) => i.productItem.product.name).join(', ')}
+                  <Text style={styles.orderItems} numberOfLines={2}>
+                    {(() => {
+                      try {
+                        const items = JSON.parse(order.items);
+                        return items.map((i: any) => i.productItem?.product?.name).filter(Boolean).join(', ');
+                      } catch {
+                        return '';
+                      }
+                    })()}
                   </Text>
                 </View>
               ))
@@ -570,7 +579,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
   statusBadge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 10 },
   statusText: { fontSize: 12, fontWeight: '800' },
   orderDate: { fontSize: 12, color: t.textMuted, marginTop: 4 },
-  orderPrice: { fontSize: 18, fontWeight: '900', color: t.primary, marginTop: 10 },
+  orderPrice: { fontSize: 18, fontWeight: '900', color: t.primary },
   orderDivider: { height: 1, backgroundColor: t.borderMuted, marginVertical: 12 },
   orderItems: { fontSize: 13, color: t.textMuted },
   emptyOrders: { alignItems: 'center', paddingVertical: 60, paddingHorizontal: 20, gap: 15 },

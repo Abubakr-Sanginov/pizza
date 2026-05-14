@@ -12,6 +12,7 @@ import { IngredientItem } from './ingredient-item';
 import { cn } from '@/shared/lib/utils';
 import { getPizzaDetails } from '@/shared/lib';
 import { usePizzaOptions } from '@/shared/hooks';
+import { ProductTagBadges } from './product-tag-badges';
 
 import { useTranslation } from 'react-i18next';
 
@@ -23,6 +24,7 @@ interface Props {
   loading?: boolean;
   onSubmit: (itemId: number, ingredients: number[]) => void;
   className?: string;
+  tags?: string[];
 }
 
 /**
@@ -36,6 +38,7 @@ export const ChoosePizzaForm: React.FC<Props> = ({
   loading,
   onSubmit,
   className,
+  tags,
 }) => {
   const { t } = useTranslation();
   const {
@@ -70,6 +73,8 @@ export const ChoosePizzaForm: React.FC<Props> = ({
 
       <div className="w-full lg:w-[490px] bg-secondary text-secondary-foreground p-7">
         <Title text={name} size="md" className="font-extrabold mb-1" />
+
+        {tags && tags.length > 0 && <ProductTagBadges tags={tags} size="md" className="mb-2" />}
 
         <p className="text-muted-foreground">{textDetaills}</p>
 

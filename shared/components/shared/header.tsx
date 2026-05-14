@@ -15,6 +15,7 @@ import { AuthModal } from './modals';
 import { useTranslation } from 'react-i18next';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Button } from '../ui';
 import { useSession } from 'next-auth/react';
+import { useFavoritesStore } from '@/shared/store';
 
 const LanguageSelector = () => {
   const { i18n } = useTranslation();
@@ -45,6 +46,11 @@ export const Header: React.FC<Props> = ({ hasSearch = true, hasCart = true, clas
   const { t } = useTranslation();
   const { data: session } = useSession();
   const isCourier = session?.user?.role === 'COURIER';
+  const fetchFavoriteIds = useFavoritesStore((s) => s.fetchIds);
+
+  React.useEffect(() => {
+    if (session) fetchFavoriteIds();
+  }, [session, fetchFavoriteIds]);
   const showSearch = hasSearch && !isCourier;
   const showCart = hasCart && !isCourier;
 

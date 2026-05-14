@@ -9,7 +9,8 @@ import { BASE_URL } from '@/constants/Api';
 import { useTheme, Theme } from '@/hooks/useTheme';
 import { gradients } from '@/constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SpringPress, AmbientBackdrop } from '@/components/ui';
+import { SpringPress, AmbientBackdrop, TagBadges } from '@/components/ui';
+import { pushRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { BlurView } from 'expo-blur';
 
 interface Props {
@@ -21,7 +22,7 @@ interface Props {
 
 export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose, onAddToCart }) => {
   const user = useUserStore(state => state.user);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const theme = useTheme();
   const styles = useMemo(() => makeStyles(theme), [theme]);
   
@@ -51,6 +52,7 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
       setSize(firstAvailableItem.size);
       setType(firstAvailableItem.pizzaType || 1);
       setTab('details');
+      if (product.id) pushRecentlyViewed(product.id);
     }
   }, [product, visible]);
 
@@ -173,7 +175,14 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                 </View>
 
                 <Text style={styles.name}>{product.name}</Text>
-                
+                <View style={{ alignItems: 'center', marginTop: 6 }}>
+                  <TagBadges
+                    tags={product.tags}
+                    lang={i18n.language}
+                    dark={theme.mode === 'dark'}
+                  />
+                </View>
+
                 {isPizza && (
                   <View style={styles.selectors}>
                     <View style={styles.selectorRow}>

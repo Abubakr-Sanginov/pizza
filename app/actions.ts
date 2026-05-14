@@ -13,6 +13,7 @@ import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { sendOrderNotification } from '@/bot/service';
 import { sendOrderToIiko } from '@/back/services/iiko';
+import { applyPromo, bumpPromoUsage } from '@/back/lib/promo';
 
 export async function createOrder(data: CheckoutFormValues) {
   try {
@@ -87,6 +88,25 @@ export async function createOrder(data: CheckoutFormValues) {
       }
     }
 
+    /* Получаем настройки (НДС и доставка) */
+    const settings = await prisma.setting.findFirst({ where: { id: 1 } });
+    const vatPercent = settings?.vatPrice ?? 15;
+    const deliveryPrice = data.deliveryType === 'DELIVERY' ? (settings?.deliveryPrice ?? 250) : 0;
+
+    /* Применяем промокод, если он есть */
+    let promoCodeApplied: string | null = null;
+    let discountAmount = 0;
+    if (data.promoCode) {
+      const result = await applyPromo(data.promoCode, userCart.totalAmount);
+      if (!('error' in result)) {
+        promoCodeApplied = result.promo.code;
+        discountAmount = result.discount;
+      }
+    }
+
+    const vatPrice = Math.floor((userCart.totalAmount * vatPercent) / 100);
+    const finalTotal = Math.max(0, userCart.totalAmount + deliveryPrice + vatPrice - discountAmount);
+
     /* Создаем заказ */
     const order = await prisma.order.create({
       data: {
@@ -104,12 +124,18 @@ export async function createOrder(data: CheckoutFormValues) {
         comment: data.comment,
         lat: data.lat,
         lng: data.lng,
-        totalAmount: userCart.totalAmount,
+        totalAmount: finalTotal,
+        discount: discountAmount,
+        promoCode: promoCodeApplied,
         status: OrderStatus.PENDING,
         items: JSON.stringify(userCart.items),
         userId: currentUser ? Number(currentUser.id) : null,
       },
     });
+
+    if (promoCodeApplied) {
+      bumpPromoUsage(promoCodeApplied).catch(() => {});
+    }
 
     /* Сохраняем адрес в профиль пользователя, если он авторизован */
     if (currentUser && data.address) {
@@ -178,7 +204,7 @@ export async function createOrder(data: CheckoutFormValues) {
     }
 
     revalidatePath('/dashboard/orders');
-    return '/?paid';
+    return `/order-success/${order.id}`;
   } catch (err) {
     console.log('[CreateOrder] Server error', err);
     throw err;

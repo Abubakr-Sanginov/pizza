@@ -6,6 +6,7 @@ import React from 'react';
 import toast from 'react-hot-toast';
 import { ChoosePizzaForm } from './choose-pizza-form';
 import { ChooseProductForm } from './choose-product-form';
+import { pushRecentlyViewed } from '@/shared/hooks';
 
 interface Props {
   product: ProductWithRelations;
@@ -14,6 +15,10 @@ interface Props {
 
 export const ProductForm: React.FC<Props> = ({ product, onSubmit: _onSubmit }) => {
   const [addCartItem, loading] = useCartStore((state) => [state.addCartItem, state.loading]);
+
+  React.useEffect(() => {
+    pushRecentlyViewed(product.id);
+  }, [product.id]);
 
   const firstItem = product.items[0];
   const isPizzaForm = Boolean(firstItem.pizzaType);
@@ -36,6 +41,8 @@ export const ProductForm: React.FC<Props> = ({ product, onSubmit: _onSubmit }) =
     }
   };
 
+  const tags = (product as any).tags ?? [];
+
   if (isPizzaForm) {
     return (
       <ChoosePizzaForm
@@ -45,6 +52,7 @@ export const ProductForm: React.FC<Props> = ({ product, onSubmit: _onSubmit }) =
         items={product.items}
         onSubmit={onSubmit}
         loading={loading}
+        tags={tags}
       />
     );
   }
@@ -56,6 +64,7 @@ export const ProductForm: React.FC<Props> = ({ product, onSubmit: _onSubmit }) =
       onSubmit={onSubmit}
       price={firstItem.price}
       loading={loading}
+      tags={tags}
     />
   );
 };

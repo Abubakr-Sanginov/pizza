@@ -1,10 +1,14 @@
 'use client';
 
 import React from 'react';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+import { useFormContext } from 'react-hook-form';
+
 import { WhiteBlock } from './white-block';
 import { CheckoutItemDetails } from './checkout-item-details';
-import { ArrowRight, Package, Percent, Truck } from 'lucide-react';
-import { Button, Skeleton } from '../ui';
+import { ArrowRight, Check, Package, Percent, Ticket, Truck, X } from 'lucide-react';
+import { Button, Input, Skeleton } from '../ui';
 import { cn } from '@/shared/lib/utils';
 import { useTranslation } from 'react-i18next';
 
@@ -24,8 +28,42 @@ export const CheckoutSidebar: React.FC<Props> = ({
   deliveryPrice = 250,
 }) => {
   const { t } = useTranslation();
+  const form = useFormContext();
+
+  const [promoInput, setPromoInput] = React.useState('');
+  const [appliedPromo, setAppliedPromo] = React.useState<{
+    code: string;
+    discount: number;
+  } | null>(null);
+  const [applying, setApplying] = React.useState(false);
+
   const vatPrice = (totalAmount * vatPercent) / 100;
-  const totalPrice = totalAmount + deliveryPrice + vatPrice;
+  const discount = appliedPromo?.discount ?? 0;
+  const totalPrice = Math.max(0, totalAmount + deliveryPrice + vatPrice - discount);
+
+  const applyPromo = async () => {
+    if (!promoInput.trim()) return;
+    setApplying(true);
+    try {
+      const { data } = await axios.post('/api/promo/validate', {
+        code: promoInput.trim(),
+        subtotal: totalAmount,
+      });
+      setAppliedPromo({ code: data.code, discount: data.appliedDiscount });
+      form?.setValue?.('promoCode', data.code);
+      toast.success(`Промокод применён: −${data.appliedDiscount} TJS`);
+    } catch (e: any) {
+      toast.error(e?.response?.data?.error ?? 'Не удалось применить промокод');
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  const clearPromo = () => {
+    setAppliedPromo(null);
+    setPromoInput('');
+    form?.setValue?.('promoCode', undefined);
+  };
 
   return (
     <WhiteBlock className={cn('p-6 sticky top-4', className)}>
@@ -65,6 +103,55 @@ export const CheckoutSidebar: React.FC<Props> = ({
         }
         value={loading ? <Skeleton className="h-6 w-16 rounded-[6px]" /> : `${deliveryPrice} TJS`}
       />
+
+      {appliedPromo && (
+        <CheckoutItemDetails
+          title={
+            <div className="flex items-center text-primary font-semibold">
+              <Ticket size={18} className="mr-2" />
+              {appliedPromo.code}
+            </div>
+          }
+          value={
+            <span className="text-primary font-bold">−{appliedPromo.discount} TJS</span>
+          }
+        />
+      )}
+
+      {/* Promo input */}
+      <div className="mt-5">
+        {appliedPromo ? (
+          <button
+            type="button"
+            onClick={clearPromo}
+            className="w-full h-10 inline-flex items-center justify-between gap-2 px-4 rounded-xl glass text-sm font-bold text-foreground hover:bg-muted transition">
+            <span className="flex items-center gap-2">
+              <Check size={16} className="text-primary" />
+              Промокод применён
+            </span>
+            <X size={14} className="text-muted-foreground" />
+          </button>
+        ) : (
+          <div className="flex gap-2">
+            <Input
+              value={promoInput}
+              onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+              placeholder="Промокод"
+              className="h-10 uppercase tracking-wider font-bold"
+              maxLength={50}
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={applyPromo}
+              loading={applying}
+              disabled={!promoInput.trim() || loading}
+              className="h-10 rounded-xl font-bold">
+              ОК
+            </Button>
+          </div>
+        )}
+      </div>
 
       <Button
         loading={loading}

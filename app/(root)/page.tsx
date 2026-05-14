@@ -7,6 +7,8 @@ import {
   Stories,
   TopProducts,
   RecentOrders,
+  BackToTop,
+  RecentlyViewed,
 } from '@/shared/components/shared';
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
@@ -49,6 +51,10 @@ export default async function Home({ searchParams }: { searchParams: GetSearchPa
         <TopProducts />
       </Container>
 
+      <Container className="my-10">
+        <RecentlyViewed />
+      </Container>
+
       <Container className="mt-10 pb-14">
         <div className="flex flex-col lg:flex-row gap-10 lg:gap-[80px]">
           {/* Фильтрация */}
@@ -79,6 +85,8 @@ export default async function Home({ searchParams }: { searchParams: GetSearchPa
           </div>
         </div>
       </Container>
+
+      <BackToTop />
     </>
   );
 }
