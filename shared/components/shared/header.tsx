@@ -7,7 +7,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { SearchInput } from './search-input';
 import { CartButton } from './cart-button';
-import { Bell } from 'lucide-react';
+import { Bell, Heart } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { ProfileButton } from './profile-button';
@@ -118,6 +118,12 @@ export const Header: React.FC<Props> = ({ hasSearch = true, hasCart = true, clas
             <AuthModal open={openAuthModal} onClose={() => setOpenAuthModal(false)} />
 
             <LanguageSelector />
+
+            <Link href="/profile/favorites" aria-label="Избранное">
+              <Button variant="secondary" className="px-2 md:px-4 h-[42px] rounded-2xl">
+                <Heart size={18} className="text-muted-foreground" />
+              </Button>
+            </Link>
 
             <Link href="/notifications">
               <Button variant="secondary" className="px-2 md:px-4 h-[42px] rounded-2xl">

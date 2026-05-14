@@ -57,11 +57,16 @@ export const ProfileForm: React.FC<Props> = ({ data }) => {
 
   return (
     <Container className="my-10">
-      <div className="flex items-center justify-between mt-10 mb-5 w-96">
+      <div className="flex items-center justify-between mt-10 mb-5 w-full max-w-2xl gap-3 flex-wrap">
         <Title text={`Личные данные | #${data.id}`} size="md" className="font-bold" />
-        <Button variant="secondary" asChild>
-          <Link href="/profile/orders">Мои заказы</Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="secondary" asChild>
+            <Link href="/profile/favorites">Избранное</Link>
+          </Button>
+          <Button variant="secondary" asChild>
+            <Link href="/profile/orders">Мои заказы</Link>
+          </Button>
+        </div>
       </div>
 
       <FormProvider {...form}>
