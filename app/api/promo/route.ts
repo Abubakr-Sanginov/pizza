@@ -14,6 +14,8 @@ const CreateBody = z.object({
   usageLimit: z.coerce.number().int().min(1).optional().nullable(),
   expiresAt: z.string().datetime().optional().nullable(),
   active: z.boolean().optional().default(true),
+  productIds: z.array(z.coerce.number().int().positive()).optional().default([]),
+  categoryIds: z.array(z.coerce.number().int().positive()).optional().default([]),
 });
 
 async function requireAdmin() {

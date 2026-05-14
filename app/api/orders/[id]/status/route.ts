@@ -4,6 +4,25 @@ import { getUserSession } from '@/back/lib/get-user-session';
 import { OrderStatus } from '@prisma/client';
 import { notifyOrderStatus } from '@/back/lib/notify-order-status';
 
+export const dynamic = 'force-dynamic';
+
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  const orderId = Number(params.id);
+  if (!Number.isFinite(orderId) || orderId <= 0) {
+    return NextResponse.json({ message: 'Неверный orderId' }, { status: 400 });
+  }
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: { id: true, status: true, deliveryType: true, updatedAt: true },
+  });
+  if (!order) {
+    return NextResponse.json({ message: 'Заказ не найден' }, { status: 404 });
+  }
+  return NextResponse.json(order, {
+    headers: { 'Cache-Control': 'no-store' },
+  });
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { CheckCircle2, Package, Home } from 'lucide-react';
 
 import { prisma } from '@/back/prisma/prisma-client';
-import { Container, Confetti, OrderStatusTracker } from '@/shared/components/shared';
+import { Container, Confetti, LiveOrderStatus } from '@/shared/components/shared';
 import { Button } from '@/shared/components/ui';
 
 interface PageProps {
@@ -69,7 +69,11 @@ export default async function OrderSuccessPage({ params }: PageProps) {
             <div className="text-sm font-bold text-muted-foreground uppercase tracking-wide mb-4 text-left">
               Этапы заказа
             </div>
-            <OrderStatusTracker status={order.status} deliveryType={order.deliveryType} />
+            <LiveOrderStatus
+              orderId={order.id}
+              initialStatus={order.status}
+              initialDeliveryType={order.deliveryType}
+            />
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">

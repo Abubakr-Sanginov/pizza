@@ -1,5 +1,5 @@
 import { prisma } from '@/back/prisma/prisma-client';
-import { Title, Container, DeleteButton, EmptyState, OrderStatusTracker } from '@/shared/components/shared';
+import { Title, Container, DeleteButton, EmptyState, LiveOrderStatus } from '@/shared/components/shared';
 import { RepeatOrderButton } from '@/shared/components/shared/repeat-order-button';
 import { getUserSession } from '@/back/lib/get-user-session';
 import { redirect } from 'next/navigation';
@@ -91,7 +91,11 @@ export default async function UserOrdersPage() {
                 </div>
 
                 <div className="mt-5 pt-5 border-t border-border">
-                  <OrderStatusTracker status={order.status} deliveryType={order.deliveryType} />
+                  <LiveOrderStatus
+                    orderId={order.id}
+                    initialStatus={order.status}
+                    initialDeliveryType={order.deliveryType}
+                  />
                 </div>
 
                 {willAutoDelete && (

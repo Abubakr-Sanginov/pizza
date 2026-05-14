@@ -11,6 +11,7 @@ import { ArrowRight, Check, Package, Percent, Ticket, Truck, X } from 'lucide-re
 import { Button, Input, Skeleton } from '../ui';
 import { cn } from '@/shared/lib/utils';
 import { useTranslation } from 'react-i18next';
+import { useCart } from '@/shared/hooks';
 
 interface Props {
   totalAmount: number;
@@ -29,6 +30,7 @@ export const CheckoutSidebar: React.FC<Props> = ({
 }) => {
   const { t } = useTranslation();
   const form = useFormContext();
+  const { items } = useCart();
 
   const [promoInput, setPromoInput] = React.useState('');
   const [appliedPromo, setAppliedPromo] = React.useState<{
@@ -41,6 +43,34 @@ export const CheckoutSidebar: React.FC<Props> = ({
   const discount = appliedPromo?.discount ?? 0;
   const totalPrice = Math.max(0, totalAmount + deliveryPrice + vatPrice - discount);
 
+  // Re-validate promo when cart changes (items added / removed) so the discount stays correct
+  const itemsKey = items.map((i) => `${i.productId}:${i.quantity}:${i.price}`).join('|');
+  React.useEffect(() => {
+    if (!appliedPromo) return;
+    let cancelled = false;
+    axios
+      .post('/api/promo/validate', {
+        code: appliedPromo.code,
+        subtotal: totalAmount,
+        items: items.map((i) => ({ productId: i.productId, lineTotal: i.price * i.quantity })),
+      })
+      .then(({ data }) => {
+        if (cancelled) return;
+        setAppliedPromo({ code: data.code, discount: data.appliedDiscount });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        // Promo no longer valid for new cart (e.g., scoped items removed)
+        setAppliedPromo(null);
+        form?.setValue?.('promoCode', undefined);
+        toast.error('Промокод больше не действует для текущей корзины');
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemsKey, totalAmount]);
+
   const applyPromo = async () => {
     if (!promoInput.trim()) return;
     setApplying(true);
@@ -48,6 +78,7 @@ export const CheckoutSidebar: React.FC<Props> = ({
       const { data } = await axios.post('/api/promo/validate', {
         code: promoInput.trim(),
         subtotal: totalAmount,
+        items: items.map((i) => ({ productId: i.productId, lineTotal: i.price * i.quantity })),
       });
       setAppliedPromo({ code: data.code, discount: data.appliedDiscount });
       form?.setValue?.('promoCode', data.code);

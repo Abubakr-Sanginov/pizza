@@ -30,6 +30,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const data: any = {};
   if (typeof body.active === 'boolean') data.active = body.active;
   if (typeof body.usageLimit === 'number') data.usageLimit = body.usageLimit;
+  if (Array.isArray(body.productIds)) {
+    data.productIds = body.productIds.map((n: any) => Number(n)).filter((n: number) => Number.isFinite(n) && n > 0);
+  }
+  if (Array.isArray(body.categoryIds)) {
+    data.categoryIds = body.categoryIds.map((n: any) => Number(n)).filter((n: number) => Number.isFinite(n) && n > 0);
+  }
   const updated = await prisma.promoCode.update({ where: { id }, data });
   return NextResponse.json(updated);
 }

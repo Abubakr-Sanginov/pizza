@@ -12,7 +12,7 @@ import { useTheme, Theme } from '@/hooks/useTheme';
 import { gradients } from '@/constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SpringPress, AmbientBackdrop, LiquidGlassCard } from '@/components/ui';
-import { OrderStatusTracker } from '@/components/shared/OrderStatusTracker';
+import { LiveOrderStatus } from '@/components/shared/LiveOrderStatus';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -313,9 +313,10 @@ export default function ProfileScreen() {
                   </View>
                   <Text style={styles.orderDate}>{new Date(order.createdAt).toLocaleDateString()}</Text>
                   <View style={{ marginTop: 12, marginBottom: 6 }}>
-                    <OrderStatusTracker
-                      status={order.status}
-                      deliveryType={order.deliveryType}
+                    <LiveOrderStatus
+                      orderId={order.id}
+                      initialStatus={order.status}
+                      initialDeliveryType={order.deliveryType}
                     />
                   </View>
                   <View style={styles.orderDivider} />

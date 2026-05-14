@@ -4,16 +4,26 @@ import { prisma } from '@/back/prisma/prisma-client';
 
 export interface AppliedPromo {
   promo: PromoCode;
-  discount: number; // absolute TJS off
+  discount: number;        // absolute TJS off
+  scopedSubtotal: number;  // subtotal of items the promo actually applies to
+}
+
+export interface PromoCartItem {
+  productId: number;
+  lineTotal: number; // total price for this cart line (price * qty + ingredients)
 }
 
 /**
- * Validate and compute discount for a promo `code` against `subtotal` (in TJS).
- * Returns the applied promo with computed `discount` amount, or { error } if rejected.
+ * Validate and compute discount for a promo `code` against the given cart items.
+ * If the promo has a non-empty product/category scope, the discount applies ONLY to
+ * the matching items' subtotal.
+ *
+ * `subtotal` is the entire cart subtotal — used for minAmount checks.
  */
 export async function applyPromo(
   rawCode: string,
   subtotal: number,
+  items: PromoCartItem[] = [],
 ): Promise<AppliedPromo | { error: string }> {
   if (!rawCode || typeof rawCode !== 'string') return { error: 'Введите промокод' };
   const code = rawCode.trim().toUpperCase();
@@ -31,16 +41,49 @@ export async function applyPromo(
     return { error: `Минимальная сумма заказа: ${promo.minAmount} TJS` };
   }
 
+  // Determine the scoped subtotal that the promo applies to.
+  const promoAny = promo as unknown as PromoCode & { productIds?: number[]; categoryIds?: number[] };
+  const promoProductIds: number[] = promoAny.productIds ?? [];
+  const promoCategoryIds: number[] = promoAny.categoryIds ?? [];
+  const hasScope = promoProductIds.length > 0 || promoCategoryIds.length > 0;
+
+  let scopedSubtotal = subtotal;
+  if (hasScope) {
+    if (items.length === 0) {
+      // No items context — cannot evaluate scope, refuse
+      return { error: 'Промокод действует только на отдельные товары — открой корзину' };
+    }
+    const allProductIds = items.map((i) => i.productId);
+    const products = await prisma.product.findMany({
+      where: { id: { in: allProductIds } },
+      select: { id: true, categoryId: true },
+    });
+    const categoryByProduct = new Map(products.map((p) => [p.id, p.categoryId]));
+
+    const productSet = new Set(promoProductIds);
+    const categorySet = new Set(promoCategoryIds);
+
+    scopedSubtotal = items.reduce((sum, it) => {
+      const cat = categoryByProduct.get(it.productId);
+      const match = productSet.has(it.productId) || (cat != null && categorySet.has(cat));
+      return match ? sum + it.lineTotal : sum;
+    }, 0);
+
+    if (scopedSubtotal <= 0) {
+      return { error: 'В корзине нет товаров, на которые действует промокод' };
+    }
+  }
+
   let discount = 0;
   if (promo.type === 'PERCENT') {
-    discount = Math.floor((subtotal * promo.discount) / 100);
+    discount = Math.floor((scopedSubtotal * promo.discount) / 100);
   } else {
     discount = promo.discount;
   }
-  // Never let discount exceed the subtotal
-  discount = Math.max(0, Math.min(discount, subtotal));
+  // Never let discount exceed the scoped subtotal
+  discount = Math.max(0, Math.min(discount, scopedSubtotal));
 
-  return { promo, discount };
+  return { promo, discount, scopedSubtotal };
 }
 
 /**

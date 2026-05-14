@@ -64,6 +64,11 @@ model PromoCode {
     expiresAt   DateTime?
     active      Boolean           @default(true)
 
+    // Scope: empty arrays = applies to everything. Otherwise discount only applies
+    // to items whose productId is in productIds OR whose category is in categoryIds.
+    productIds   Int[] @default([])
+    categoryIds  Int[] @default([])
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }

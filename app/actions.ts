@@ -97,7 +97,15 @@ export async function createOrder(data: CheckoutFormValues) {
     let promoCodeApplied: string | null = null;
     let discountAmount = 0;
     if (data.promoCode) {
-      const result = await applyPromo(data.promoCode, userCart.totalAmount);
+      const promoItems = userCart.items.map((item) => {
+        const ingredientsTotal = item.ingredients.reduce((s, ing) => s + ing.price, 0);
+        const lineTotal = (item.productItem.price + ingredientsTotal) * item.quantity;
+        return {
+          productId: item.productItem.productId,
+          lineTotal,
+        };
+      });
+      const result = await applyPromo(data.promoCode, userCart.totalAmount, promoItems);
       if (!('error' in result)) {
         promoCodeApplied = result.promo.code;
         discountAmount = result.discount;
