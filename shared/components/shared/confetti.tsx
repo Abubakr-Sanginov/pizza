@@ -27,28 +27,30 @@ export const Confetti: React.FC<Props> = ({
   duration = 4000,
   colors = DEFAULT_COLORS,
 }) => {
+  const [mounted, setMounted] = React.useState(false);
   const [active, setActive] = React.useState(true);
-
-  const pieces = React.useMemo<Piece[]>(() => {
-    return Array.from({ length: count }, (_, i) => ({
-      id: i,
-      left: Math.random() * 100,
-      delay: Math.random() * 800,
-      duration: 2400 + Math.random() * 1800,
-      rotate: Math.random() * 720 - 360,
-      drift: (Math.random() - 0.5) * 200,
-      color: colors[i % colors.length],
-      size: 6 + Math.random() * 8,
-      shape: ['square', 'circle', 'rect'][i % 3] as Piece['shape'],
-    }));
-  }, [count, colors]);
+  const [pieces, setPieces] = React.useState<Piece[]>([]);
 
   React.useEffect(() => {
+    setMounted(true);
+    setPieces(
+      Array.from({ length: count }, (_, i) => ({
+        id: i,
+        left: Math.random() * 100,
+        delay: Math.random() * 800,
+        duration: 2400 + Math.random() * 1800,
+        rotate: Math.random() * 720 - 360,
+        drift: (Math.random() - 0.5) * 200,
+        color: colors[i % colors.length],
+        size: 6 + Math.random() * 8,
+        shape: ['square', 'circle', 'rect'][i % 3] as Piece['shape'],
+      })),
+    );
     const t = setTimeout(() => setActive(false), duration);
     return () => clearTimeout(t);
-  }, [duration]);
+  }, [count, duration, colors]);
 
-  if (!active) return null;
+  if (!mounted || !active) return null;
 
   return (
     <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden" aria-hidden>
