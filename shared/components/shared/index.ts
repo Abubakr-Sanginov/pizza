@@ -42,6 +42,7 @@ export { EmptyState } from './empty-state';
 export { BackToTop } from './back-to-top';
 export { OrderStatusTracker } from './order-status-tracker';
 export { LiveOrderStatus } from './live-order-status';
+export { LocalTime } from './local-time';
 export { Confetti } from './confetti';
 export { CartCrossSell } from './cart-cross-sell';
 export { RecentlyViewed } from './recently-viewed';

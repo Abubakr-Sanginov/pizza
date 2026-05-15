@@ -1,5 +1,5 @@
 import { prisma } from '@/back/prisma/prisma-client';
-import { Title, Container, DeleteButton, EmptyState, LiveOrderStatus } from '@/shared/components/shared';
+import { Title, Container, DeleteButton, EmptyState, LiveOrderStatus, LocalTime } from '@/shared/components/shared';
 import { RepeatOrderButton } from '@/shared/components/shared/repeat-order-button';
 import { getUserSession } from '@/back/lib/get-user-session';
 import { redirect } from 'next/navigation';
@@ -63,15 +63,11 @@ export default async function UserOrdersPage() {
                 <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
                   <div>
                     <div className="font-bold text-lg mb-1">Заказ #{order.id}</div>
-                    <div className="text-muted-foreground text-sm">
-                      {new Date(order.createdAt).toLocaleString('ru-RU', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </div>
+                    <LocalTime
+                      date={order.createdAt.toISOString()}
+                      format="datetime"
+                      className="text-muted-foreground text-sm"
+                    />
                   </div>
 
                   <div className="flex items-center gap-3 md:gap-6 flex-wrap">

@@ -1,4 +1,4 @@
-import { Container, Title } from '@/shared/components/shared';
+import { Container, Title, LocalTime } from '@/shared/components/shared';
 import { prisma } from '@/back/prisma/prisma-client';
 import { Metadata } from 'next';
 
@@ -40,14 +40,11 @@ export default async function NotificationsPage() {
               <div className="flex-1">
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="text-xl font-bold">{item.title}</h3>
-                  <span className="text-sm text-muted-foreground">
-                    {item.createdAt.toLocaleDateString('ru-RU', {
-                      day: 'numeric',
-                      month: 'long',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </span>
+                  <LocalTime
+                    date={item.createdAt.toISOString()}
+                    format="datetime"
+                    className="text-sm text-muted-foreground"
+                  />
                 </div>
                 <p className="text-muted-foreground leading-relaxed">{item.body}</p>
               </div>

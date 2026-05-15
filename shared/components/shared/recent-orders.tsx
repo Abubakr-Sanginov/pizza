@@ -2,6 +2,7 @@ import React from 'react';
 import { Title } from './title';
 import { prisma } from '@/back/prisma/prisma-client';
 import { ShoppingBag } from 'lucide-react';
+import { LocalTime } from './local-time';
 
 interface Props {
   className?: string;
@@ -56,9 +57,11 @@ export const RecentOrders: React.FC<Props> = async ({ className }) => {
                 <span className="text-sm font-medium truncate">
                   {firstName} купил {productName}
                 </span>
-                <span className="text-xs text-muted-foreground">
-                  {new Date(order.createdAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
-                </span>
+                <LocalTime
+                  date={order.createdAt.toISOString()}
+                  format="time"
+                  className="text-xs text-muted-foreground"
+                />
               </div>
             </div>
           );
