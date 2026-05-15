@@ -2,7 +2,6 @@ import { AuthOptions } from 'next-auth';
 import GitHubProvider from 'next-auth/providers/github';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
-import AppleProvider from 'next-auth/providers/apple';
 
 import { prisma } from '@/back/prisma/prisma-client';
 import { compare, hashSync } from 'bcrypt';
@@ -13,21 +12,6 @@ export const authOptions: AuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-    }),
-    AppleProvider({
-      clientId: process.env.APPLE_CLIENT_ID || '',
-      clientSecret: process.env.APPLE_CLIENT_SECRET || '',
-      profile(profile) {
-        return {
-          id: profile.sub,
-          name: profile.name
-            ? `${profile.name.firstName ?? ''} ${profile.name.lastName ?? ''}`.trim()
-            : profile.email,
-          email: profile.email,
-          image: null,
-          role: 'USER' as UserRole,
-        };
-      },
     }),
     GitHubProvider({
       clientId: process.env.GITHUB_ID || '',
