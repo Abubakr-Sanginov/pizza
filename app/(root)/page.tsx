@@ -9,16 +9,21 @@ import {
   RecentOrders,
   BackToTop,
   RecentlyViewed,
-} from '@/shared/components/shared';
-import { Suspense } from 'react';
-import { redirect } from 'next/navigation';
-import { GetSearchParams, findPizzas } from '@/back/lib/find-pizzas';
-import { getUserSession } from '@/back/lib/get-user-session';
+  PizzaOfTheDayServer,
+} from "@/shared/components/shared";
+import { Suspense } from "react";
+import { redirect } from "next/navigation";
+import { GetSearchParams, findPizzas } from "@/back/lib/find-pizzas";
+import { getUserSession } from "@/back/lib/get-user-session";
 
-export default async function Home({ searchParams }: { searchParams: GetSearchParams }) {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: GetSearchParams;
+}) {
   const session = await getUserSession();
-  if (session?.role === 'COURIER') {
-    redirect('/courier');
+  if (session?.role === "COURIER") {
+    redirect("/courier");
   }
   const categories = await findPizzas(searchParams);
 
@@ -32,20 +37,29 @@ export default async function Home({ searchParams }: { searchParams: GetSearchPa
             Свежее меню
           </span>
           <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-[0.95]">
-            Любимая пицца{' '}
+            Любимая пицца{" "}
             <span className="bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">
               у тебя дома
             </span>
           </h1>
           <p className="text-base md:text-lg text-muted-foreground max-w-xl leading-relaxed">
-            Готовим из свежих ингредиентов и доставляем горячей. Выбирай, что сегодня будет на столе.
+            Готовим из свежих ингредиентов и доставляем горячей. Выбирай, что
+            сегодня будет на столе.
           </p>
         </div>
       </Container>
 
-      <TopBar categories={categories.filter((category) => category.products.length > 0)} />
+      <TopBar
+        categories={categories.filter(
+          (category) => category.products.length > 0,
+        )}
+      />
 
       <Stories />
+
+      <Container className="my-10">
+        <PizzaOfTheDayServer />
+      </Container>
 
       <Container className="my-10">
         <TopProducts />
@@ -90,4 +104,3 @@ export default async function Home({ searchParams }: { searchParams: GetSearchPa
     </>
   );
 }
-

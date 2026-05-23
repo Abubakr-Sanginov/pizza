@@ -67,6 +67,10 @@
   "checkout": {
     "title": "Checkout",
     "personalTitle": "1. Personal Information",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "E-Mail",
+    "phone": "Phone",
     "deliveryTitle": "3. Delivery Method and Address",
     "deliveryType": "Delivery Method",
     "delivery": "Courier Delivery",

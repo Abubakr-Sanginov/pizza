@@ -67,6 +67,10 @@
   "checkout": {
     "title": "Бақайдгирии фармоиш",
     "personalTitle": "1. Маълумоти шахсӣ",
+    "firstName": "Ном",
+    "lastName": "Насаб",
+    "email": "E-Mail",
+    "phone": "Телефон",
     "deliveryTitle": "3. Тарзи интиқол ва суроға",
     "deliveryType": "Тарзи интиқол",
     "delivery": "Интиқол бо хаткашон",

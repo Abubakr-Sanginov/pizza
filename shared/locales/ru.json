@@ -67,6 +67,10 @@
   "checkout": {
     "title": "Оформление заказа",
     "personalTitle": "1. Персональные данные",
+    "firstName": "Имя",
+    "lastName": "Фамилия",
+    "email": "E-Mail",
+    "phone": "Телефон",
     "deliveryTitle": "3. Способ и адрес доставки",
     "deliveryType": "Способ доставки",
     "delivery": "Доставка курьером",

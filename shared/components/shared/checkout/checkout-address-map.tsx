@@ -6,13 +6,35 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { LocateFixed } from 'lucide-react';
 
-// Fix for default marker icon in leaflet with Next.js/Webpack
-const icon = L.icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
+const customIcon = L.divIcon({
+  html: `
+    <div style="
+      background-color: white; 
+      border-radius: 12px; 
+      padding: 6px; 
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.2); 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      width: 40px; 
+      height: 40px;
+      border: 2px solid #f97316;
+    ">
+      <span style="font-size: 20px; line-height: 1;">🍕</span>
+    </div>
+    <div style="
+      width: 0; 
+      height: 0; 
+      border-left: 8px solid transparent; 
+      border-right: 8px solid transparent; 
+      border-top: 10px solid #f97316; 
+      margin: 0 auto; 
+      margin-top: -2px;
+    "></div>
+  `,
+  className: 'custom-pizza-marker',
+  iconSize: [40, 50],
+  iconAnchor: [20, 50],
 });
 
 interface Props {
@@ -20,6 +42,7 @@ interface Props {
   onPositionChange?: (pos: [number, number] | null) => void;
   position?: [number, number] | null;
   className?: string;
+  readOnly?: boolean;
 }
 
 async function reverseGeocode(lat: number, lng: number): Promise<string> {
@@ -41,13 +64,16 @@ function LocationMarker({
   onChange,
   position,
   setPosition,
+  readOnly,
 }: {
   onChange: (addr: string) => void;
   position: [number, number] | null;
   setPosition: (pos: [number, number]) => void;
+  readOnly?: boolean;
 }) {
   useMapEvents({
     click: async (e) => {
+      if (readOnly) return;
       const lat = e.latlng.lat;
       const lng = e.latlng.lng;
       setPosition([lat, lng]);
@@ -56,7 +82,7 @@ function LocationMarker({
     },
   });
 
-  return position === null ? null : <Marker position={position} icon={icon}></Marker>;
+  return position === null ? null : <Marker position={position} icon={customIcon}></Marker>;
 }
 
 function FlyToLocation({ position }: { position: [number, number] | null }) {
@@ -69,7 +95,7 @@ function FlyToLocation({ position }: { position: [number, number] | null }) {
   return null;
 }
 
-export const CheckoutAddressMap: React.FC<Props> = ({ onChange, onPositionChange, position: propsPosition, className }) => {
+export const CheckoutAddressMap: React.FC<Props> = ({ onChange, onPositionChange, position: propsPosition, className, readOnly }) => {
   const [internalPosition, setInternalPosition] = React.useState<[number, number] | null>(null);
   const [locating, setLocating] = React.useState(false);
 
@@ -109,15 +135,17 @@ export const CheckoutAddressMap: React.FC<Props> = ({ onChange, onPositionChange
 
   return (
     <div className="flex flex-col gap-3">
-      <button
-        type="button"
-        onClick={handleLocateMe}
-        disabled={locating}
-        className="flex items-center gap-2 self-start px-4 py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm"
-      >
-        <LocateFixed size={18} className={locating ? 'animate-spin' : ''} />
-        {locating ? 'Определяем...' : 'Определить моё местоположение'}
-      </button>
+      {!readOnly && (
+        <button
+          type="button"
+          onClick={handleLocateMe}
+          disabled={locating}
+          className="flex items-center gap-2 self-start px-4 py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm"
+        >
+          <LocateFixed size={18} className={locating ? 'animate-spin' : ''} />
+          {locating ? 'Определяем...' : 'Определить моё местоположение'}
+        </button>
+      )}
 
       <div className={className} style={{ height: 350, width: '100%', borderRadius: 16, overflow: 'hidden', position: 'relative', zIndex: 1, border: '1px solid #e5e7eb' }}>
         <MapContainer
@@ -130,7 +158,7 @@ export const CheckoutAddressMap: React.FC<Props> = ({ onChange, onPositionChange
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <LocationMarker onChange={onChange} position={position} setPosition={setPosition} />
+          <LocationMarker onChange={onChange} position={position} setPosition={setPosition} readOnly={readOnly} />
           <FlyToLocation position={position} />
         </MapContainer>
       </div>

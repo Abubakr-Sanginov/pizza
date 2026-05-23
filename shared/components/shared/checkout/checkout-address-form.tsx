@@ -10,8 +10,14 @@ import dynamic from 'next/dynamic';
 import { Store } from '@prisma/client';
 import { useTranslation } from 'react-i18next';
 
+
 const CheckoutAddressMap = dynamic(
   () => import('./checkout-address-map').then((m) => m.CheckoutAddressMap),
+  { ssr: false }
+);
+
+const CheckoutPickupMap = dynamic(
+  () => import('./checkout-pickup-map').then((m) => m.CheckoutPickupMap),
   { ssr: false }
 );
 
@@ -79,11 +85,23 @@ export const CheckoutAddressForm: React.FC<Props> = ({ className, stores }) => {
               items={stores.map((s) => ({ value: s.id.toString(), label: s.name }))}
             />
 
-            {stores.length === 0 && (
+            {stores?.length === 0 && (
               <p className="text-red-500 text-sm -mt-3">
                 ⚠️ Ошибка: в базе нет заведений. Добавьте их в <a href="/dashboard/stores" className="underline">админ-панели</a>.
               </p>
             )}
+
+            {watch('storeId') && stores.find(s => s.id.toString() === watch('storeId')?.toString()) && (() => {
+              const selectedStore = stores.find(s => s.id.toString() === watch('storeId')?.toString())!;
+              return (
+                <div className="mt-5 border-t border-border pt-5">
+                  <CheckoutPickupMap
+                    storePosition={[selectedStore.lat || 38.5598, selectedStore.lng || 68.7741]}
+                    storeAddress={selectedStore.address}
+                  />
+                </div>
+              );
+            })()}
           </>
         )}
 
@@ -112,7 +130,7 @@ export const CheckoutAddressForm: React.FC<Props> = ({ className, stores }) => {
               <div className="mb-3 text-sm font-medium">{t('checkout.mapPoint')}:</div>
               <CheckoutAddressMap
                 onChange={(addr) => setValue('address', addr, { shouldValidate: true })}
-                position={lat && lng ? [lat, lng] : null}
+                position={lat !== undefined && lng !== undefined ? [Number(lat), Number(lng)] : null}
                 onPositionChange={onMapPositionChange}
               />
               {watch('address') && (

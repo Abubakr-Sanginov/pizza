@@ -62,9 +62,10 @@ export default function CartScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successOrder, setSuccessOrder] = useState<{ id: number; total: number; eta: number } | null>(null);
 
-  // Map/Stores state
   const [stores, setStores] = useState<any[]>([]);
   const [location, setLocation] = useState({ lat: 38.5763, lon: 68.7831 });
+  const [userPos, setUserPos] = useState<{lat: number, lon: number} | null>(null);
+  const [routeInfo, setRouteInfo] = useState<{distance: number, duration: number} | null>(null);
   const [locating, setLocating] = useState(false);
   const webViewRef = useRef<WebView>(null);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
@@ -265,6 +266,81 @@ export default function CartScreen() {
           marker.setLatLng(e.latlng);
           window.ReactNativeWebView.postMessage(JSON.stringify(e.latlng));
         });
+      </script>
+    </body>
+    </html>
+  `;
+
+  const getPickupMapHtml = (storeLat: number, storeLon: number, uLat?: number, uLon?: number) => `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+      <style>
+        body { margin: 0; padding: 0; }
+        #map { height: 100vh; width: 100vw; background: #fdf7f2; }
+        .leaflet-control-attribution { display: none; }
+        .custom-pizza-marker {
+          background-color: white; 
+          border-radius: 12px; 
+          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.25); 
+          display: flex; 
+          align-items: center; 
+          justify-content: center; 
+          width: 42px; 
+          height: 42px;
+          border: 2.5px solid #f97316;
+          box-sizing: border-box;
+        }
+        .custom-pizza-marker span { font-size: 22px; line-height: 1; }
+        .custom-user-marker {
+          background-color: #3b82f6; 
+          border-radius: 50%; 
+          width: 16px; 
+          height: 16px;
+          border: 3px solid white;
+          box-shadow: 0 0 0 3px rgba(59,130,246,0.4), 0 4px 6px -1px rgb(0 0 0 / 0.2);
+        }
+      </style>
+    </head>
+    <body>
+      <div id="map"></div>
+      <script>
+        var map = L.map('map', { zoomControl: false }).setView([${storeLat}, ${storeLon}], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        var storeIcon = L.divIcon({
+          html: '<div class="custom-pizza-marker"><span>🍕</span></div>',
+          className: '',
+          iconSize: [42, 42],
+          iconAnchor: [21, 21]
+        });
+        L.marker([${storeLat}, ${storeLon}], { icon: storeIcon }).addTo(map);
+
+        ${uLat && uLon ? `
+          var userIcon = L.divIcon({
+            html: '<div class="custom-user-marker"></div>',
+            className: '',
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
+          });
+          L.marker([${uLat}, ${uLon}], { icon: userIcon }).addTo(map);
+
+          var url = 'https://router.project-osrm.org/route/v1/walking/${uLon},${uLat};${storeLon},${storeLat}?overview=full&geometries=geojson';
+          fetch(url)
+            .then(res => res.json())
+            .then(data => {
+              if (data.routes && data.routes.length > 0) {
+                var route = data.routes[0];
+                var coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+                var polyline = L.polyline(coords, { color: '#f97316', weight: 5 }).addTo(map);
+                map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
+                window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'route', distance: route.distance, duration: route.duration }));
+              }
+            });
+        ` : ''}
       </script>
     </body>
     </html>
@@ -485,6 +561,76 @@ export default function CartScreen() {
                         {selectedStoreId === store.id && <Ionicons name="checkmark-circle" size={24} color={theme.primary} />}
                       </TouchableOpacity>
                     ))}
+
+                    {selectedStoreId && (() => {
+                      const s = stores.find(s => s.id === selectedStoreId);
+                      if (!s) return null;
+                      return (
+                        <DefaultView style={{ marginTop: 10 }}>
+                          {routeInfo && (
+                            <DefaultView style={{ flexDirection: 'row', gap: 10, marginBottom: 10 }}>
+                              <DefaultView style={{ flex: 1, padding: 12, backgroundColor: 'rgba(249, 115, 22, 0.1)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(249, 115, 22, 0.2)' }}>
+                                <DefaultText style={{ fontSize: 12, color: theme.textMuted }}>Расстояние</DefaultText>
+                                <DefaultText style={{ fontSize: 16, fontWeight: 'bold', color: theme.text }}>
+                                  {routeInfo.distance < 1000 ? Math.round(routeInfo.distance) + ' м' : (routeInfo.distance / 1000).toFixed(1) + ' км'}
+                                </DefaultText>
+                              </DefaultView>
+                              <DefaultView style={{ flex: 1, padding: 12, backgroundColor: 'rgba(59, 130, 246, 0.1)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(59, 130, 246, 0.2)' }}>
+                                <DefaultText style={{ fontSize: 12, color: theme.textMuted }}>Пешком</DefaultText>
+                                <DefaultText style={{ fontSize: 16, fontWeight: 'bold', color: theme.text }}>
+                                  {Math.round(routeInfo.duration / 60)} мин
+                                </DefaultText>
+                              </DefaultView>
+                            </DefaultView>
+                          )}
+                          
+                          <DefaultView style={styles.mapWrapper}>
+                            <WebView
+                              originWhitelist={['*']}
+                              source={{ html: getPickupMapHtml(s.lat || 38.5598, s.lng || 68.7741, userPos?.lat, userPos?.lon) }}
+                              style={styles.mapWeb}
+                              onMessage={(e) => {
+                                try {
+                                  const data = JSON.parse(e.nativeEvent.data);
+                                  if (data.type === 'route') {
+                                    setRouteInfo({ distance: data.distance, duration: data.duration });
+                                  }
+                                } catch {}
+                              }}
+                            />
+                          </DefaultView>
+
+                          <TouchableOpacity 
+                            style={[styles.mainButton, { marginTop: 15, height: 48, borderRadius: 14, shadowOpacity: 0 }]} 
+                            onPress={async () => {
+                              setLocating(true);
+                              try {
+                                let { status } = await Location.requestForegroundPermissionsAsync();
+                                if (status !== 'granted') {
+                                  Alert.alert('Геолокация недоступна');
+                                  return;
+                                }
+                                let loc = await Location.getCurrentPositionAsync({});
+                                setUserPos({ lat: loc.coords.latitude, lon: loc.coords.longitude });
+                              } catch (err) {
+                                Alert.alert('Не удалось определить местоположение');
+                              } finally {
+                                setLocating(false);
+                              }
+                            }}
+                          >
+                            {locating ? <ActivityIndicator color="white" /> : (
+                              <>
+                                <Ionicons name="navigate" size={18} color="white" />
+                                <DefaultText style={[styles.mainButtonText, { fontSize: 14 }]}>
+                                  {userPos ? 'Обновить маршрут' : 'Проложить маршрут'}
+                                </DefaultText>
+                              </>
+                            )}
+                          </TouchableOpacity>
+                        </DefaultView>
+                      );
+                    })()}
                   </>
                 )}
 

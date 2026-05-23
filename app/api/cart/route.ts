@@ -34,6 +34,10 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    if (!userCart) {
+      return NextResponse.json({ totalAmount: 0, items: [] });
+    }
+
     return NextResponse.json(userCart);
   } catch (error) {
     console.log('[CART_GET] Server error', error);
@@ -65,7 +69,7 @@ export async function POST(req: NextRequest) {
 
     const findCartItem = cartItems.find(item => {
       const itemIngredientIds = item.ingredients.map(i => i.id).sort();
-      const dataIngredientIds = (data.ingredients || []).sort();
+      const dataIngredientIds = [...(data.ingredients || [])].sort();
       return JSON.stringify(itemIngredientIds) === JSON.stringify(dataIngredientIds);
     });
 

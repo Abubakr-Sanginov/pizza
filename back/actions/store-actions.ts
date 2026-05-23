@@ -3,19 +3,11 @@
 import { prisma } from '@/back/prisma/prisma-client';
 import { revalidatePath } from 'next/cache';
 
-export async function createStore(data: { name: string; address: string; phone?: string; ownerUsername?: string }) {
+export async function createStore(data: { name: string; address: string; phone?: string; lat?: number; lng?: number }) {
   try {
-    const { ownerUsername, ...storeData } = data;
     const store = await prisma.store.create({
-      data: storeData,
+      data,
     });
-
-    if (ownerUsername) {
-      await prisma.botUser.updateMany({
-        where: { username: ownerUsername.replace('@', '') },
-        data: { storeId: store.id },
-      });
-    }
 
     revalidatePath('/dashboard/stores');
     return store;
@@ -25,27 +17,12 @@ export async function createStore(data: { name: string; address: string; phone?:
   }
 }
 
-export async function updateStore(id: number, data: { name: string; address: string; phone?: string; ownerUsername?: string }) {
+export async function updateStore(id: number, data: { name: string; address: string; phone?: string; lat?: number; lng?: number }) {
   try {
-    const { ownerUsername, ...storeData } = data;
     const store = await prisma.store.update({
       where: { id },
-      data: storeData,
+      data,
     });
-
-    if (ownerUsername) {
-      // Сначала отвязываем всех от этого заведения (чтобы был один хозяин)
-      await prisma.botUser.updateMany({
-        where: { storeId: id },
-        data: { storeId: null },
-      });
-
-      // Привязываем нового
-      await prisma.botUser.updateMany({
-        where: { username: ownerUsername.replace('@', '') },
-        data: { storeId: id },
-      });
-    }
 
     revalidatePath('/dashboard/stores');
     return store;
