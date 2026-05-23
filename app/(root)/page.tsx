@@ -58,7 +58,9 @@ export default async function Home({
       <Stories />
 
       <Container className="my-10">
-        <PizzaOfTheDayServer />
+        <Suspense fallback={null}>
+          <PizzaOfTheDayServer />
+        </Suspense>
       </Container>
 
       <Container className="my-10">
