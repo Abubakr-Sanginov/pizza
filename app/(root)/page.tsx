@@ -64,7 +64,9 @@ export default async function Home({
       </Container>
 
       <Container className="my-10">
-        <TopProducts />
+        <Suspense fallback={null}>
+          <TopProducts />
+        </Suspense>
       </Container>
 
       <Container className="my-10">
