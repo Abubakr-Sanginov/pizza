@@ -161,7 +161,7 @@ export const Header: React.FC<Props> = ({
               </Button>
             </Link>
 
-            <Link href="/constructor">
+            <Link href="/pizza-builder">
               <Button
                 variant="secondary"
                 className="px-2 md:px-4 h-[42px] rounded-2xl gap-2"

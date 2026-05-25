@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { prisma } from "@/back/prisma/prisma-client";
 import { Container, PizzaConstructor, Title } from "@/shared/components/shared";
 import type { Metadata } from "next";
@@ -6,7 +8,7 @@ export const metadata: Metadata = {
   title: "Next Pizza | Конструктор пиццы",
 };
 
-export default async function ConstructorPage() {
+export default async function PizzaBuilderPage() {
   try {
     const [pizzas, allIngredients] = await Promise.all([
       prisma.product.findMany({
@@ -27,7 +29,7 @@ export default async function ConstructorPage() {
       </Container>
     );
   } catch (error) {
-    console.error("[ConstructorPage]", error);
+    console.error("[PizzaBuilderPage]", error);
     return (
       <Container className="mt-10 pb-20">
         <p className="text-muted-foreground">
