@@ -1,19 +1,22 @@
-﻿import { prisma } from '@/back/prisma/prisma-client';
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { prisma } from "@/back/prisma/prisma-client";
+import { NextRequest, NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  const query = req.nextUrl.searchParams.get('query') || '';
+  try {
+    const query = req.nextUrl.searchParams.get("query") || "";
 
-  const products = await prisma.product.findMany({
-    where: {
-      name: {
-        contains: query,
-        mode: 'insensitive',
+    const products = await prisma.product.findMany({
+      where: {
+        name: { contains: query, mode: "insensitive" },
       },
-    },
-    take: 5,
-  });
+      take: 5,
+    });
 
-  return NextResponse.json(products);
+    return NextResponse.json(products);
+  } catch (error) {
+    console.error("[PRODUCTS_SEARCH]", error);
+    return NextResponse.json([], { status: 200 });
+  }
 }
-
