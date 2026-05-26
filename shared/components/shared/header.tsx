@@ -7,7 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { SearchInput } from "./search-input";
 import { CartButton } from "./cart-button";
-import { Bell, ChefHat, Heart } from "lucide-react";
+import { Bell, ChefHat, Heart, MapPin } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { ProfileButton } from "./profile-button";
@@ -164,12 +164,18 @@ export const Header: React.FC<Props> = ({
             <Link href="/pizza-builder">
               <Button
                 variant="secondary"
-                className="px-2 md:px-4 h-[42px] rounded-2xl gap-2"
+                className="px-2 md:px-4 h-[42px] rounded-2xl"
               >
                 <ChefHat size={18} className="text-muted-foreground" />
-                <span className="hidden md:inline text-sm font-semibold">
-                  Конструктор
-                </span>
+              </Button>
+            </Link>
+
+            <Link href="/delivery">
+              <Button
+                variant="secondary"
+                className="px-2 md:px-4 h-[42px] rounded-2xl"
+              >
+                <MapPin size={18} className="text-muted-foreground" />
               </Button>
             </Link>
 

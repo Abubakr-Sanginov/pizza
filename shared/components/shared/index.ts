@@ -48,3 +48,5 @@ export { CartCrossSell } from "./cart-cross-sell";
 export { RecentlyViewed } from "./recently-viewed";
 export { PizzaOfTheDayServer } from "./pizza-of-the-day-server";
 export { PizzaConstructor } from "./pizza-constructor";
+// DeliveryMap intentionally NOT exported here — Leaflet uses window/document.
+// Use next/dynamic in the page directly.
