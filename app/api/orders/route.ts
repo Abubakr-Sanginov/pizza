@@ -5,27 +5,30 @@ import { sendEmail } from '@/back/lib/send-email';
 import { OrderSuccessTemplate } from '@/shared/components/shared/email-temapltes/order-success';
 import { sendOrderNotification } from '@/bot/service';
 import { sendOrderToIiko } from '@/back/services/iiko';
+import { applyPromo, bumpPromoUsage } from '@/back/lib/promo';
 import React from 'react';
 
 export async function POST(req: NextRequest) {
   try {
     const data = await req.json();
-    const { 
-      cartToken, 
-      fullName, 
-      email, 
-      phone, 
-      address, 
-      apartment, 
-      entrance, 
-      floor, 
-      doorCode, 
-      deliveryType, 
-      storeId, 
-      comment, 
-      lat, 
+    const {
+      cartToken,
+      fullName,
+      email,
+      phone,
+      address,
+      apartment,
+      entrance,
+      floor,
+      doorCode,
+      deliveryType,
+      storeId,
+      comment,
+      lat,
       lng,
-      userId 
+      userId,
+      paymentMethod,
+      promoCode,
     } = data;
 
     if (!cartToken) {
@@ -86,7 +89,34 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    
+    const settings = await prisma.setting.findFirst({ where: { id: 1 } });
+    const vatPercent = settings?.vatPrice ?? 15;
+    const deliveryPrice = deliveryType === 'DELIVERY' ? (settings?.deliveryPrice ?? 250) : 0;
+
+    let promoCodeApplied: string | null = null;
+    let discountAmount = 0;
+    if (promoCode) {
+      const promoItems = userCart.items.map((item) => {
+        const ingredientsTotal = item.ingredients.reduce((s, ing) => s + ing.price, 0);
+        const lineTotal = (item.productItem.price + ingredientsTotal) * item.quantity;
+        return { productId: item.productItem.productId, lineTotal };
+      });
+      const result = await applyPromo(promoCode, userCart.totalAmount, promoItems);
+      if (!('error' in result)) {
+        promoCodeApplied = result.promo.code;
+        discountAmount = result.discount;
+      }
+    }
+
+    const vatPrice = Math.floor((userCart.totalAmount * vatPercent) / 100);
+    const finalTotal = Math.max(0, userCart.totalAmount + deliveryPrice + vatPrice - discountAmount);
+
+    const method = (paymentMethod ?? 'CASH_ON_DELIVERY') as
+      | 'CASH_ON_DELIVERY'
+      | 'TELEGRAM_STARS'
+      | 'MANUAL_TRANSFER';
+    const isOnlinePayment = method === 'TELEGRAM_STARS' || method === 'MANUAL_TRANSFER';
+
     const order = await prisma.order.create({
       data: {
         token: cartToken,
@@ -103,22 +133,31 @@ export async function POST(req: NextRequest) {
         comment,
         lat,
         lng,
-        totalAmount: userCart.totalAmount,
+        totalAmount: finalTotal,
+        discount: discountAmount,
+        promoCode: promoCodeApplied,
         status: OrderStatus.PENDING,
+        paymentMethod: method as any,
+        paymentStatus: 'PENDING',
         items: JSON.stringify(userCart.items),
         userId: userId ? Number(userId) : null,
       },
     });
 
-    
-    await prisma.cart.update({
-      where: { id: userCart.id },
-      data: { totalAmount: 0 },
-    });
+    if (promoCodeApplied) {
+      bumpPromoUsage(promoCodeApplied).catch(() => {});
+    }
 
-    await prisma.cartItem.deleteMany({
-      where: { cartId: userCart.id },
-    });
+    if (!isOnlinePayment) {
+      await prisma.cart.update({
+        where: { id: userCart.id },
+        data: { totalAmount: 0 },
+      });
+
+      await prisma.cartItem.deleteMany({
+        where: { cartId: userCart.id },
+      });
+    }
 
     
     try {
@@ -147,19 +186,20 @@ export async function POST(req: NextRequest) {
       console.log('[API_ORDER] Telegram failed', e);
     }
 
-    
-    try {
-      const result = await sendOrderToIiko(order, userCart.items as any);
-      if (result.status === 'failed') {
-        console.warn(`[API_ORDER] iiko sync failed for order ${order.id}: ${result.reason}`);
-      } else if (result.status === 'skipped') {
-        console.info(`[API_ORDER] iiko skipped for order ${order.id}: ${result.reason}`);
+    if (!isOnlinePayment) {
+      try {
+        const result = await sendOrderToIiko(order, userCart.items as any);
+        if (result.status === 'failed') {
+          console.warn(`[API_ORDER] iiko sync failed for order ${order.id}: ${result.reason}`);
+        } else if (result.status === 'skipped') {
+          console.info(`[API_ORDER] iiko skipped for order ${order.id}: ${result.reason}`);
+        }
+      } catch (e) {
+        console.error('[API_ORDER] iiko crashed', e);
       }
-    } catch (e) {
-      console.error('[API_ORDER] iiko crashed', e);
     }
 
-    return NextResponse.json(order);
+    return NextResponse.json({ ...order, requiresOnlinePayment: isOnlinePayment });
   } catch (error) {
     console.error('[ORDER_POST]', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

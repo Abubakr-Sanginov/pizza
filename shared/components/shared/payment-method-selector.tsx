@@ -16,12 +16,13 @@ const OPTIONS: Array<{ id: Method; title: string; subtitle: string; icon: React.
     subtitle: 'Наличными или картой',
     icon: <Banknote size={20} />,
   },
-  {
-    id: 'ALIF_PAY',
-    title: 'Алиф Pay (картой онлайн)',
-    subtitle: 'Korti Milli, Visa, Mastercard, Alif Mobi',
-    icon: <CreditCard size={20} />,
-  },
+  // Alif Pay временно скрыт до получения боевых ключей.
+  // {
+  //   id: 'ALIF_PAY',
+  //   title: 'Алиф Pay (картой онлайн)',
+  //   subtitle: 'Korti Milli, Visa, Mastercard, Alif Mobi',
+  //   icon: <CreditCard size={20} />,
+  // },
   {
     id: 'TELEGRAM_STARS',
     title: 'Telegram Stars',

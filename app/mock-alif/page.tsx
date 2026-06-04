@@ -1,11 +1,11 @@
-'use client';
-
 import React from 'react';
-import { useSearchParams } from 'next/navigation';
 import axios from 'axios';
+import { useSearchParams } from 'next/navigation';
 import { Loader2, CreditCard, CheckCircle2, XCircle } from 'lucide-react';
 
-export default function MockAlifPage() {
+export const dynamic = 'force-dynamic';
+
+function MockAlifPageInner() {
   const params = useSearchParams();
   const orderId = params.get('order_id') || '';
   const amount = params.get('amount') || '0.00';
@@ -99,5 +99,13 @@ export default function MockAlifPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function MockAlifPage() {
+  return (
+    <React.Suspense fallback={null}>
+      <MockAlifPageInner />
+    </React.Suspense>
   );
 }

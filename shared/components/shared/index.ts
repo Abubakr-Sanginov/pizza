@@ -22,6 +22,8 @@ export { CheckoutItem } from "./checkout-item";
 export { CheckoutItemSkeleton } from "./checkout-item-skeleton";
 export { CheckoutSidebar } from "./checkout-sidebar";
 export { PaymentMethodSelector } from "./payment-method-selector";
+export { BonusSpendSelector } from "./bonus-spend-selector";
+export { BonusCard } from "./bonus-card";
 export { ErrorText } from "./error-text";
 export { RequiredSymbol } from "./required-symbol";
 export { ClearButton } from "./clear-button";

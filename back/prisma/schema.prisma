@@ -35,6 +35,14 @@ model User {
   groupOrders         GroupOrder[]
   groupParticipations GroupOrderParticipant[]
 
+  bonus               UserBonus?
+  bonusTransactions   BonusTransaction[]
+
+  referralCode  String? @unique
+  referredById  Int?
+  referredBy    User?   @relation("UserReferrals", fields: [referredById], references: [id])
+  referrals     User[]  @relation("UserReferrals")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -419,6 +427,47 @@ enum PaymentMethod {
   TELEGRAM_STARS
   MANUAL_TRANSFER
   ALIF_PAY
+}
+
+model UserBonus {
+  id Int @id @default(autoincrement())
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int  @unique
+
+  balance       Int @default(0)
+  lifetimeEarn  Int @default(0)
+  lifetimeSpent Int @default(0)
+
+  level         String  @default("BRONZE")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BonusTransaction {
+  id Int @id @default(autoincrement())
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+
+  type        BonusTransactionType
+  amount      Int
+  orderId     Int?
+  description String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+enum BonusTransactionType {
+  EARN
+  SPEND
+  REFUND
+  REFERRAL_BONUS
+  WELCOME
+  ADJUSTMENT
 }
 
 enum PaymentStatus {

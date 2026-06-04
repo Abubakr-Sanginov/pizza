@@ -13,6 +13,7 @@ import { Title } from './title';
 import { FormInput } from './form';
 import { Button } from '../ui';
 import { updateUserInfo } from '@/app/actions';
+import { BonusCard } from './bonus-card';
 
 interface Props {
   data: User;
@@ -67,6 +68,10 @@ export const ProfileForm: React.FC<Props> = ({ data }) => {
             <Link href="/profile/orders">Мои заказы</Link>
           </Button>
         </div>
+      </div>
+
+      <div className="w-full max-w-2xl mb-5">
+        <BonusCard />
       </div>
 
       <FormProvider {...form}>

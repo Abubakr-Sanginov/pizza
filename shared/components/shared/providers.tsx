@@ -7,6 +7,7 @@ import NextTopLoader from 'nextjs-toploader';
 import i18n from '@/shared/lib/i18n';
 import { NotificationsManager } from './notifications-manager';
 import { ThemeProvider } from './theme-provider';
+import { ReferralCapture } from './referral-capture';
 
 const I18nBootstrap: React.FC = () => {
   React.useEffect(() => {
@@ -29,6 +30,9 @@ export const Providers: React.FC<React.PropsWithChildren> = ({ children }) => {
       />
       <NextTopLoader />
       <NotificationsManager />
+      <React.Suspense fallback={null}>
+        <ReferralCapture />
+      </React.Suspense>
     </ThemeProvider>
   );
 };

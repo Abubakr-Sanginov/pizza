@@ -14,6 +14,7 @@ import { cookies } from 'next/headers';
 import { sendOrderNotification } from '@/bot/service';
 import { sendOrderToIiko } from '@/back/services/iiko';
 import { applyPromo, bumpPromoUsage } from '@/back/lib/promo';
+import { accrueBonus, spendBonus, BONUS_MAX_SPEND_RATE } from '@/back/lib/bonus';
 
 export async function createOrder(data: CheckoutFormValues) {
   try {
@@ -113,7 +114,18 @@ export async function createOrder(data: CheckoutFormValues) {
     }
 
     const vatPrice = Math.floor((userCart.totalAmount * vatPercent) / 100);
-    const finalTotal = Math.max(0, userCart.totalAmount + deliveryPrice + vatPrice - discountAmount);
+    const baseTotal = Math.max(0, userCart.totalAmount + deliveryPrice + vatPrice - discountAmount);
+
+    let bonusSpent = 0;
+    if (currentUser && data.bonusToSpend && data.bonusToSpend > 0) {
+      const userId = Number(currentUser.id);
+      const bonus = await prisma.userBonus.findUnique({ where: { userId } });
+      if (bonus) {
+        const maxAllowed = Math.floor(baseTotal * BONUS_MAX_SPEND_RATE);
+        bonusSpent = Math.min(data.bonusToSpend, bonus.balance, maxAllowed);
+      }
+    }
+    const finalTotal = Math.max(0, baseTotal - bonusSpent);
 
     
     const order = await prisma.order.create({
@@ -145,6 +157,27 @@ export async function createOrder(data: CheckoutFormValues) {
 
     if (promoCodeApplied) {
       bumpPromoUsage(promoCodeApplied).catch(() => {});
+    }
+
+    if (currentUser && bonusSpent > 0) {
+      await spendBonus({
+        userId: Number(currentUser.id),
+        amount: bonusSpent,
+        orderTotal: baseTotal,
+        orderId: order.id,
+      });
+    }
+
+    if (currentUser && data.paymentMethod === 'CASH_ON_DELIVERY') {
+      try {
+        await accrueBonus({
+          userId: Number(currentUser.id),
+          orderTotal: finalTotal,
+          orderId: order.id,
+        });
+      } catch (e) {
+        console.error('[CreateOrder] accrue bonus failed', e);
+      }
     }
 
     
@@ -287,13 +320,36 @@ export async function registerUser(body: Prisma.UserCreateInput) {
       throw new Error('Пользователь уже существует');
     }
 
+    let referrerId: number | null = null;
+    try {
+      const cookieStore = cookies();
+      const refCode = cookieStore.get('referralCode')?.value;
+      if (refCode) {
+        const ref = await prisma.user.findUnique({ where: { referralCode: refCode } });
+        if (ref) referrerId = ref.id;
+      }
+    } catch {}
+
     const createdUser = await prisma.user.create({
       data: {
         fullName: body.fullName,
         email: body.email,
         password: hashSync(body.password, 10),
+        referredById: referrerId,
       },
     });
+
+    try {
+      const { accrueDirectBonus, BONUS_WELCOME_AMOUNT } = await import('@/back/lib/bonus');
+      await accrueDirectBonus({
+        userId: createdUser.id,
+        amount: BONUS_WELCOME_AMOUNT,
+        type: 'WELCOME',
+        description: 'Приветственный бонус за регистрацию',
+      });
+    } catch (e) {
+      console.error('[Register] welcome bonus failed', e);
+    }
 
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 

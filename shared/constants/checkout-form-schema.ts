@@ -17,6 +17,7 @@ export const checkoutFormSchema = z.object({
   lng: z.number().optional(),
   promoCode: z.string().optional(),
   paymentMethod: z.enum(['CASH_ON_DELIVERY', 'TELEGRAM_STARS', 'MANUAL_TRANSFER', 'ALIF_PAY']).default('CASH_ON_DELIVERY'),
+  bonusToSpend: z.coerce.number().int().min(0).optional(),
 }).superRefine((data, ctx) => {
   if (data.deliveryType === 'DELIVERY' && (!data.address || data.address.trim().length < 5)) {
     ctx.addIssue({

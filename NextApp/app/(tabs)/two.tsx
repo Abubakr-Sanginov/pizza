@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
-import { View as DefaultView, Text as DefaultText, StyleSheet, FlatList, Image, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, TextInput, RefreshControl, LayoutAnimation, Dimensions, ActivityIndicator, Keyboard, Alert } from 'react-native';
+import { View as DefaultView, Text as DefaultText, StyleSheet, FlatList, Image, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, TextInput, RefreshControl, LayoutAnimation, Dimensions, ActivityIndicator, Keyboard, Alert, Linking } from 'react-native';
 import { useCartStore, getCartToken } from '@/store/useCartStore';
 import { useUserStore } from '@/store/useUserStore';
 import { useUiStore } from '@/store/useUiStore';
@@ -128,6 +128,39 @@ export default function CartScreen() {
 
   const [stores, setStores] = useState<any[]>([]);
   const [location, setLocation] = useState({ lat: 38.5763, lon: 68.7831 });
+
+  type PaymentMethod = 'CASH_ON_DELIVERY' | 'TELEGRAM_STARS' | 'MANUAL_TRANSFER';
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH_ON_DELIVERY');
+  const [promoInput, setPromoInput] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; discount: number } | null>(null);
+  const [applyingPromo, setApplyingPromo] = useState(false);
+
+  const applyPromoCode = async () => {
+    if (!promoInput.trim()) return;
+    setApplyingPromo(true);
+    try {
+      const res = await fetch(`${BASE_URL}/api/promo/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: promoInput.trim(),
+          subtotal: totalAmount,
+          items: items.map((i: any) => ({ productId: i.productId, lineTotal: i.price * i.quantity })),
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        Alert.alert(err?.error || 'Промокод недействителен');
+        return;
+      }
+      const data = await res.json();
+      setAppliedPromo({ code: data.code, discount: data.appliedDiscount });
+    } catch {
+      Alert.alert('Не удалось проверить промокод');
+    } finally {
+      setApplyingPromo(false);
+    }
+  };
   const [userPos, setUserPos] = useState<{lat: number, lon: number} | null>(null);
   const [routeInfo, setRouteInfo] = useState<{distance: number, duration: number} | null>(null);
   const [locating, setLocating] = useState(false);
@@ -138,7 +171,8 @@ export default function CartScreen() {
   const VAT_PERCENT = 15;
   const DELIVERY_PRICE = deliveryType === 'DELIVERY' ? 250 : 0;
   const vatPrice = (totalAmount * VAT_PERCENT) / 100;
-  const finalTotal = totalAmount + DELIVERY_PRICE + vatPrice;
+  const promoDiscount = appliedPromo?.discount ?? 0;
+  const finalTotal = Math.max(0, totalAmount + DELIVERY_PRICE + vatPrice - promoDiscount);
 
   useEffect(() => {
     const fetchStores = async () => {
@@ -223,7 +257,9 @@ export default function CartScreen() {
         comment,
         lat: location.lat,
         lng: location.lon,
-        userId: user?.id
+        userId: user?.id,
+        paymentMethod,
+        promoCode: appliedPromo?.code,
       };
 
       const res = await fetch(`${BASE_URL}/api/orders`, {
@@ -239,6 +275,40 @@ export default function CartScreen() {
 
       const created = await res.json().catch(() => null);
       const orderId = created?.id ?? created?.order?.id ?? 0;
+      const requiresOnlinePayment = created?.requiresOnlinePayment;
+
+      if (requiresOnlinePayment && orderId) {
+        try {
+          const initRes = await fetch(`${BASE_URL}/api/payments/telegram/init`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              orderId,
+              method: paymentMethod === 'TELEGRAM_STARS' ? 'STARS' : 'TRANSFER',
+            }),
+          });
+          const initData = await initRes.json();
+          if (initData?.deepLink) {
+            Alert.alert(
+              'Завершите оплату',
+              'Сейчас откроется Telegram. После оплаты заказ автоматически принимается в работу.',
+              [
+                {
+                  text: 'Открыть Telegram',
+                  onPress: () => Linking.openURL(initData.deepLink),
+                },
+              ],
+            );
+          } else {
+            Alert.alert('Не удалось создать ссылку оплаты');
+          }
+        } catch (e) {
+          Alert.alert('Ошибка инициализации оплаты');
+        }
+        clearCart();
+        return;
+      }
+
       clearCart();
       setSuccessOrder({
         id: orderId,
@@ -743,6 +813,83 @@ export default function CartScreen() {
                     <DefaultText style={styles.priceVal}>{DELIVERY_PRICE} TJS</DefaultText>
                   </DefaultView>
                 )}
+                {appliedPromo && (
+                  <DefaultView style={styles.priceRow}>
+                    <DefaultText style={[styles.priceLabel, { color: theme.primary }]}>
+                      Промокод {appliedPromo.code}
+                    </DefaultText>
+                    <DefaultText style={[styles.priceVal, { color: theme.primary, fontWeight: '800' }]}>
+                      −{appliedPromo.discount} TJS
+                    </DefaultText>
+                  </DefaultView>
+                )}
+              </DefaultView>
+
+              <DefaultView style={styles.section}>
+                <DefaultView style={styles.sectionHeaderRow}>
+                  <Ionicons name="pricetag-outline" size={22} color={theme.primary} />
+                  <DefaultText style={styles.sectionHeader}>Промокод</DefaultText>
+                </DefaultView>
+                {appliedPromo ? (
+                  <DefaultView
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: 12,
+                      borderRadius: 12,
+                      backgroundColor: theme.primarySoft,
+                      borderWidth: 1,
+                      borderColor: theme.primary,
+                    }}
+                  >
+                    <Ionicons name="checkmark-circle" size={20} color={theme.primary} />
+                    <DefaultView style={{ flex: 1 }}>
+                      <DefaultText style={{ fontWeight: '800', color: theme.text }}>
+                        {appliedPromo.code}
+                      </DefaultText>
+                      <DefaultText style={{ fontSize: 12, color: theme.textMuted }}>
+                        Скидка −{appliedPromo.discount} TJS
+                      </DefaultText>
+                    </DefaultView>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setAppliedPromo(null);
+                        setPromoInput('');
+                      }}
+                    >
+                      <Ionicons name="close-circle" size={22} color={theme.textSubtle} />
+                    </TouchableOpacity>
+                  </DefaultView>
+                ) : (
+                  <DefaultView style={{ flexDirection: 'row', gap: 8 }}>
+                    <TextInput
+                      style={[styles.input, { flex: 1, textTransform: 'uppercase' }]}
+                      value={promoInput}
+                      onChangeText={(v) => setPromoInput(v.toUpperCase())}
+                      placeholder="Введите промокод"
+                      placeholderTextColor={theme.textSubtle}
+                      autoCapitalize="characters"
+                    />
+                    <TouchableOpacity
+                      onPress={applyPromoCode}
+                      disabled={applyingPromo || !promoInput.trim()}
+                      style={{
+                        paddingHorizontal: 20,
+                        justifyContent: 'center',
+                        backgroundColor: theme.primary,
+                        borderRadius: 12,
+                        opacity: applyingPromo || !promoInput.trim() ? 0.5 : 1,
+                      }}
+                    >
+                      {applyingPromo ? (
+                        <ActivityIndicator color="#fff" />
+                      ) : (
+                        <DefaultText style={{ color: '#fff', fontWeight: '800' }}>OK</DefaultText>
+                      )}
+                    </TouchableOpacity>
+                  </DefaultView>
+                )}
               </DefaultView>
 
               <DefaultView style={styles.section}>
@@ -750,11 +897,97 @@ export default function CartScreen() {
                   <Ionicons name="card-outline" size={22} color={theme.primary} />
                   <DefaultText style={styles.sectionHeader}>{t('cart.payment')}</DefaultText>
                 </DefaultView>
-                <TouchableOpacity style={styles.paymentMethod}>
-                  <Ionicons name="wallet-outline" size={24} color={theme.primary} />
-                  <DefaultText style={styles.paymentText}>{t('cart.cash')}</DefaultText>
-                  <Ionicons name="checkmark-circle" size={24} color={theme.primary} />
-                </TouchableOpacity>
+
+                {[
+                  {
+                    id: 'CASH_ON_DELIVERY' as PaymentMethod,
+                    title: 'Курьеру при получении',
+                    subtitle: 'Наличными или картой',
+                    icon: 'wallet-outline' as const,
+                  },
+                  {
+                    id: 'TELEGRAM_STARS' as PaymentMethod,
+                    title: 'Telegram Stars',
+                    subtitle: 'Звёздами в Telegram (+43% наценка)',
+                    icon: 'star-outline' as const,
+                  },
+                  {
+                    id: 'MANUAL_TRANSFER' as PaymentMethod,
+                    title: 'Перевод на карту',
+                    subtitle: 'Через Telegram-бот',
+                    icon: 'send-outline' as const,
+                  },
+                ].map((opt) => {
+                  const active = paymentMethod === opt.id;
+                  return (
+                    <TouchableOpacity
+                      key={opt.id}
+                      onPress={() => setPaymentMethod(opt.id)}
+                      activeOpacity={0.85}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 12,
+                        padding: 14,
+                        borderRadius: 14,
+                        marginTop: 8,
+                        backgroundColor: active ? theme.primarySoft : theme.surface,
+                        borderWidth: 1.5,
+                        borderColor: active ? theme.primary : theme.border,
+                      }}
+                    >
+                      <DefaultView
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 10,
+                          backgroundColor: active ? theme.primary : theme.border,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Ionicons name={opt.icon} size={20} color={active ? '#fff' : theme.text} />
+                      </DefaultView>
+                      <DefaultView style={{ flex: 1 }}>
+                        <DefaultText style={{ fontWeight: '800', color: theme.text, fontSize: 14 }}>
+                          {opt.title}
+                        </DefaultText>
+                        <DefaultText style={{ fontSize: 12, color: theme.textMuted, marginTop: 2 }}>
+                          {opt.subtitle}
+                        </DefaultText>
+                      </DefaultView>
+                      <DefaultView
+                        style={{
+                          width: 22,
+                          height: 22,
+                          borderRadius: 11,
+                          borderWidth: 2,
+                          borderColor: active ? theme.primary : theme.border,
+                          backgroundColor: active ? theme.primary : 'transparent',
+                        }}
+                      />
+                    </TouchableOpacity>
+                  );
+                })}
+
+                {paymentMethod === 'TELEGRAM_STARS' && (
+                  <DefaultView
+                    style={{
+                      marginTop: 10,
+                      padding: 12,
+                      borderRadius: 12,
+                      backgroundColor: '#FEF3C7',
+                      borderWidth: 1,
+                      borderColor: '#FCD34D',
+                    }}
+                  >
+                    <DefaultText style={{ fontSize: 11, color: '#92400E', lineHeight: 16 }}>
+                      <DefaultText style={{ fontWeight: '800' }}>Внимание:</DefaultText> Telegram удерживает 30%
+                      комиссии. К сумме заказа добавляется +43% наценка — чтобы после удержания нам пришла
+                      полная стоимость. Формула: сумма ÷ 0,7 ≈ ×1,43.
+                    </DefaultText>
+                  </DefaultView>
+                )}
               </DefaultView>
             </>
           )}

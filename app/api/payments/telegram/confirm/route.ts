@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/back/prisma/prisma-client';
 import { sendOrderToIiko } from '@/back/services/iiko';
+import { accrueBonus } from '@/back/lib/bonus';
 
 export async function POST(req: NextRequest) {
   const secret = req.headers.get('x-internal-secret');
@@ -44,6 +45,18 @@ export async function POST(req: NextRequest) {
       await sendOrderToIiko(updated, JSON.parse(order.items as any));
     } catch (e) {
       console.error('[Payments] iiko sync failed', e);
+    }
+  }
+
+  if (order.userId) {
+    try {
+      await accrueBonus({
+        userId: order.userId,
+        orderTotal: order.totalAmount,
+        orderId: order.id,
+      });
+    } catch (e) {
+      console.error('[Payments] bonus accrue failed', e);
     }
   }
 

@@ -13,6 +13,7 @@ import { cn } from '@/shared/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { useCart } from '@/shared/hooks';
 import { PaymentMethodSelector } from './payment-method-selector';
+import { BonusSpendSelector } from './bonus-spend-selector';
 
 interface Props {
   totalAmount: number;
@@ -42,7 +43,9 @@ export const CheckoutSidebar: React.FC<Props> = ({
 
   const vatPrice = (totalAmount * vatPercent) / 100;
   const discount = appliedPromo?.discount ?? 0;
-  const totalPrice = Math.max(0, totalAmount + deliveryPrice + vatPrice - discount);
+  const bonusSpend: number = form?.watch?.('bonusToSpend') ?? 0;
+  const baseTotal = Math.max(0, totalAmount + deliveryPrice + vatPrice - discount);
+  const totalPrice = Math.max(0, baseTotal - bonusSpend);
 
   const itemsKey = items.map((i) => `${i.productId}:${i.quantity}:${i.price}`).join('|');
   React.useEffect(() => {
@@ -182,6 +185,22 @@ export const CheckoutSidebar: React.FC<Props> = ({
             </Button>
           </div>
         )}
+      </div>
+
+      {bonusSpend > 0 && (
+        <CheckoutItemDetails
+          title={
+            <div className="flex items-center text-amber-600 font-semibold">
+              <Ticket size={18} className="mr-2" />
+              Бонусы
+            </div>
+          }
+          value={<span className="text-amber-600 font-bold">−{bonusSpend} TJS</span>}
+        />
+      )}
+
+      <div className="mt-4">
+        <BonusSpendSelector baseTotal={baseTotal} />
       </div>
 
       <div className="mt-6">
