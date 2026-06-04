@@ -51,9 +51,9 @@ export default async function CourierDashboardPage() {
 
             <div className="flex flex-col items-end gap-2 w-full md:w-auto">
               <div className="text-xl font-bold mb-2">{order.totalAmount} TJS</div>
-              <OrderStatusSelector 
-                orderId={order.id} 
-                initialStatus={order.status} 
+              <OrderStatusSelector
+                orderId={order.id}
+                initialStatus={order.status}
               />
             </div>
           </div>

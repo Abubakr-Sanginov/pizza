@@ -17,9 +17,7 @@ interface Props {
   tags?: string[];
 }
 
-/**
- * Форма выбора ПРОДУКТА
- */
+
 export const ChooseProductForm: React.FC<Props> = ({
   name,
   imageUrl,

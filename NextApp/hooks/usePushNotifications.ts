@@ -23,11 +23,6 @@ const PENDING_RETRY_KEY = 'pushTokenPendingRetry';
 
 const isExpoGo = Constants.executionEnvironment === 'storeClient';
 
-/**
- * Set up high-importance Android channel.
- * Critical for SDK 53+: without channel notifications won't show
- * with banner/heads-up at all on Android 8+.
- */
 async function ensureAndroidChannels() {
   if (Platform.OS !== 'android') return;
   try {
@@ -101,22 +96,30 @@ export const usePushNotifications = (): PushNotificationState => {
       try {
         await ensureAndroidChannels();
 
+        console.log('[push] starting registration, isExpoGo:', isExpoGo, 'isDevice:', Device.isDevice);
+
         if (isExpoGo) {
           setRegistrationError(
             'Push не работает в Expo Go (SDK 53+). Соберите development build.',
           );
+          console.warn('[push] blocked: running in Expo Go');
           return;
         }
 
         if (!Device.isDevice) {
           setRegistrationError('not a physical device');
+          console.warn('[push] blocked: not a physical device');
           return;
         }
 
         // Permissions
         const existing = (await Notifications.getPermissionsAsync()) as any;
         let granted = existing?.granted ?? existing?.status === 'granted';
+
+        console.log('[push] existing permissions:', existing);
+
         if (!granted) {
+          console.log('[push] requesting permissions...');
           const requested = (await Notifications.requestPermissionsAsync({
             ios: {
               allowAlert: true,
@@ -127,6 +130,9 @@ export const usePushNotifications = (): PushNotificationState => {
             },
           })) as any;
           granted = requested?.granted ?? requested?.status === 'granted';
+          console.log('[push] permission result:', requested, 'granted:', granted);
+        } else {
+          console.log('[push] permissions already granted');
         }
         if (cancelled) return;
         setPermissionGranted(granted);

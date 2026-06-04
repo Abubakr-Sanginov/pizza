@@ -1,368 +1,458 @@
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider  = "postgresql"
-    url       = env("POSTGRES_URL")
-    directUrl = env("POSTGRES_URL_NON_POOLING")
+  provider  = "postgresql"
+  url       = env("POSTGRES_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
 model User {
-    id Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-    fullName String
-    email    String    @unique
-    password String
-    role     UserRole  @default(USER)
-    verified DateTime?
-    iikoId   String?   @unique
+  fullName String
+  email    String    @unique
+  password String
+  role     UserRole  @default(USER)
+  verified DateTime?
+  iikoId   String?   @unique
 
-    provider   String?
-    providerId String?
-    address    String?
+  provider   String?
+  providerId String?
+  address    String?
 
-    cart             Cart?
-    orders           Order[] @relation("UserOrders")
-    courierOrders    Order[] @relation("CourierOrders")
-    telegramUsername String? @unique
-    verificationCode VerificationCode?
-    pushTokens       PushToken[]
+  cart             Cart?
+  orders           Order[]           @relation("UserOrders")
+  courierOrders    Order[]           @relation("CourierOrders")
+  telegramUsername String?           @unique
+  verificationCode VerificationCode?
+  pushTokens       PushToken[]
 
-    reviews          Review[]
-    favorites        Favorite[]
+  reviews   Review[]
+  favorites Favorite[]
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  groupOrders         GroupOrder[]
+  groupParticipations GroupOrderParticipant[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Favorite {
-    id Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-    user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
 
-    product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-    productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId Int
 
-    createdAt DateTime @default(now())
+  createdAt DateTime @default(now())
 
-    @@unique([userId, productId])
-    @@index([userId])
+  @@unique([userId, productId])
+  @@index([userId])
 }
 
 model PromoCode {
-    id Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-    code        String           @unique
-    description String?
-    type        PromoDiscountType @default(PERCENT)
-    discount    Int               // % when PERCENT, TJS when FIXED
-    minAmount   Int               @default(0)
-    usageLimit  Int?              // null = unlimited
-    usedCount   Int               @default(0)
-    expiresAt   DateTime?
-    active      Boolean           @default(true)
+  code        String            @unique
+  description String?
+  type        PromoDiscountType @default(PERCENT)
+  discount    Int // % when PERCENT, TJS when FIXED
+  minAmount   Int               @default(0)
+  usageLimit  Int? // null = unlimited
+  usedCount   Int               @default(0)
+  expiresAt   DateTime?
+  active      Boolean           @default(true)
 
-    // Scope: empty arrays = applies to everything. Otherwise discount only applies
-    // to items whose productId is in productIds OR whose category is in categoryIds.
-    productIds   Int[] @default([])
-    categoryIds  Int[] @default([])
+  // Scope: empty arrays = applies to everything. Otherwise discount only applies
+  // to items whose productId is in productIds OR whose category is in categoryIds.
+  productIds  Int[] @default([])
+  categoryIds Int[] @default([])
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum PromoDiscountType {
-    PERCENT
-    FIXED
+  PERCENT
+  FIXED
 }
 
 model Category {
-    id       Int       @id @default(autoincrement())
-    name     String    @unique
-    nameEn   String?
-    nameTg   String?
-    products Product[]
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  nameEn   String?
+  nameTg   String?
+  products Product[]
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Product {
-    id Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-    name     String
-    imageUrl String
+  name     String
+  imageUrl String
 
-    // Dietary / allergen tags: VEGAN, VEGETARIAN, SPICY, GLUTEN_FREE, LACTOSE_FREE, NEW, HIT
-    tags     String[] @default([])
+  // Dietary / allergen tags: VEGAN, VEGETARIAN, SPICY, GLUTEN_FREE, LACTOSE_FREE, NEW, HIT
+  tags String[] @default([])
 
-    ingredients Ingredient[]
-    items       ProductItem[]
+  ingredients Ingredient[]
+  items       ProductItem[]
 
-    category   Category @relation(fields: [categoryId], references: [id])
-    categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId Int
 
-    reviews    Review[]
-    favorites  Favorite[]
+  reviews   Review[]
+  favorites Favorite[]
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ProductItem {
-    id Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-    price     Int
-    priceOld  Int?
-    size      Int?
-    pizzaType Int?
+  price     Int
+  priceOld  Int?
+  size      Int?
+  pizzaType Int?
 
-    cartItems CartItem[]
+  cartItems CartItem[]
 
-    product   Product @relation(fields: [productId], references: [id])
-    productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int
 
-    iikoId String?
+  iikoId String?
 }
 
 model Ingredient {
-    id Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-    name     String
-    price    Int
-    imageUrl String
+  name     String
+  price    Int
+  imageUrl String
 
-    products  Product[]
-    cartItems CartItem[]
+  products  Product[]
+  cartItems CartItem[]
 
-    iikoId String?
+  iikoId String?
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Cart {
-    id Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-    user   User? @relation(fields: [userId], references: [id])
-    userId Int?  @unique
+  user   User? @relation(fields: [userId], references: [id])
+  userId Int?  @unique
 
-    items CartItem[]
+  items CartItem[]
 
-    token String
+  token String
 
-    totalAmount Int @default(0)
+  totalAmount Int @default(0)
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model CartItem {
-    id Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-    cart   Cart @relation(fields: [cartId], references: [id])
-    cartId Int
+  cart   Cart @relation(fields: [cartId], references: [id])
+  cartId Int
 
-    productItem   ProductItem @relation(fields: [productItemId], references: [id])
-    productItemId Int
+  productItem   ProductItem @relation(fields: [productItemId], references: [id])
+  productItemId Int
 
-    quantity Int @default(1)
+  quantity Int @default(1)
 
-    ingredients Ingredient[]
+  customName String?
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  ingredients Ingredient[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Order {
-    id Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-    user   User? @relation("UserOrders", fields: [userId], references: [id])
-    userId Int?
+  user   User? @relation("UserOrders", fields: [userId], references: [id])
+  userId Int?
 
-    courier   User? @relation("CourierOrders", fields: [courierId], references: [id])
-    courierId Int?
+  courier   User? @relation("CourierOrders", fields: [courierId], references: [id])
+  courierId Int?
 
-    token String
+  token String
 
-    totalAmount Int
-    discount    Int     @default(0)
-    promoCode   String?
-    status      OrderStatus
+  totalAmount Int
+  discount    Int         @default(0)
+  promoCode   String?
+  status      OrderStatus
 
-    items Json
+  paymentMethod   PaymentMethod  @default(CASH_ON_DELIVERY)
+  paymentStatus   PaymentStatus  @default(PENDING)
+  paymentProvider String?
+  paymentRef      String?
+  paymentProof    String?
+  paymentConfirmedAt DateTime?
+  paymentConfirmedBy String?
 
-    fullName String
-    email    String
-    phone    String
-    address  String?
-    entrance String?
-    floor    String?
-    doorCode String?
-    apartment String?
-    deliveryType DeliveryType @default(DELIVERY)
-    comment  String?
-    lat      Float?
-    lng      Float?
+  items Json
 
-    iikoOrderId        String?  @unique
-    iikoStatus         String?
-    iikoSyncedAt       DateTime?
-    iikoSyncError      String?
-    iikoSyncAttempts   Int      @default(0)
-    iikoCorrelationId  String?  @unique
+  fullName     String
+  email        String
+  phone        String
+  address      String?
+  entrance     String?
+  floor        String?
+  doorCode     String?
+  apartment    String?
+  deliveryType DeliveryType @default(DELIVERY)
+  comment      String?
+  lat          Float?
+  lng          Float?
 
-    storeId Int?
-    store   Store? @relation(fields: [storeId], references: [id])
+  iikoOrderId       String?   @unique
+  iikoStatus        String?
+  iikoSyncedAt      DateTime?
+  iikoSyncError     String?
+  iikoSyncAttempts  Int       @default(0)
+  iikoCorrelationId String?   @unique
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  storeId Int?
+  store   Store? @relation(fields: [storeId], references: [id])
 
-    @@index([iikoStatus])
-    @@index([status, iikoSyncedAt])
+  tip CourierTip?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([iikoStatus])
+  @@index([status, iikoSyncedAt])
+}
+
+model CourierTip {
+  id Int @id @default(autoincrement())
+
+  order   Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId Int   @unique
+
+  amount Int
+
+  rating  Int?
+  comment String?
+
+  createdAt DateTime @default(now())
+}
+
+model GroupOrder {
+  id Int @id @default(autoincrement())
+
+  code String @unique
+
+  creator   User @relation(fields: [creatorId], references: [id])
+  creatorId Int
+
+  status GroupOrderStatus @default(ACTIVE)
+
+  totalAmount Int @default(0)
+
+  participants GroupOrderParticipant[]
+
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GroupOrderParticipant {
+  id Int @id @default(autoincrement())
+
+  groupOrder   GroupOrder @relation(fields: [groupOrderId], references: [id], onDelete: Cascade)
+  groupOrderId Int
+
+  user   User? @relation(fields: [userId], references: [id])
+  userId Int?
+
+  guestName String?
+
+  items Json @default("[]")
+
+  totalAmount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([groupOrderId, userId])
+}
+
+enum GroupOrderStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
 }
 
 model Store {
-    id      Int      @id @default(autoincrement())
-    name    String
-    address String
-    phone   String?
-    lat     Float?
-    lng     Float?
-    orders  Order[]
-    botUsers BotUser[]
+  id       Int       @id @default(autoincrement())
+  name     String
+  address  String
+  phone    String?
+  lat      Float?
+  lng      Float?
+  orders   Order[]
+  botUsers BotUser[]
 
-    iikoOrganizationId String?
-    iikoTerminalGroupId String?
+  iikoOrganizationId  String?
+  iikoTerminalGroupId String?
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model VerificationCode {
-    id Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-    user   User @relation(fields: [userId], references: [id])
-    userId Int  @unique
+  user   User @relation(fields: [userId], references: [id])
+  userId Int  @unique
 
-    code String
+  code String
 
-    createdAt DateTime @default(now())
+  createdAt DateTime @default(now())
 
-    @@unique([userId, code])
+  @@unique([userId, code])
 }
 
 model Story {
-    id              Int    @id @default(autoincrement())
-    previewImageUrl String
+  id              Int    @id @default(autoincrement())
+  previewImageUrl String
 
-    items StoryItem[]
+  items StoryItem[]
 
-    createdAt DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 model StoryItem {
-    id Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-    storyId Int
-    story   Story @relation(fields: [storyId], references: [id])
+  storyId Int
+  story   Story @relation(fields: [storyId], references: [id])
 
-    sourceUrl String
+  sourceUrl String
 
-    createdAt DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 model Review {
-    id Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-    user   User @relation(fields: [userId], references: [id])
-    userId Int
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
 
-    product   Product @relation(fields: [productId], references: [id])
-    productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int
 
-    rating  Int
-    comment String?
+  rating  Int
+  comment String?
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model BotUser {
-    id Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-    chatId   String  @unique
-    username String? @unique
-    isSuperAdmin Boolean @default(false)
-    isCourier    Boolean @default(false)
+  chatId       String  @unique
+  username     String? @unique
+  isSuperAdmin Boolean @default(false)
+  isCourier    Boolean @default(false)
 
-    storeId Int?
-    store   Store? @relation(fields: [storeId], references: [id])
+  storeId Int?
+  store   Store? @relation(fields: [storeId], references: [id])
 
-    createdAt DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 model Setting {
-    id Int @id @default(1)
+  id Int @id @default(1)
 
-    vatPrice      Int @default(15)
-    deliveryPrice Int @default(250)
+  vatPrice      Int @default(15)
+  deliveryPrice Int @default(250)
 
-    updatedAt DateTime @updatedAt
+  updatedAt DateTime @updatedAt
 }
 
 model GlobalStat {
-    id Int @id @default(1)
+  id Int @id @default(1)
 
-    totalRevenue Int @default(0)
-    totalOrders   Int @default(0)
+  totalRevenue Int @default(0)
+  totalOrders  Int @default(0)
 
-    updatedAt DateTime @updatedAt
+  updatedAt DateTime @updatedAt
 }
 
 model SearchQuery {
-    id    Int    @id @default(autoincrement())
-    query String @unique
-    count Int    @default(1)
+  id    Int    @id @default(autoincrement())
+  query String @unique
+  count Int    @default(1)
 
-    updatedAt DateTime @updatedAt
+  updatedAt DateTime @updatedAt
 }
 
 enum OrderStatus {
-    PENDING
-    COOKING
-    READY
-    DELIVERING
-    SUCCEEDED
-    CANCELLED
+  PENDING
+  COOKING
+  READY
+  DELIVERING
+  SUCCEEDED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH_ON_DELIVERY
+  TELEGRAM_STARS
+  MANUAL_TRANSFER
+  ALIF_PAY
+}
+
+enum PaymentStatus {
+  PENDING
+  AWAITING_CONFIRMATION
+  PAID
+  FAILED
+  REFUNDED
 }
 
 enum UserRole {
-    USER
-    ADMIN
-    COURIER
+  USER
+  ADMIN
+  COURIER
 }
 
 enum DeliveryType {
-    DELIVERY
-    PICKUP
+  DELIVERY
+  PICKUP
 }
 
 model PushToken {
-    id        Int      @id @default(autoincrement())
-    token     String   @unique
-    platform  String? // 'ios', 'android', 'web'
-    user      User?    @relation(fields: [userId], references: [id])
-    userId    Int?
-    createdAt DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  platform  String? // 'ios', 'android', 'web'
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    Int?
+  createdAt DateTime @default(now())
 }
 
 model Notification {
-    id        Int      @id @default(autoincrement())
-    title     String
-    body      String
-    imageUrl  String?
-    createdAt DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  title     String
+  body      String
+  imageUrl  String?
+  createdAt DateTime @default(now())
 }

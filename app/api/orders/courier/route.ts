@@ -16,8 +16,7 @@ export async function GET(req: NextRequest) {
       userId = Number(session.id);
       userRole = session.role;
     } else if (queryUserId) {
-      // Mobile fallback: must include the cart token bound to this user.
-      // Without it, anyone could pass any userId and read courier orders.
+
       const token = req.cookies.get('cartToken')?.value || req.headers.get('x-cart-token');
       if (token) {
         const cart = await prisma.cart.findFirst({
@@ -45,17 +44,17 @@ export async function GET(req: NextRequest) {
     const orders = await prisma.order.findMany({
       where: {
         OR: [
-          // Заказы, которые готовы, но еще ни на кого не назначены
-          { 
-            status: OrderStatus.READY, 
-            courierId: null 
+
+          {
+            status: OrderStatus.READY,
+            courierId: null
           },
-          // Заказы, которые назначены именно этому курьеру и находятся в работе
-          { 
-            courierId: userId, 
-            status: { 
-              in: [OrderStatus.COOKING, OrderStatus.READY, OrderStatus.DELIVERING] 
-            } 
+
+          {
+            courierId: userId,
+            status: {
+              in: [OrderStatus.COOKING, OrderStatus.READY, OrderStatus.DELIVERING]
+            }
           }
         ]
       },

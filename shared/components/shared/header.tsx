@@ -7,42 +7,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { SearchInput } from "./search-input";
 import { CartButton } from "./cart-button";
-import { Bell, ChefHat, Heart, MapPin } from "lucide-react";
+import { Bell, ChefHat, Heart, MapPin, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { ProfileButton } from "./profile-button";
 import { AuthModal } from "./modals";
 import { useTranslation } from "react-i18next";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Button,
-} from "../ui";
+import { Button } from "../ui";
 import { useSession } from "next-auth/react";
 import { useFavoritesStore } from "@/shared/store";
-
-const LanguageSelector = () => {
-  const { i18n } = useTranslation();
-
-  return (
-    <Select
-      value={i18n.language}
-      onValueChange={(val) => i18n.changeLanguage(val)}
-    >
-      <SelectTrigger className="w-[60px] h-[38px] bg-muted border-none shadow-none focus:ring-0">
-        <SelectValue placeholder="Lang" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="ru">RU</SelectItem>
-        <SelectItem value="tg">TG</SelectItem>
-        <SelectItem value="en">EN</SelectItem>
-      </SelectContent>
-    </Select>
-  );
-};
+import { ThemeToggle } from "./theme-toggle";
 
 interface Props {
   hasSearch?: boolean;
@@ -77,11 +51,11 @@ export const Header: React.FC<Props> = ({
     let toastMessage = "";
 
     if (searchParams.has("paid")) {
-      toastMessage = t("header.paidSuccess"); // Added to locales below
+      toastMessage = t("header.paidSuccess");
     }
 
     if (searchParams.has("verified")) {
-      toastMessage = t("header.verifiedSuccess"); // Added to locales below
+      toastMessage = t("header.verifiedSuccess");
     }
 
     if (toastMessage) {
@@ -103,7 +77,7 @@ export const Header: React.FC<Props> = ({
     >
       <Container className="py-3 md:py-5">
         <div className="flex items-center justify-between gap-2">
-          {/* Левая часть */}
+          {}
           <Link href="/" className="group">
             <div className="flex items-center gap-2 md:gap-4">
               <div className="relative">
@@ -127,21 +101,21 @@ export const Header: React.FC<Props> = ({
             </div>
           </Link>
 
-          {/* Поиск на десктопе */}
+          {}
           {showSearch && (
             <div className="mx-2 md:mx-10 flex-1 hidden md:block">
               <SearchInput placeholder={t("header.searchPlaceholder")} />
             </div>
           )}
 
-          {/* Правая часть */}
+          {}
           <div className="flex items-center gap-1 md:gap-2">
             <AuthModal
               open={openAuthModal}
               onClose={() => setOpenAuthModal(false)}
             />
 
-            <LanguageSelector />
+            <ThemeToggle />
 
             <Link href="/profile/favorites" aria-label="Избранное">
               <Button
@@ -179,6 +153,15 @@ export const Header: React.FC<Props> = ({
               </Button>
             </Link>
 
+            <Link href="/group-order">
+              <Button
+                variant="secondary"
+                className="px-2 md:px-4 h-[42px] rounded-2xl"
+              >
+                <Users size={18} className="text-muted-foreground" />
+              </Button>
+            </Link>
+
             <ProfileButton onClickSignIn={() => setOpenAuthModal(true)} />
 
             {showCart && (
@@ -187,7 +170,7 @@ export const Header: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Поиск на мобилке (второй ряд) */}
+        {}
         {showSearch && (
           <div className="mt-3 md:hidden">
             <SearchInput placeholder={t("header.searchPlaceholder")} />

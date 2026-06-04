@@ -25,7 +25,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-screen bg-muted flex-col md:flex-row">
-      {/* Mobile Header */}
+      {}
       <div className="md:hidden flex items-center justify-between p-4 bg-card border-b border-border sticky top-0 z-50">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Logo" width={30} height={30} />
@@ -36,18 +36,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </Button>
       </div>
 
-      {/* Sidebar */}
-      <DashboardSidebar 
+      {}
+      <DashboardSidebar
         className={cn(
           'fixed inset-y-0 left-0 z-40 md:static transform transition-transform duration-300 ease-in-out md:translate-x-0',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        )} 
+        )}
       />
 
-      {/* Overlay for mobile */}
+      {}
       {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-30 md:hidden" 
+        <div
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}

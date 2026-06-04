@@ -48,7 +48,9 @@ export default function MenuScreen() {
       ]);
       const productsData = await productsRes.json();
       const storiesData = await storiesRes.json();
-      
+
+      console.log('Stories loaded:', storiesData.length, storiesData);
+
       setCategories(productsData);
       setStories(storiesData);
       if (productsData.length > 0 && activeCategory === 0) setActiveCategory(productsData[0].id);
@@ -131,6 +133,18 @@ export default function MenuScreen() {
     setSelectedStory(null);
     storyProgress.stopAnimation();
   };
+
+  const topPizzas = useMemo(() => {
+    const pizzaCat = categories.find((c) => c.id === 1) ?? categories[0];
+    if (!pizzaCat) return [];
+    const list = [...(pizzaCat.products ?? [])];
+    list.sort(
+      (a, b) =>
+        (b.reviews?.length ?? 0) - (a.reviews?.length ?? 0) ||
+        (a.items?.[0]?.price ?? 0) - (b.items?.[0]?.price ?? 0),
+    );
+    return list.slice(0, 8);
+  }, [categories]);
 
   const sections = useMemo(() => {
     const filtered = searchQuery.trim() 
@@ -372,18 +386,73 @@ export default function MenuScreen() {
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.storiesContainer}
               >
-                {stories.map((story) => (
-                  <TouchableOpacity
-                    key={story.id}
-                    style={styles.storyThumbWrapper}
-                    onPress={() => openStory(story)}
-                  >
-                    <View style={styles.storyBorder}>
-                      <Image source={{ uri: story.previewImageUrl }} style={styles.storyThumb} />
-                    </View>
-                  </TouchableOpacity>
-                ))}
+                {stories.map((story) => {
+                  if (!story.previewImageUrl || !story.previewImageUrl.trim()) return null;
+                  const previewUri = story.previewImageUrl.startsWith('http')
+                    ? story.previewImageUrl
+                    : `${BASE_URL}${story.previewImageUrl}`;
+                  return (
+                    <TouchableOpacity
+                      key={story.id}
+                      style={styles.storyThumbWrapper}
+                      onPress={() => openStory(story)}
+                    >
+                      <View style={styles.storyBorder}>
+                        <Image
+                          source={{ uri: previewUri }}
+                          style={styles.storyThumb}
+                          onError={(e) => console.log('Story image error:', previewUri, e.nativeEvent.error)}
+                        />
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
               </ScrollView>
+            )}
+            {!searchQuery && topPizzas.length > 0 && (
+              <View style={styles.topSection}>
+                <View style={styles.topHeader}>
+                  <Ionicons name="flame" size={18} color="#ff5400" />
+                  <Text style={styles.topTitle}>Популярное сейчас</Text>
+                </View>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.topScroll}
+                >
+                  {topPizzas.map((p: any, idx: number) => {
+                    const price = p.items?.[0]?.price ?? 0;
+                    const grad =
+                      theme.mode === 'dark' ? gradients.dark : gradients.light;
+                    return (
+                      <SpringPress
+                        key={p.id}
+                        onPress={() => handleProductPress(p)}
+                        scaleTo={0.95}
+                      >
+                        <LiquidGlassCard rounded={22} shadow="sm" style={styles.topCard}>
+                          <View style={styles.topRankBadge}>
+                            <Text style={styles.topRankText}>#{idx + 1}</Text>
+                          </View>
+                          <LinearGradient
+                            colors={grad.surface}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={styles.topImgBg}
+                          />
+                          <Image source={{ uri: p.imageUrl }} style={styles.topImg} />
+                          <Text style={styles.topName} numberOfLines={1}>
+                            {p.name}
+                          </Text>
+                          <Text style={styles.topPrice}>
+                            {t('menu.from')} {price} TJS
+                          </Text>
+                        </LiquidGlassCard>
+                      </SpringPress>
+                    );
+                  })}
+                </ScrollView>
+              </View>
             )}
             <RecentlyViewed onPress={handleProductPress} refreshToken={modalVisible} />
           </>
@@ -409,7 +478,15 @@ export default function MenuScreen() {
         <View style={styles.storyModalContainer}>
           {selectedStory && (
             <View style={styles.storyContent}>
-              <Image source={{ uri: selectedStory.items[currentStoryIndex].sourceUrl }} style={styles.storyImage} />
+              <Image
+                source={{
+                  uri: (() => {
+                    const src = selectedStory.items[currentStoryIndex].sourceUrl ?? '';
+                    return src.startsWith('http') ? src : `${BASE_URL}${src}`;
+                  })(),
+                }}
+                style={styles.storyImage}
+              />
               <View style={[styles.storyHeader, { paddingTop: insets.top + 10 }]}>
                 <View style={styles.progressBarContainer}>
                   {selectedStory.items.map((_: any, i: number) => (
@@ -496,6 +573,73 @@ const makeStyles = (t: Theme) => StyleSheet.create({
   },
   stickyCategories: {
     paddingBottom: 15,
+  },
+  topSection: {
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  topHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 22,
+    marginBottom: 12,
+  },
+  topTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: -0.4,
+    color: t.text,
+  },
+  topScroll: {
+    paddingHorizontal: 18,
+    gap: 12,
+    paddingBottom: 4,
+  },
+  topCard: {
+    width: 150,
+    padding: 10,
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  topImgBg: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    right: 8,
+    height: 110,
+    borderRadius: 16,
+  },
+  topImg: {
+    width: 120,
+    height: 110,
+    resizeMode: 'contain',
+    marginTop: 2,
+  },
+  topRankBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: '#ff5400',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    zIndex: 2,
+  },
+  topRankText: { color: '#fff', fontSize: 11, fontWeight: '900' },
+  topName: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: t.text,
+    marginTop: 8,
+    textAlign: 'center',
+    maxWidth: 130,
+  },
+  topPrice: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: t.primary,
+    marginTop: 2,
   },
   categoriesScroll: {
     paddingHorizontal: 18,

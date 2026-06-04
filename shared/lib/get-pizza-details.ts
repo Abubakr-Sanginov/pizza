@@ -11,7 +11,7 @@ export const getPizzaDetails = (
   t?: any,
 ) => {
   const totalPrice = calcTotalPizzaPrice(type, size, items, ingredients, selectedIngredients);
-  
+
   const typeName = t ? (type === 1 ? t('cart.traditional') : t('cart.thin')) : (type === 1 ? 'традиционная' : 'тонкая');
   const cm = t ? t('cart.cm') : 'см';
   const pizzaLabel = t ? t('cart.pizza') : 'пицца';

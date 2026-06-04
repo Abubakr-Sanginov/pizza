@@ -4,7 +4,15 @@
       "Bash(npx tsc *)",
       "Bash(npx prisma *)",
       "Bash(git stash *)",
-      "PowerShell(npx tsc --noEmit -p tsconfig.json 2>&1)"
+      "PowerShell(npx tsc --noEmit -p tsconfig.json 2>&1)",
+      "Bash(curl -s \"https://pizza-liart-chi.vercel.app/api/stories\")",
+      "Bash(node D:/Projects/next-pizza-main/scripts/strip-comments.cjs)",
+      "Bash(grep -rn \"https:$\" --include=\"*.ts\" --include=\"*.tsx\" --include=\"*.js\" --include=\"*.jsx\" D:/Projects/next-pizza-main/NextApp D:/Projects/next-pizza-main/app D:/Projects/next-pizza-main/shared D:/Projects/next-pizza-main/back)",
+      "Bash(timeout 10 grep -rln \"https:$\\\\|http:$\" --include=\"*.ts\" --include=\"*.tsx\" D:/Projects/next-pizza-main/NextApp D:/Projects/next-pizza-main/app D:/Projects/next-pizza-main/shared D:/Projects/next-pizza-main/back)",
+      "Bash(npx tsx *)",
+      "Bash(npm run *)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

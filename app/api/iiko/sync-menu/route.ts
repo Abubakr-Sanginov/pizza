@@ -5,13 +5,12 @@ import { UserRole } from '@prisma/client';
 
 export async function POST(req: NextRequest) {
   try {
-    // Для безопасности проверяем, что запрос делает администратор
+
     const session = await getUserSession();
     if (!session || session.role !== UserRole.ADMIN) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    // Запускаем полную синхронизацию
     const result = await IikoSyncService.syncMenu();
 
     return NextResponse.json(result);

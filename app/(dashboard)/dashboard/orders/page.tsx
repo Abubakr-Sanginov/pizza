@@ -53,10 +53,10 @@ export default async function DashboardOrdersPage() {
                   <OrderStatusSelector orderId={order.id} initialStatus={order.status} />
                 </td>
                 <td className="px-6 py-4">
-                  <CourierSelector 
-                    orderId={order.id} 
-                    couriers={couriers} 
-                    initialCourierId={order.courierId} 
+                  <CourierSelector
+                    orderId={order.id}
+                    couriers={couriers}
+                    initialCourierId={order.courierId}
                   />
                 </td>
                 <td className="px-6 py-4 text-right">

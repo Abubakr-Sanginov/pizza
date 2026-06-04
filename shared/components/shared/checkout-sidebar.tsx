@@ -12,6 +12,7 @@ import { Button, Input, Skeleton } from '../ui';
 import { cn } from '@/shared/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { useCart } from '@/shared/hooks';
+import { PaymentMethodSelector } from './payment-method-selector';
 
 interface Props {
   totalAmount: number;
@@ -43,7 +44,6 @@ export const CheckoutSidebar: React.FC<Props> = ({
   const discount = appliedPromo?.discount ?? 0;
   const totalPrice = Math.max(0, totalAmount + deliveryPrice + vatPrice - discount);
 
-  // Re-validate promo when cart changes (items added / removed) so the discount stays correct
   const itemsKey = items.map((i) => `${i.productId}:${i.quantity}:${i.price}`).join('|');
   React.useEffect(() => {
     if (!appliedPromo) return;
@@ -182,6 +182,11 @@ export const CheckoutSidebar: React.FC<Props> = ({
             </Button>
           </div>
         )}
+      </div>
+
+      <div className="mt-6">
+        <div className="text-sm font-bold mb-2 text-muted-foreground">Способ оплаты</div>
+        <PaymentMethodSelector />
       </div>
 
       <Button

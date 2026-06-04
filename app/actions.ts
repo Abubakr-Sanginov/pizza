@@ -24,7 +24,7 @@ export async function createOrder(data: CheckoutFormValues) {
       throw new Error('Cart token not found');
     }
 
-    /* Находим корзину по токену */
+    
     const userCart = await prisma.cart.findFirst({
       include: {
         user: true,
@@ -44,12 +44,12 @@ export async function createOrder(data: CheckoutFormValues) {
       },
     });
 
-    /* Если корзина не найдена возвращаем ошибку */
+    
     if (!userCart) {
       throw new Error('Cart not found');
     }
 
-    /* Если корзина пустая возвращаем ошибку */
+    
     if (userCart?.totalAmount === 0) {
       throw new Error('Cart is empty');
     }
@@ -58,7 +58,7 @@ export async function createOrder(data: CheckoutFormValues) {
 
     let finalStoreId = data.storeId;
 
-    // Если это доставка и у нас есть координаты, находим ближайший ресторан
+
     if (data.deliveryType === 'DELIVERY' && data.lat && data.lng) {
       const stores = await prisma.store.findMany();
       if (stores.length > 0) {
@@ -69,7 +69,7 @@ export async function createOrder(data: CheckoutFormValues) {
 
         for (const store of stores) {
           if (store.lat && store.lng) {
-            const R = 6371; // км
+            const R = 6371;
             const dLat = toRad(store.lat - data.lat);
             const dLon = toRad(store.lng - data.lng);
             const a =
@@ -88,12 +88,12 @@ export async function createOrder(data: CheckoutFormValues) {
       }
     }
 
-    /* Получаем настройки (НДС и доставка) */
+    
     const settings = await prisma.setting.findFirst({ where: { id: 1 } });
     const vatPercent = settings?.vatPrice ?? 15;
     const deliveryPrice = data.deliveryType === 'DELIVERY' ? (settings?.deliveryPrice ?? 250) : 0;
 
-    /* Применяем промокод, если он есть */
+    
     let promoCodeApplied: string | null = null;
     let discountAmount = 0;
     if (data.promoCode) {
@@ -115,7 +115,7 @@ export async function createOrder(data: CheckoutFormValues) {
     const vatPrice = Math.floor((userCart.totalAmount * vatPercent) / 100);
     const finalTotal = Math.max(0, userCart.totalAmount + deliveryPrice + vatPrice - discountAmount);
 
-    /* Создаем заказ */
+    
     const order = await prisma.order.create({
       data: {
         token: cartToken,
@@ -136,6 +136,8 @@ export async function createOrder(data: CheckoutFormValues) {
         discount: discountAmount,
         promoCode: promoCodeApplied,
         status: OrderStatus.PENDING,
+        paymentMethod: (data.paymentMethod ?? 'CASH_ON_DELIVERY') as any,
+        paymentStatus: 'PENDING',
         items: JSON.stringify(userCart.items),
         userId: currentUser ? Number(currentUser.id) : null,
       },
@@ -145,7 +147,7 @@ export async function createOrder(data: CheckoutFormValues) {
       bumpPromoUsage(promoCodeApplied).catch(() => {});
     }
 
-    /* Сохраняем адрес в профиль пользователя, если он авторизован */
+    
     if (currentUser && data.address) {
       await prisma.user.update({
         where: { id: Number(currentUser.id) },
@@ -153,23 +155,30 @@ export async function createOrder(data: CheckoutFormValues) {
       });
     }
 
-    /* Очищаем корзину */
-    await prisma.cart.update({
-      where: {
-        id: userCart.id,
-      },
-      data: {
-        totalAmount: 0,
-      },
-    });
+    
+    const isOnlinePayment =
+      data.paymentMethod === 'TELEGRAM_STARS' ||
+      data.paymentMethod === 'MANUAL_TRANSFER' ||
+      data.paymentMethod === 'ALIF_PAY';
 
-    await prisma.cartItem.deleteMany({
-      where: {
-        cartId: userCart.id,
-      },
-    });
+    if (!isOnlinePayment) {
+      await prisma.cart.update({
+        where: {
+          id: userCart.id,
+        },
+        data: {
+          totalAmount: 0,
+        },
+      });
 
-    // We removed online payment. Order logic completes here.
+      await prisma.cartItem.deleteMany({
+        where: {
+          cartId: userCart.id,
+        },
+      });
+    }
+
+
     try {
       await sendEmail(
         data.email,
@@ -180,7 +189,7 @@ export async function createOrder(data: CheckoutFormValues) {
       console.log('[CreateOrder] Failed to send email', emailError);
     }
 
-    /* Отправляем уведомление в Telegram */
+    
     try {
       await sendOrderNotification(
         order.id,
@@ -201,17 +210,29 @@ export async function createOrder(data: CheckoutFormValues) {
       console.log('[CreateOrder] Failed to send Telegram notification', tgError);
     }
 
-    /* Синхронизация с iiko */
-    try {
-      const result = await sendOrderToIiko(order, userCart.items as any);
-      if (result.status === 'failed') {
-        console.warn(`[CreateOrder] iiko sync failed for order ${order.id}: ${result.reason}`);
+    
+    if (!data.paymentMethod || data.paymentMethod === 'CASH_ON_DELIVERY') {
+      try {
+        const result = await sendOrderToIiko(order, userCart.items as any);
+        if (result.status === 'failed') {
+          console.warn(`[CreateOrder] iiko sync failed for order ${order.id}: ${result.reason}`);
+        }
+      } catch (iikoError) {
+        console.error('[CreateOrder] iiko sync crashed:', iikoError);
       }
-    } catch (iikoError) {
-      console.error('[CreateOrder] iiko sync crashed:', iikoError);
     }
 
     revalidatePath('/dashboard/orders');
+
+    if (data.paymentMethod === 'ALIF_PAY') {
+      return `/checkout/pay/${order.id}?method=ALIF`;
+    }
+    if (data.paymentMethod === 'TELEGRAM_STARS') {
+      return `/checkout/pay/${order.id}?method=STARS`;
+    }
+    if (data.paymentMethod === 'MANUAL_TRANSFER') {
+      return `/checkout/pay/${order.id}?method=TRANSFER`;
+    }
     return `/order-success/${order.id}`;
   } catch (err) {
     console.log('[CreateOrder] Server error', err);

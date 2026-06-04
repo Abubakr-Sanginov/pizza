@@ -16,12 +16,12 @@ function AuthSuccessContent() {
         const session = await res.json();
 
         if (session?.user && redirect) {
-          // Формируем URL с данными пользователя
+
           const url = new URL(redirect);
           url.searchParams.append('email', session.user.email || '');
           url.searchParams.append('name', session.user.name || '');
           url.searchParams.append('image', session.user.image || '');
-          
+
           window.location.href = url.toString();
         } else if (redirect) {
           window.location.href = redirect;

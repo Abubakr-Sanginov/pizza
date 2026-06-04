@@ -4,11 +4,6 @@ import { prisma } from '@/back/prisma/prisma-client';
 import { getUserSession } from '@/back/lib/get-user-session';
 import { OrderStatus } from '@prisma/client';
 
-/**
- * Delete an order from user's history.
- * Users can only delete their own CANCELLED orders.
- * SUCCEEDED orders are auto-deleted after 1 day.
- */
 export async function deleteOrder(orderId: number) {
   try {
     const session = await getUserSession();
@@ -25,12 +20,10 @@ export async function deleteOrder(orderId: number) {
       throw new Error('Order not found');
     }
 
-    // Users can only delete their own orders
     if (order.userId !== Number(session.id) && session.role !== 'ADMIN') {
       throw new Error('Access denied');
     }
 
-    // Only allow manual deletion for CANCELLED orders (or admin)
     if (order.status !== OrderStatus.CANCELLED && session.role !== 'ADMIN') {
       throw new Error('Can only manually delete cancelled orders');
     }
@@ -46,10 +39,6 @@ export async function deleteOrder(orderId: number) {
   }
 }
 
-/**
- * Auto-cleanup: delete SUCCEEDED and CANCELLED orders older than 1 day.
- * Called periodically (e.g., from the bot).
- */
 export async function cleanupOldOrders() {
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 

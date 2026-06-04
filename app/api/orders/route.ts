@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Cart token not found' }, { status: 400 });
     }
 
-    /* Находим корзину по токену */
+    
     const userCart = await prisma.cart.findFirst({
       include: {
         items: {
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
 
     let finalStoreId = storeId;
 
-    // Если это доставка и есть координаты, находим ближайший ресторан
+
     if (deliveryType === 'DELIVERY' && lat && lng) {
       const stores = await prisma.store.findMany();
       if (stores.length > 0) {
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
 
         for (const store of stores) {
           if (store.lat && store.lng) {
-            const R = 6371; // км
+            const R = 6371;
             const dLat = toRad(store.lat - lat);
             const dLon = toRad(store.lng - lng);
             const a =
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    /* Создаем заказ */
+    
     const order = await prisma.order.create({
       data: {
         token: cartToken,
@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    /* Очищаем корзину */
+    
     await prisma.cart.update({
       where: { id: userCart.id },
       data: { totalAmount: 0 },
@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
       where: { cartId: userCart.id },
     });
 
-    /* Отправка email */
+    
     try {
       await sendEmail(
         email,
@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
       console.log('[API_ORDER] Email failed', e);
     }
 
-    /* Телеграм уведомление */
+    
     try {
       await sendOrderNotification(
         order.id,
@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
       console.log('[API_ORDER] Telegram failed', e);
     }
 
-    /* iiko Sync */
+    
     try {
       const result = await sendOrderToIiko(order, userCart.items as any);
       if (result.status === 'failed') {

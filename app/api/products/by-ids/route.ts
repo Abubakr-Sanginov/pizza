@@ -25,7 +25,6 @@ export async function GET(req: Request) {
       },
     });
 
-    // Preserve the order of the requested ids
     const map = new Map(products.map((p) => [p.id, p]));
     const ordered = ids.map((id) => map.get(id)).filter(Boolean);
 

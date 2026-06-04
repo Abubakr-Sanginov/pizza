@@ -22,7 +22,7 @@ export const useFavoritesStore = create<FavoritesState>((set, get) => ({
       const { data } = await axios.get<number[]>('/api/favorites/ids');
       set({ ids: new Set(data), fetched: true });
     } catch (e) {
-      // Anonymous users get [] from the API — still mark fetched.
+
       set({ fetched: true });
     } finally {
       set({ loading: false });
@@ -31,7 +31,7 @@ export const useFavoritesStore = create<FavoritesState>((set, get) => ({
 
   toggle: async (productId) => {
     const wasIn = get().ids.has(productId);
-    // Optimistic
+
     const next = new Set(get().ids);
     if (wasIn) next.delete(productId);
     else next.add(productId);
@@ -39,14 +39,14 @@ export const useFavoritesStore = create<FavoritesState>((set, get) => ({
 
     try {
       const { data } = await axios.post<{ favorited: boolean }>('/api/favorites', { productId });
-      // Sync to server truth
+
       const synced = new Set(get().ids);
       if (data.favorited) synced.add(productId);
       else synced.delete(productId);
       set({ ids: synced });
       return data.favorited;
     } catch {
-      // Rollback
+
       const currentIds = get().ids;
       set({ ids: new Set(Array.from(currentIds)) });
       const rollback = new Set(get().ids);

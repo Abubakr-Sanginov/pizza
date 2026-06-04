@@ -27,9 +27,7 @@ interface Props {
   tags?: string[];
 }
 
-/**
- * Форма выбора ПИЦЦЫ
- */
+
 export const ChoosePizzaForm: React.FC<Props> = ({
   name,
   items,

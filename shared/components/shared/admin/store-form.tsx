@@ -98,7 +98,7 @@ export const StoreForm: React.FC<Props> = ({ initialData }) => {
             {form.formState.errors.phone && <p className="text-destructive text-xs mt-1">{form.formState.errors.phone.message}</p>}
           </div>
 
-          {/* Map section */}
+          {}
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium mb-1">Адрес</label>

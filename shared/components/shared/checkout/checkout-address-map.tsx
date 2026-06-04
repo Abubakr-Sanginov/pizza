@@ -9,26 +9,26 @@ import { LocateFixed } from 'lucide-react';
 const customIcon = L.divIcon({
   html: `
     <div style="
-      background-color: white; 
-      border-radius: 12px; 
-      padding: 6px; 
-      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.2); 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      width: 40px; 
+      background-color: white;
+      border-radius: 12px;
+      padding: 6px;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
       height: 40px;
       border: 2px solid #f97316;
     ">
       <span style="font-size: 20px; line-height: 1;">🍕</span>
     </div>
     <div style="
-      width: 0; 
-      height: 0; 
-      border-left: 8px solid transparent; 
-      border-right: 8px solid transparent; 
-      border-top: 10px solid #f97316; 
-      margin: 0 auto; 
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-top: 10px solid #f97316;
+      margin: 0 auto;
       margin-top: -2px;
     "></div>
   `,

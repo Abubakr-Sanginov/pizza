@@ -23,7 +23,7 @@ export interface SendPushPayload {
   imageUrl?: string | null;
   url?: string;
   data?: Record<string, unknown>;
-  /** Maps to Android notification channel: 'default' | 'orders' */
+
   channel?: 'default' | 'orders';
 }
 
@@ -102,14 +102,14 @@ export async function sendPushToUsers(
         data: { url: payload.url || '/', ...(payload.data || {}) },
         priority: 'high',
         channelId,
-        ttl: 60 * 60 * 24, // 24h — drop if device offline beyond
-        mutableContent: true, // iOS: allow Notification Service Extension to modify
+        ttl: 60 * 60 * 24,
+        mutableContent: true,
         ...(payload.imageUrl
           ? {
               richContent: { image: payload.imageUrl },
             }
           : {}),
-        // iOS: automatically increment app icon badge
+
         badge: 1,
       } as ExpoPushMessage;
       expoMessages.push(message);
@@ -142,7 +142,7 @@ export async function sendPushToUsers(
         } else {
           summary.expoFailed++;
           const errCode = (ticket.details as any)?.error;
-          // Hard delete obviously dead tokens
+
           if (
             (errCode === 'DeviceNotRegistered' ||
               errCode === 'InvalidCredentials' ||
@@ -160,8 +160,6 @@ export async function sendPushToUsers(
     }
   }
 
-  // Schedule receipt verification ~30s later (fire-and-forget).
-  // Expo recommends waiting before fetching receipts.
   if (summary.receiptIds && summary.receiptIds.length > 0) {
     const idsCopy = [...summary.receiptIds];
     setTimeout(() => {

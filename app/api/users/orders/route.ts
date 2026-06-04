@@ -3,11 +3,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getUserSession } from '@/back/lib/get-user-session';
 
-/**
- * Returns orders of the authenticated user only. Without auth — 401.
- * We never trust `?userId` from the query string alone; mobile fallback
- * accepts it only if the caller's cartToken is bound to that same user.
- */
 export async function GET(req: NextRequest) {
   try {
     const session = await getUserSession();
@@ -32,6 +27,7 @@ export async function GET(req: NextRequest) {
     const orders = await prisma.order.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
+      include: { tip: true },
     });
 
     return NextResponse.json(orders);

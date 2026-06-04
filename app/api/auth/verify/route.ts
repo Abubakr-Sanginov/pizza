@@ -2,7 +2,7 @@ import { prisma } from '@/back/prisma/prisma-client';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-const CODE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+const CODE_TTL_MS = 30 * 60 * 1000;
 
 export async function GET(req: NextRequest) {
   try {

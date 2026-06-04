@@ -35,7 +35,7 @@ export async function createStory(data: CreateStoryValues) {
 
 export async function deleteStory(id: number) {
   try {
-    // Delete associated items first (if no cascade in schema)
+
     await prisma.storyItem.deleteMany({
       where: { storyId: id },
     });

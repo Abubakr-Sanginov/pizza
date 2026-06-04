@@ -6,10 +6,6 @@ import { getUserSession } from '@/back/lib/get-user-session';
 import { findOrCreateCart } from '@/back/lib/find-or-create-cart';
 import { updateCartTotalAmount } from '@/back/lib/update-cart-total-amount';
 
-/**
- * Clones items from a previous order back into the user's cart.
- * Skips items whose ProductItem or ingredients no longer exist (silently).
- */
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await getUserSession();

@@ -6,6 +6,7 @@ import { useUserStore } from '@/store/useUserStore';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { useTranslation } from 'react-i18next';
+import { useRouter } from 'expo-router';
 
 import { BASE_URL } from '@/constants/Api';
 import { useTheme, Theme } from '@/hooks/useTheme';
@@ -13,31 +14,35 @@ import { gradients } from '@/constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SpringPress, AmbientBackdrop, LiquidGlassCard } from '@/components/ui';
 import { LiveOrderStatus } from '@/components/shared/LiveOrderStatus';
+import { ThemeToggle } from '@/components/shared/ThemeToggle';
+import { CourierTipModal } from '@/components/shared/CourierTipModal';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { user, setUser, logout } = useUserStore();
   const { t } = useTranslation();
+  const router = useRouter();
   const theme = useTheme();
   const styles = useMemo(() => makeStyles(theme), [theme]);
-  
+
   const [isLogin, setIsLogin] = useState(true);
   const [step, setStep] = useState<'auth' | 'verify'>('auth');
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
 
-  // Form states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [code, setCode] = useState('');
 
-  // Edit Profile states
   const [isEditing, setIsEditing] = useState(false);
   const [editFullName, setEditFullName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editPassword, setEditPassword] = useState('');
+
+  const [tipModalVisible, setTipModalVisible] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -79,7 +84,7 @@ export default function ProfileScreen() {
           password: editPassword || undefined,
         })
       });
-      
+
       if (res.ok) {
         const updatedUser = await res.json();
         setUser(updatedUser);
@@ -106,7 +111,7 @@ export default function ProfileScreen() {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&json=true`
         });
-        
+
         const loginRes = await fetch(`${BASE_URL}/api/users`);
         const allUsers = await loginRes.json();
         const foundUser = allUsers.find((u: any) => u.email === email);
@@ -148,16 +153,16 @@ export default function ProfileScreen() {
     try {
       // Создаем URL для возврата в приложение
       const redirectUri = Linking.createURL('profile');
-      
+
       // Формируем URL для входа, который после успеха отправит на нашу страницу-мост
       const bridgeUrl = `${BASE_URL}/auth/success?redirect=${encodeURIComponent(redirectUri)}`;
       const authUrl = `${BASE_URL}/api/auth/signin/${provider}?callbackUrl=${encodeURIComponent(bridgeUrl)}`;
-      
+
       console.log('Redirect URI:', redirectUri);
       console.log('Auth URL:', authUrl);
 
       const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
-      
+
       if (result.type === 'success' && result.url) {
         // Парсим параметры из URL возврата
         const { queryParams } = Linking.parse(result.url);
@@ -169,7 +174,7 @@ export default function ProfileScreen() {
           const usersRes = await fetch(`${BASE_URL}/api/users`);
           const allUsers = await usersRes.json();
           const foundUser = allUsers.find((u: any) => u.email === email);
-          
+
           if (foundUser) {
             setUser({
               id: foundUser.id.toString(),
@@ -220,7 +225,6 @@ export default function ProfileScreen() {
     }
   };
 
-
   if (user) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -251,28 +255,28 @@ export default function ProfileScreen() {
               <View style={styles.editForm}>
                 <View style={styles.editInputGroup}>
                   <Text style={styles.editLabel}>{t('profile.fullName')}</Text>
-                  <TextInput 
-                    style={styles.editInput} 
-                    value={editFullName} 
-                    onChangeText={setEditFullName} 
+                  <TextInput
+                    style={styles.editInput}
+                    value={editFullName}
+                    onChangeText={setEditFullName}
                   />
                 </View>
                 <View style={styles.editInputGroup}>
                   <Text style={styles.editLabel}>{t('profile.email')}</Text>
-                  <TextInput 
-                    style={styles.editInput} 
-                    value={editEmail} 
-                    onChangeText={setEditEmail} 
+                  <TextInput
+                    style={styles.editInput}
+                    value={editEmail}
+                    onChangeText={setEditEmail}
                     autoCapitalize="none"
                   />
                 </View>
                 <View style={styles.editInputGroup}>
                   <Text style={styles.editLabel}>{t('profile.password')}</Text>
-                  <TextInput 
-                    style={styles.editInput} 
+                  <TextInput
+                    style={styles.editInput}
                     placeholder="••••••••"
-                    value={editPassword} 
-                    onChangeText={setEditPassword} 
+                    value={editPassword}
+                    onChangeText={setEditPassword}
                     secureTextEntry
                   />
                 </View>
@@ -295,11 +299,129 @@ export default function ProfileScreen() {
                 </View>
               </>
             )}
-            
+
             <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
               <Ionicons name="log-out-outline" size={20} color={theme.danger} />
               <Text style={styles.logoutText}>{t('profile.logout')}</Text>
             </TouchableOpacity>
+          </View>
+
+          <View style={{ marginTop: 20, gap: 10 }}>
+            <TouchableOpacity
+              onPress={() => router.push('/favorites')}
+              activeOpacity={0.85}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 14,
+                paddingVertical: 14,
+                paddingHorizontal: 16,
+                borderRadius: 20,
+                backgroundColor: theme.surface,
+                borderWidth: 1,
+                borderColor: theme.border,
+              }}
+            >
+              <View
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: theme.primarySoft,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Ionicons name="heart" size={20} color={theme.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: theme.text, fontSize: 15, fontWeight: '800' }}>
+                  Избранное
+                </Text>
+                <Text style={{ color: theme.textMuted, fontSize: 12, marginTop: 2, fontWeight: '500' }}>
+                  Сохранённые товары
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={theme.textSubtle} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => router.push('/delivery')}
+              activeOpacity={0.85}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 14,
+                paddingVertical: 14,
+                paddingHorizontal: 16,
+                borderRadius: 20,
+                backgroundColor: theme.surface,
+                borderWidth: 1,
+                borderColor: theme.border,
+              }}
+            >
+              <View
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: theme.primarySoft,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Ionicons name="location" size={20} color={theme.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: theme.text, fontSize: 15, fontWeight: '800' }}>
+                  Доставка
+                </Text>
+                <Text style={{ color: theme.textMuted, fontSize: 12, marginTop: 2, fontWeight: '500' }}>
+                  Зоны, цены и рестораны
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={theme.textSubtle} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => router.push('/group-order')}
+              activeOpacity={0.85}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 14,
+                paddingVertical: 14,
+                paddingHorizontal: 16,
+                borderRadius: 20,
+                backgroundColor: theme.surface,
+                borderWidth: 1,
+                borderColor: theme.border,
+              }}
+            >
+              <View
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: theme.primarySoft,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Ionicons name="people" size={20} color={theme.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: theme.text, fontSize: 15, fontWeight: '800' }}>
+                  Групповой заказ
+                </Text>
+                <Text style={{ color: theme.textMuted, fontSize: 12, marginTop: 2, fontWeight: '500' }}>
+                  Заказывайте вместе с друзьями
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={theme.textSubtle} />
+            </TouchableOpacity>
+
+            <ThemeToggle />
           </View>
 
           <View style={styles.ordersSection}>
@@ -330,6 +452,28 @@ export default function ProfileScreen() {
                       }
                     })()}
                   </Text>
+                  {order.status === 'SUCCEEDED' && !order.tip && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        setSelectedOrderId(order.id);
+                        setTipModalVisible(true);
+                      }}
+                      style={[styles.tipBtn, { backgroundColor: theme.primarySoft }]}
+                    >
+                      <Ionicons name="heart" size={16} color={theme.primary} />
+                      <Text style={[styles.tipBtnText, { color: theme.primary }]}>
+                        Оставить чаевые
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                  {order.tip && (
+                    <View style={[styles.tipBadge, { backgroundColor: theme.successSoft }]}>
+                      <Ionicons name="checkmark-circle" size={16} color={theme.success} />
+                      <Text style={[styles.tipBadgeText, { color: theme.success }]}>
+                        Чаевые {order.tip.amount} TJS
+                      </Text>
+                    </View>
+                  )}
                 </View>
               ))
             ) : (
@@ -349,6 +493,9 @@ export default function ProfileScreen() {
       <AmbientBackdrop />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.authScroll}>
+          <View style={{ position: 'absolute', top: insets.top + 12, right: 18, zIndex: 10 }}>
+            <ThemeToggle variant="icon" />
+          </View>
           <View style={styles.authHeader}>
             <Image source={{ uri: 'https://cdn.dodostatic.net/site-static/dist/assets/522384a867822955.svg' }} style={styles.logo} />
             <Text style={styles.authTitle}>
@@ -364,32 +511,32 @@ export default function ProfileScreen() {
               {!isLogin && (
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>{t('auth.fullName')}</Text>
-                  <TextInput 
-                    style={styles.input} 
-                    placeholder="Фирдавс Рахимов" 
-                    value={fullName} 
-                    onChangeText={setFullName} 
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Фирдавс Рахимов"
+                    value={fullName}
+                    onChangeText={setFullName}
                   />
                 </View>
               )}
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>{t('auth.email')}</Text>
-                <TextInput 
-                  style={styles.input} 
-                  placeholder="example@mail.com" 
-                  value={email} 
-                  onChangeText={setEmail} 
+                <TextInput
+                  style={styles.input}
+                  placeholder="example@mail.com"
+                  value={email}
+                  onChangeText={setEmail}
                   autoCapitalize="none"
                 />
               </View>
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>{t('auth.password')}</Text>
-                <TextInput 
-                  style={styles.input} 
-                  placeholder="••••••••" 
-                  value={password} 
-                  onChangeText={setPassword} 
-                  secureTextEntry 
+                <TextInput
+                  style={styles.input}
+                  placeholder="••••••••"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
                 />
               </View>
 
@@ -412,14 +559,14 @@ export default function ProfileScreen() {
               </View>
 
               <View style={styles.socialRow}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[styles.socialBtn, { borderColor: theme.border }]}
                   onPress={() => handleSocialLogin('google')}
                 >
                   <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/2991/2991148.png' }} style={styles.socialIcon} />
                   <Text style={styles.socialBtnText}>Google</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[styles.socialBtn, { borderColor: theme.text, backgroundColor: theme.text }]}
                   onPress={() => handleSocialLogin('github')}
                 >
@@ -428,8 +575,8 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
               </View>
 
-              <TouchableOpacity 
-                style={styles.switchBtn} 
+              <TouchableOpacity
+                style={styles.switchBtn}
                 onPress={() => {
                   LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                   setIsLogin(!isLogin);
@@ -444,11 +591,11 @@ export default function ProfileScreen() {
             <View style={styles.form}>
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>{t('auth.codeInput')}</Text>
-                <TextInput 
-                  style={[styles.input, styles.codeInput]} 
-                  placeholder="000000" 
-                  value={code} 
-                  onChangeText={setCode} 
+                <TextInput
+                  style={[styles.input, styles.codeInput]}
+                  placeholder="000000"
+                  value={code}
+                  onChangeText={setCode}
                   keyboardType="numeric"
                   maxLength={6}
                 />
@@ -465,6 +612,20 @@ export default function ProfileScreen() {
           )}
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {selectedOrderId && (
+        <CourierTipModal
+          visible={tipModalVisible}
+          orderId={selectedOrderId}
+          onClose={() => {
+            setTipModalVisible(false);
+            setSelectedOrderId(null);
+          }}
+          onSuccess={() => {
+            fetchOrders();
+          }}
+        />
+      )}
     </View>
   );
 }
@@ -583,6 +744,34 @@ const makeStyles = (t: Theme) => StyleSheet.create({
   orderPrice: { fontSize: 18, fontWeight: '900', color: t.primary },
   orderDivider: { height: 1, backgroundColor: t.borderMuted, marginVertical: 12 },
   orderItems: { fontSize: 13, color: t.textMuted },
+  tipBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+  },
+  tipBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  tipBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  tipBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
   emptyOrders: { alignItems: 'center', paddingVertical: 60, paddingHorizontal: 20, gap: 15 },
   emptyOrdersText: {
     color: t.textSubtle,

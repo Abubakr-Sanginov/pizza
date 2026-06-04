@@ -1,4 +1,4 @@
-// Ref: https://next-auth.js.org/getting-started/typescript#module-augmentation
+
 
 import { DefaultSession, DefaultUser } from 'next-auth';
 import { JWT, DefaultJWT } from 'next-auth/jwt';

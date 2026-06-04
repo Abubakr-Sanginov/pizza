@@ -48,7 +48,7 @@ export const StoryForm: React.FC<Props> = ({ initialData }) => {
   const onSubmit = async (values: StoryFormValues) => {
     try {
       if (initialData) {
-        // Edit functionality can be added later if needed
+
         toast.error('Редактирование пока не поддерживается');
         return;
       } else {

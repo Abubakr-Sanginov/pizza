@@ -51,7 +51,7 @@ export default function CourierScreen() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, userId: user?.id })
       });
-      
+
       if (res.ok) {
         Alert.alert(t('courier.success'), t('courier.statusUpdated'));
         fetchOrders();
@@ -79,7 +79,7 @@ export default function CourierScreen() {
         <Text style={styles.subtitle}>{t('courier.subtitle')}</Text>
       </View>
 
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />}
       >
@@ -135,16 +135,16 @@ export default function CourierScreen() {
                   </SpringPress>
                 )}
 
-                <TouchableOpacity 
-                  style={styles.cancelBtn} 
+                <TouchableOpacity
+                  style={styles.cancelBtn}
                   onPress={() => {
                     Alert.alert(
                       t('courier.confirmCancelTitle') || 'Отмена заказа',
                       t('courier.confirmCancel') || 'Вы уверены, что хотите отменить этот заказ?',
                       [
                         { text: t('reviews.cancel'), style: 'cancel' },
-                        { 
-                          text: t('courier.cancelOrder'), 
+                        {
+                          text: t('courier.cancelOrder'),
                           style: 'destructive',
                           onPress: () => updateStatus(order.id, 'CANCELLED')
                         }

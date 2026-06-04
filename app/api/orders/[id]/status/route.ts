@@ -47,7 +47,7 @@ export async function PATCH(
       userId = Number(session.id);
       userRole = session.role;
     } else if (bodyUserId) {
-      // Mobile fallback: must present cartToken bound to that user
+
       const token = req.cookies.get('cartToken')?.value || req.headers.get('x-cart-token');
       if (token) {
         const cart = await prisma.cart.findFirst({
@@ -72,7 +72,6 @@ export async function PATCH(
       return NextResponse.json({ message: 'Нет прав' }, { status: 403 });
     }
 
-    // Courier can only update orders they're assigned to
     if (userRole === 'COURIER') {
       const target = await prisma.order.findUnique({
         where: { id: orderId },
@@ -89,8 +88,7 @@ export async function PATCH(
     }
 
     const updateData: any = { status };
-    
-    // Если курьер берет заказ, записываем его ID в заказ
+
     if (status === OrderStatus.DELIVERING) {
       updateData.courierId = userId;
     }

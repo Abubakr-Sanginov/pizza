@@ -25,7 +25,7 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
   const { t, i18n } = useTranslation();
   const theme = useTheme();
   const styles = useMemo(() => makeStyles(theme), [theme]);
-  
+
   const SIZE_LABELS: Record<number, string> = {
     20: t('productModal.sizeSmall'),
     30: t('productModal.sizeMedium'),
@@ -91,15 +91,15 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
 
   const isPizza = product.items[0]?.pizzaType !== null;
   const currentItem = product.items.find((item: any) => item.size === size && item.pizzaType === type) || product.items[0];
-  
-  const totalPrice = (currentItem?.price || 0) + 
+
+  const totalPrice = (currentItem?.price || 0) +
     selectedIngredients.reduce((acc, id) => {
       const ingredient = product.ingredients.find((i: any) => i.id === id);
       return acc + (ingredient?.price || 0);
     }, 0);
 
   const toggleIngredient = (id: number) => {
-    setSelectedIngredients(prev => 
+    setSelectedIngredients(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
@@ -168,9 +168,9 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
             {tab === 'details' ? (
               <>
                 <View style={styles.imageContainer}>
-                  <Animated.Image 
-                    source={{ uri: product.imageUrl }} 
-                    style={[styles.image, { transform: [{ scale: scaleAnim }] }]} 
+                  <Animated.Image
+                    source={{ uri: product.imageUrl }}
+                    style={[styles.image, { transform: [{ scale: scaleAnim }] }]}
                   />
                 </View>
 
@@ -187,10 +187,10 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                   <View style={styles.selectors}>
                     <View style={styles.selectorRow}>
                       {availableSizes.map((s) => (
-                        <TouchableOpacity 
-                          key={s.value} 
+                        <TouchableOpacity
+                          key={s.value}
                           style={[
-                            styles.selectorBtn, 
+                            styles.selectorBtn,
                             size === s.value && styles.selectorBtnActive,
                             s.disabled && styles.selectorBtnDisabled
                           ]}
@@ -198,7 +198,7 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                           disabled={s.disabled}
                         >
                           <Text style={[
-                            styles.selectorText, 
+                            styles.selectorText,
                             size === s.value && styles.selectorTextActive,
                             s.disabled && styles.selectorTextDisabled
                           ]}>
@@ -212,10 +212,10 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                       {PIZZA_TYPES.map((t) => {
                         const isDisabled = !product.items.some((item: any) => item.pizzaType === t.value);
                         return (
-                          <TouchableOpacity 
-                            key={t.value} 
+                          <TouchableOpacity
+                            key={t.value}
                             style={[
-                              styles.selectorBtn, 
+                              styles.selectorBtn,
                               type === t.value && styles.selectorBtnActive,
                               isDisabled && styles.selectorBtnDisabled
                             ]}
@@ -223,7 +223,7 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                             disabled={isDisabled}
                           >
                             <Text style={[
-                              styles.selectorText, 
+                              styles.selectorText,
                               type === t.value && styles.selectorTextActive,
                               isDisabled && styles.selectorTextDisabled
                             ]}>
@@ -243,8 +243,8 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                       {product.ingredients.map((item: any) => {
                         const isSelected = selectedIngredients.includes(item.id);
                         return (
-                          <TouchableOpacity 
-                            key={item.id} 
+                          <TouchableOpacity
+                            key={item.id}
                             style={[styles.ingredientCard, isSelected && styles.ingredientActive]}
                             onPress={() => toggleIngredient(item.id)}
                           >
@@ -267,10 +267,10 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                     <View style={styles.starRowBig}>
                       {[1, 2, 3, 4, 5].map((s) => (
                         <TouchableOpacity key={s} onPress={() => setRating(s)}>
-                          <Ionicons 
-                            name={s <= rating ? "star" : "star-outline"} 
-                            size={32} 
-                            color={s <= rating ? "#ff7000" : "#9BA1A6"} 
+                          <Ionicons
+                            name={s <= rating ? "star" : "star-outline"}
+                            size={32}
+                            color={s <= rating ? "#ff7000" : "#9BA1A6"}
                           />
                         </TouchableOpacity>
                       ))}
@@ -320,11 +320,11 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                           <Text style={styles.userName}>{review.user?.fullName || t('reviews.user')}</Text>
                           <View style={styles.starRow}>
                             {[...Array(5)].map((_, i) => (
-                              <Ionicons 
-                                key={i} 
-                                name={i < review.rating ? "star" : "star-outline"} 
-                                size={14} 
-                                color={i < review.rating ? "#ff7000" : "#9BA1A6"} 
+                              <Ionicons
+                                key={i}
+                                name={i < review.rating ? "star" : "star-outline"}
+                                size={14}
+                                color={i < review.rating ? "#ff7000" : "#9BA1A6"}
                               />
                             ))}
                           </View>
@@ -332,9 +332,9 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                         <Text style={styles.reviewDate}>{new Date(review.createdAt).toLocaleDateString()}</Text>
                       </View>
                       <Text style={styles.reviewText}>{review.comment}</Text>
-                      
+
                       {user && (Number(user.id) === review.userId || user.role === 'ADMIN') && (
-                        <TouchableOpacity 
+                        <TouchableOpacity
                           style={styles.deleteReviewBtn}
                           onPress={() => {
                             Alert.alert(
@@ -342,8 +342,8 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                               t('reviews.deleteConfirm'),
                               [
                                 { text: t('reviews.cancel'), style: 'cancel' },
-                                { 
-                                  text: t('reviews.delete'), 
+                                {
+                                  text: t('reviews.delete'),
                                   style: 'destructive',
                                   onPress: async () => {
                                     try {

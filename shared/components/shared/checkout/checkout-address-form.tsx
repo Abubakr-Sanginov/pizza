@@ -10,7 +10,6 @@ import dynamic from 'next/dynamic';
 import { Store } from '@prisma/client';
 import { useTranslation } from 'react-i18next';
 
-
 const CheckoutAddressMap = dynamic(
   () => import('./checkout-address-map').then((m) => m.CheckoutAddressMap),
   { ssr: false }
@@ -40,7 +39,6 @@ export const CheckoutAddressForm: React.FC<Props> = ({ className, stores }) => {
       setValue('lng', pos[1], { shouldValidate: true });
     }
   };
-
 
   return (
     <WhiteBlock title={t('checkout.deliveryTitle')} className={className}>
@@ -104,7 +102,6 @@ export const CheckoutAddressForm: React.FC<Props> = ({ className, stores }) => {
             })()}
           </>
         )}
-
 
         {isDelivery && (
           <>

@@ -10,7 +10,7 @@ export const PizzaOfTheDayServer: React.FC<Props> = async ({ className }) => {
   try {
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-    // Get orders from last 24h
+
     const recentOrders = await prisma.order.findMany({
       where: {
         createdAt: { gte: since },
@@ -19,7 +19,7 @@ export const PizzaOfTheDayServer: React.FC<Props> = async ({ className }) => {
       select: { items: true },
     });
 
-    // Count pizza occurrences from order JSON
+
     const countMap = new Map<number, number>();
     for (const order of recentOrders) {
       const items = order.items as Array<{
@@ -32,7 +32,7 @@ export const PizzaOfTheDayServer: React.FC<Props> = async ({ className }) => {
       }
     }
 
-    // Find the top pizza (only from category 1 = pizzas)
+
     let topPizzaId: number | null = null;
     let topCount = 0;
 
@@ -51,7 +51,7 @@ export const PizzaOfTheDayServer: React.FC<Props> = async ({ className }) => {
       }
     }
 
-    // Fallback: highest rated pizza
+
     if (!topPizzaId) {
       const fallback = await prisma.product.findFirst({
         where: { categoryId: 1, items: { some: {} } },

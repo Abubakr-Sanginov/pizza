@@ -16,6 +16,7 @@ export interface CartItem {
   id: number;
   quantity: number;
   productItemId: number;
+  customName?: string | null;
   productItem: {
     id: number;
     price: number;
@@ -42,7 +43,7 @@ interface CartState {
   error: boolean;
   
   fetchCart: () => Promise<void>;
-  addItem: (productItemId: number, ingredients?: number[]) => Promise<void>;
+  addItem: (productItemId: number, ingredients?: number[], customName?: string) => Promise<void>;
   updateQuantity: (id: number, quantity: number) => Promise<void>;
   removeItem: (id: number) => Promise<void>;
   clearCart: () => void;
@@ -76,13 +77,14 @@ export const useCartStore = create<CartState>((set, get) => ({
     }
   },
 
-  addItem: async (productItemId: number, ingredients?: number[]) => {
+  addItem: async (productItemId: number, ingredients?: number[], customName?: string) => {
     try {
       let token = await getCartToken();
-      
+
       const { data } = await axios.post(`${API_URL}/cart`, {
         productItemId,
         ingredients,
+        customName: customName?.trim() || undefined,
       }, {
         headers: { 'X-Cart-Token': token || '' },
       });

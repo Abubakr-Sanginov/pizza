@@ -14,7 +14,7 @@ import "leaflet/dist/leaflet.css";
 import { cn } from "@/shared/lib/utils";
 import { Clock, MapPin, Phone, ShoppingCart, Timer, Truck } from "lucide-react";
 
-// Fix default marker icons in Next.js
+
 const markerIcon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   iconRetinaUrl:
@@ -25,7 +25,7 @@ const markerIcon = L.icon({
   popupAnchor: [1, -34],
 });
 
-// Delivery zones: radius in meters, time estimate, price
+
 const DELIVERY_ZONES = [
   {
     radius: 2000,
@@ -67,7 +67,7 @@ interface Props {
   className?: string;
 }
 
-// Center map on stores
+
 function MapCenter({ stores }: { stores: Store[] }) {
   const map = useMap();
   React.useEffect(() => {
@@ -88,12 +88,12 @@ export const DeliveryMap: React.FC<Props> = ({ stores, className }) => {
     stores[0] ?? null,
   );
 
-  // Default center — Dushanbe
+
   const defaultCenter: [number, number] = [38.5598, 68.7738];
 
   return (
     <div className={cn("flex flex-col lg:flex-row gap-6", className)}>
-      {/* Map */}
+      {}
       <div
         className="flex-1 rounded-3xl overflow-hidden shadow-2xl"
         style={{ minHeight: 480 }}
@@ -110,7 +110,7 @@ export const DeliveryMap: React.FC<Props> = ({ stores, className }) => {
           />
           <MapCenter stores={stores} />
 
-          {/* Delivery zones around active store */}
+          {}
           {activeStore?.lat &&
             activeStore?.lng &&
             DELIVERY_ZONES.map((zone, i) => (
@@ -128,7 +128,7 @@ export const DeliveryMap: React.FC<Props> = ({ stores, className }) => {
               />
             ))}
 
-          {/* Store markers */}
+          {}
           {stores
             .filter((s) => s.lat && s.lng)
             .map((store) => (
@@ -152,9 +152,9 @@ export const DeliveryMap: React.FC<Props> = ({ stores, className }) => {
         </MapContainer>
       </div>
 
-      {/* Info panel */}
+      {}
       <div className="lg:w-[320px] flex flex-col gap-4">
-        {/* Zone legend */}
+        {}
         <div className="rounded-3xl glass p-5">
           <h3 className="font-bold text-base mb-4">Зоны доставки</h3>
           <div className="flex flex-col gap-3">
@@ -189,7 +189,7 @@ export const DeliveryMap: React.FC<Props> = ({ stores, className }) => {
           </div>
         </div>
 
-        {/* Stores list */}
+        {}
         <div className="rounded-3xl glass p-5 flex-1">
           <h3 className="font-bold text-base mb-4">Наши рестораны</h3>
           <div className="flex flex-col gap-3">
@@ -234,7 +234,7 @@ export const DeliveryMap: React.FC<Props> = ({ stores, className }) => {
           </div>
         </div>
 
-        {/* Working hours */}
+        {}
         <div className="rounded-3xl glass p-5">
           <h3 className="font-bold text-base mb-3">Время работы</h3>
           <div className="flex flex-col gap-1.5 text-sm">

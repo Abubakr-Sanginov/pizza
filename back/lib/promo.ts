@@ -4,22 +4,15 @@ import { prisma } from '@/back/prisma/prisma-client';
 
 export interface AppliedPromo {
   promo: PromoCode;
-  discount: number;        // absolute TJS off
-  scopedSubtotal: number;  // subtotal of items the promo actually applies to
+  discount: number;
+  scopedSubtotal: number;
 }
 
 export interface PromoCartItem {
   productId: number;
-  lineTotal: number; // total price for this cart line (price * qty + ingredients)
+  lineTotal: number;
 }
 
-/**
- * Validate and compute discount for a promo `code` against the given cart items.
- * If the promo has a non-empty product/category scope, the discount applies ONLY to
- * the matching items' subtotal.
- *
- * `subtotal` is the entire cart subtotal — used for minAmount checks.
- */
 export async function applyPromo(
   rawCode: string,
   subtotal: number,

@@ -67,11 +67,11 @@ export const RegisterForm: React.FC<Props> = ({ onClose, onClickLogin, onStepCha
     try {
       setVerifying(true);
       await verifyUser(verificationCode, email);
-      
+
       toast.success('Почта подтверждена! Входим в аккаунт...', {
         icon: '✅',
       });
-      
+
       await signIn('credentials', {
         email,
         password,

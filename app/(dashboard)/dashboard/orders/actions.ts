@@ -22,19 +22,16 @@ export async function updateOrderStatus(orderId: number, status: OrderStatus) {
       throw new Error('Order not found');
     }
 
-    // Role-based permissions
     if (session.role === 'COURIER') {
-      // Courier can only update orders assigned to them
+
       if (order.courierId !== Number(session.id)) {
         throw new Error('Access denied: You are not assigned to this order');
       }
 
-      // Courier cannot update if food is still cooking
       if (order.status === 'COOKING' && status !== 'COOKING') {
         throw new Error('Wait until the food is ready!');
       }
 
-      // Courier can only change to DELIVERING, SUCCEEDED, or CANCELLED
       const allowedStatuses: OrderStatus[] = ['DELIVERING', 'SUCCEEDED', 'CANCELLED'];
       if (!allowedStatuses.includes(status)) {
         throw new Error('Invalid status for courier');
@@ -58,12 +55,10 @@ export async function updateOrderStatus(orderId: number, status: OrderStatus) {
       );
     }
 
-    // Если заказ стал готов, пробуем назначить курьера автоматически
     if (status === 'READY') {
       await autoAssignCouriers();
     }
 
-    // If order is completed, update global stats
     if (status === 'SUCCEEDED') {
       await prisma.globalStat.upsert({
         where: { id: 1 },
@@ -141,15 +136,14 @@ export async function autoAssignCouriers() {
 
     let assignedCount = 0;
     for (const order of unassignedOrders) {
-      // Находим курьера с минимальным количеством заказов
+
       const bestCourier = couriers.sort((a, b) => a._count.courierOrders - b._count.courierOrders)[0];
-      
+
       await prisma.order.update({
         where: { id: order.id },
         data: { courierId: bestCourier.id },
       });
-      
-      // Увеличиваем счетчик локально для следующей итерации цикла
+
       bestCourier._count.courierOrders++;
       assignedCount++;
     }

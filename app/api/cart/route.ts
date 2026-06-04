@@ -56,7 +56,8 @@ export async function POST(req: NextRequest) {
     const userCart = await findOrCreateCart(token);
     const data = (await req.json()) as CreateCartItemValues;
 
-    // Ищем айтем с таким же productItemId и ТАКИМ ЖЕ набором ингредиентов
+    const customName = data.customName?.trim().slice(0, 40) || null;
+
     const cartItems = await prisma.cartItem.findMany({
       where: {
         cartId: userCart.id,
@@ -70,7 +71,9 @@ export async function POST(req: NextRequest) {
     const findCartItem = cartItems.find(item => {
       const itemIngredientIds = item.ingredients.map(i => i.id).sort();
       const dataIngredientIds = [...(data.ingredients || [])].sort();
-      return JSON.stringify(itemIngredientIds) === JSON.stringify(dataIngredientIds);
+      const sameIngredients = JSON.stringify(itemIngredientIds) === JSON.stringify(dataIngredientIds);
+      const sameName = (item.customName ?? null) === customName;
+      return sameIngredients && sameName;
     });
 
     if (findCartItem) {
@@ -84,6 +87,7 @@ export async function POST(req: NextRequest) {
           cartId: userCart.id,
           productItemId: data.productItemId,
           quantity: 1,
+          customName,
           ingredients: { connect: data.ingredients?.map((id) => ({ id })) },
         },
       });

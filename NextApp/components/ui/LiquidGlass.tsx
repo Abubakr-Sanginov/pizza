@@ -18,10 +18,6 @@ import { motion } from '@/constants/Colors';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
-/**
- * Highlights & shadows that give glass surfaces their "edge of light" look.
- * Top: subtle white reflection. Bottom: subtle dark depth.
- */
 function GlassEdges({ rounded, theme }: { rounded: number; theme: Theme }) {
   const topColor =
     theme.mode === 'dark' ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.55)';

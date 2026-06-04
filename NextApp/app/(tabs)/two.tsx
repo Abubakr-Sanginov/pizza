@@ -20,6 +20,70 @@ import { SpringPress, LiquidGlassCard, AmbientBackdrop } from '@/components/ui';
 import { OrderSuccessModal } from '@/components/shared/OrderSuccessModal';
 import { CartCrossSell } from '@/components/shared/CartCrossSell';
 
+const CUSTOM_SCATTER = [
+  { cx: 0.48, cy: 0.28, rotate: 15, scale: 0.55 },
+  { cx: 0.66, cy: 0.38, rotate: -20, scale: 0.5 },
+  { cx: 0.7, cy: 0.58, rotate: 35, scale: 0.52 },
+  { cx: 0.48, cy: 0.68, rotate: -15, scale: 0.48 },
+  { cx: 0.28, cy: 0.58, rotate: 5, scale: 0.5 },
+  { cx: 0.24, cy: 0.36, rotate: -20, scale: 0.48 },
+  { cx: 0.6, cy: 0.2, rotate: 30, scale: 0.45 },
+  { cx: 0.76, cy: 0.48, rotate: -5, scale: 0.5 },
+  { cx: 0.36, cy: 0.74, rotate: 18, scale: 0.48 },
+  { cx: 0.18, cy: 0.48, rotate: -12, scale: 0.45 },
+  { cx: 0.34, cy: 0.18, rotate: 8, scale: 0.5 },
+  { cx: 0.58, cy: 0.76, rotate: -25, scale: 0.45 },
+];
+
+const CustomPizzaThumb = ({
+  ingredients,
+  size = 80,
+}: {
+  ingredients: Array<{ imageUrl: string }>;
+  size?: number;
+}) => (
+  <DefaultView
+    style={{
+      width: size,
+      height: size,
+      borderRadius: size / 2,
+      overflow: 'hidden',
+      backgroundColor: '#8b4513',
+    }}
+  >
+    <DefaultView
+      style={{
+        position: 'absolute',
+        top: size * 0.08,
+        left: size * 0.08,
+        right: size * 0.08,
+        bottom: size * 0.08,
+        borderRadius: size / 2,
+        backgroundColor: '#f5d070',
+      }}
+    />
+    {ingredients.map((ing, idx) => {
+      const pos = CUSTOM_SCATTER[idx % CUSTOM_SCATTER.length];
+      const imgSize = size * pos.scale;
+      return (
+        <Image
+          key={idx}
+          source={{ uri: ing.imageUrl }}
+          style={{
+            position: 'absolute',
+            left: size * pos.cx - imgSize / 2,
+            top: size * pos.cy - imgSize / 2,
+            width: imgSize,
+            height: imgSize,
+            transform: [{ rotate: `${pos.rotate}deg` }],
+          }}
+          resizeMode="contain"
+        />
+      );
+    })}
+  </DefaultView>
+);
+
 export default function CartScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -283,22 +347,22 @@ export default function CartScreen() {
         #map { height: 100vh; width: 100vw; background: #fdf7f2; }
         .leaflet-control-attribution { display: none; }
         .custom-pizza-marker {
-          background-color: white; 
-          border-radius: 12px; 
-          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.25); 
-          display: flex; 
-          align-items: center; 
-          justify-content: center; 
-          width: 42px; 
+          background-color: white;
+          border-radius: 12px;
+          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.25);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 42px;
           height: 42px;
           border: 2.5px solid #f97316;
           box-sizing: border-box;
         }
         .custom-pizza-marker span { font-size: 22px; line-height: 1; }
         .custom-user-marker {
-          background-color: #3b82f6; 
-          border-radius: 50%; 
-          width: 16px; 
+          background-color: #3b82f6;
+          border-radius: 50%;
+          width: 16px;
           height: 16px;
           border: 3px solid white;
           box-shadow: 0 0 0 3px rgba(59,130,246,0.4), 0 4px 6px -1px rgb(0 0 0 / 0.2);
@@ -388,7 +452,7 @@ export default function CartScreen() {
     <DefaultView style={styles.container}>
       <AmbientBackdrop />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView 
+        <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 10 }]}
           showsVerticalScrollIndicator={false}
@@ -408,9 +472,21 @@ export default function CartScreen() {
               <DefaultView style={styles.itemsList}>
                 {items.map((item) => (
                   <DefaultView key={item.id} style={styles.cartItemCard}>
-                    <Image source={{ uri: item.productItem.product.imageUrl }} style={styles.itemThumb} />
+                    {item.customName ? (
+                      <CustomPizzaThumb
+                        ingredients={item.ingredients ?? []}
+                        size={80}
+                      />
+                    ) : (
+                      <Image source={{ uri: item.productItem.product.imageUrl }} style={styles.itemThumb} />
+                    )}
                     <DefaultView style={styles.itemMeta}>
-                      <DefaultText style={styles.itemName}>{item.productItem.product.name}</DefaultText>
+                      <DefaultText style={styles.itemName}>{item.customName || item.productItem.product.name}</DefaultText>
+                      {item.customName && (
+                        <DefaultText style={styles.itemSpec}>
+                          Своя пицца
+                        </DefaultText>
+                      )}
                       <DefaultText style={styles.itemSpec}>
                         {item.productItem.size && `${item.productItem.size} см, `}
                         {item.productItem.pizzaType === 1 ? t('cart.traditional') : item.productItem.pizzaType === 2 ? t('cart.thin') : ''}
@@ -479,14 +555,14 @@ export default function CartScreen() {
 
               <DefaultView style={styles.section}>
                 <DefaultView style={styles.deliveryToggle}>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     onPress={() => setDeliveryType('DELIVERY')}
                     style={[styles.toggleBtn, deliveryType === 'DELIVERY' && styles.toggleBtnActive]}
                   >
                     <Ionicons name="bicycle-outline" size={20} color={deliveryType === 'DELIVERY' ? 'white' : '#687076'} />
                     <DefaultText style={[styles.toggleText, deliveryType === 'DELIVERY' && styles.toggleTextActive]}>{t('cart.delivery')}</DefaultText>
                   </TouchableOpacity>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     onPress={() => setDeliveryType('PICKUP')}
                     style={[styles.toggleBtn, deliveryType === 'PICKUP' && styles.toggleBtnActive]}
                   >
@@ -501,9 +577,9 @@ export default function CartScreen() {
                       <Ionicons name="map-outline" size={22} color={theme.primary} />
                       <DefaultText style={styles.sectionHeader}>{t('cart.address')}</DefaultText>
                     </DefaultView>
-                    
+
                     <AddressAutocomplete value={address} onChange={setAddress} />
-                    
+
                     <DefaultView style={styles.mapWrapper}>
                       <WebView
                         ref={webViewRef}
@@ -546,8 +622,8 @@ export default function CartScreen() {
                       <DefaultText style={styles.sectionHeader}>{t('cart.selectStore')}</DefaultText>
                     </DefaultView>
                     {stores.map(store => (
-                      <TouchableOpacity 
-                        key={store.id} 
+                      <TouchableOpacity
+                        key={store.id}
                         style={[styles.storeCard, selectedStoreId === store.id && styles.storeCardActive]}
                         onPress={() => setSelectedStoreId(store.id)}
                       >
@@ -583,7 +659,7 @@ export default function CartScreen() {
                               </DefaultView>
                             </DefaultView>
                           )}
-                          
+
                           <DefaultView style={styles.mapWrapper}>
                             <WebView
                               originWhitelist={['*']}
@@ -600,8 +676,8 @@ export default function CartScreen() {
                             />
                           </DefaultView>
 
-                          <TouchableOpacity 
-                            style={[styles.mainButton, { marginTop: 15, height: 48, borderRadius: 14, shadowOpacity: 0 }]} 
+                          <TouchableOpacity
+                            style={[styles.mainButton, { marginTop: 15, height: 48, borderRadius: 14, shadowOpacity: 0 }]}
                             onPress={async () => {
                               setLocating(true);
                               try {
@@ -636,10 +712,10 @@ export default function CartScreen() {
 
                 <DefaultView style={{ marginTop: 20 }}>
                   <DefaultText style={styles.label}>{t('cart.comment')}</DefaultText>
-                  <TextInput 
-                    style={[styles.input, { height: 80, paddingTop: 12 }]} 
-                    value={comment} 
-                    onChangeText={setComment} 
+                  <TextInput
+                    style={[styles.input, { height: 80, paddingTop: 12 }]}
+                    value={comment}
+                    onChangeText={setComment}
                     placeholder={t('cart.commentPlaceholder')}
                     placeholderTextColor={theme.textSubtle}
                     multiline
@@ -652,7 +728,7 @@ export default function CartScreen() {
                   <Ionicons name="receipt-outline" size={22} color={theme.primary} />
                   <DefaultText style={styles.sectionHeader}>{t('cart.orderDetails')}</DefaultText>
                 </DefaultView>
-                
+
                 <DefaultView style={styles.priceRow}>
                   <DefaultText style={styles.priceLabel}>{t('cart.title')}</DefaultText>
                   <DefaultText style={styles.priceVal}>{totalAmount} TJS</DefaultText>

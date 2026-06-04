@@ -40,7 +40,7 @@ export const OrderStatusSelector: React.FC<Props> = ({ orderId, initialStatus })
       toast.success('Статус заказа обновлен');
     } catch (error) {
       toast.error('Не удалось обновить статус');
-      setStatus(status); // revert
+      setStatus(status);
     } finally {
       setLoading(false);
     }

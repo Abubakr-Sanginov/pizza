@@ -11,6 +11,7 @@ import {
   Animated,
   ActivityIndicator,
   Alert,
+  TextInput,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -29,11 +30,30 @@ import { useFocusEffect } from "expo-router";
 
 const { width: SW, height: SH } = Dimensions.get("window");
 
-// Pizza diameter on screen
 const PIZZA_SIZE = Math.min(SW * 0.72, 300);
 const PIZZA_RADIUS = PIZZA_SIZE / 2;
 
-// Topping scatter positions (relative 0-1 within pizza circle)
+const INGREDIENT_CALORIES: Record<string, number> = {
+  пепперони: 120, ветчина: 80, бекон: 110, курица: 70, говядина: 90,
+  колбаса: 100, сосиски: 95, тунец: 60, креветки: 50,
+  моцарелла: 85, сыр: 90, пармезан: 95, чеддер: 88,
+  томат: 20, помидор: 20, перец: 15, лук: 18,
+  грибы: 12, шампиньоны: 12, оливки: 35, маслины: 35,
+  ананас: 25, базилик: 5, орегано: 5, чеснок: 20,
+  соус: 30, майонез: 65, кетчуп: 25, горчица: 15,
+  яйцо: 55, яйца: 55, шпинат: 10, руккола: 8,
+};
+
+const DOUGH_CALORIES: Record<number, number> = { 20: 420, 30: 680, 40: 980 };
+
+const getIngredientCalories = (name: string): number => {
+  const lower = name.toLowerCase();
+  for (const [key, cal] of Object.entries(INGREDIENT_CALORIES)) {
+    if (lower.includes(key)) return cal;
+  }
+  return 40;
+};
+
 const SCATTER: { cx: number; cy: number; rotate: number; scale: number }[] = [
   { cx: 0.48, cy: 0.28, rotate: 15, scale: 0.55 },
   { cx: 0.66, cy: 0.38, rotate: -20, scale: 0.5 },
@@ -63,7 +83,6 @@ interface Pizza {
   ingredients: Ingredient[];
 }
 
-// CSS dough base rendered as SVG-like gradients via View layers
 const DoughBase = ({ size }: { size: number }) => (
   <View
     style={{
@@ -73,14 +92,14 @@ const DoughBase = ({ size }: { size: number }) => (
       overflow: "hidden",
     }}
   >
-    {/* Crust ring */}
+    {}
     <View
       style={[
         StyleSheet.absoluteFill,
         { borderRadius: size / 2, backgroundColor: "#8b4513" },
       ]}
     />
-    {/* Inner dough */}
+    {}
     <View
       style={{
         position: "absolute",
@@ -92,7 +111,7 @@ const DoughBase = ({ size }: { size: number }) => (
         backgroundColor: "#f5d070",
       }}
     />
-    {/* Highlight */}
+    {}
     <View
       style={{
         position: "absolute",
@@ -107,7 +126,28 @@ const DoughBase = ({ size }: { size: number }) => (
   </View>
 );
 
-// Draggable ingredient card
+const dragStyles = StyleSheet.create({
+  ingCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    padding: 12,
+    borderRadius: 18,
+    borderWidth: 1.5,
+  },
+  ingImg: { width: 48, height: 48, borderRadius: 8 },
+  ingName: { fontSize: 14, fontWeight: "700" },
+  ingPrice: { fontSize: 12, marginTop: 2 },
+  ingCheck: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});
+
+
 interface DragCardProps {
   ingredient: Ingredient;
   isAdded: boolean;
@@ -238,7 +278,7 @@ const DragCard: React.FC<DragCardProps> = ({
     >
       <View
         style={[
-          styles.ingCard,
+          dragStyles.ingCard,
           {
             backgroundColor: isAdded ? theme.primarySoft : theme.surface,
             borderColor: isAdded ? theme.primary : theme.border,
@@ -251,20 +291,20 @@ const DragCard: React.FC<DragCardProps> = ({
           color={theme.textSubtle}
           style={{ marginRight: 4 }}
         />
-        <Image source={{ uri: ingredient.imageUrl }} style={styles.ingImg} />
+        <Image source={{ uri: ingredient.imageUrl }} style={dragStyles.ingImg} />
         <View style={{ flex: 1 }}>
           <Text
-            style={[styles.ingName, { color: theme.text }]}
+            style={[dragStyles.ingName, { color: theme.text }]}
             numberOfLines={1}
           >
             {ingredient.name}
           </Text>
-          <Text style={[styles.ingPrice, { color: theme.textMuted }]}>
+          <Text style={[dragStyles.ingPrice, { color: theme.textMuted }]}>
             +{ingredient.price} TJS
           </Text>
         </View>
         {isAdded && (
-          <View style={[styles.ingCheck, { backgroundColor: theme.primary }]}>
+          <View style={[dragStyles.ingCheck, { backgroundColor: theme.primary }]}>
             <Ionicons name="checkmark" size={12} color="#fff" />
           </View>
         )}
@@ -273,18 +313,20 @@ const DragCard: React.FC<DragCardProps> = ({
   );
 };
 
-// Main screen
+
 export default function BuilderScreen() {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const grad = theme.mode === "dark" ? gradients.dark : gradients.light;
 
   const [pizzas, setPizzas] = useState<Pizza[]>([]);
+  const [customBase, setCustomBase] = useState<any | null>(null);
   const [allIngredients, setAllIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedBase, setSelectedBase] = useState(0); // 0 = blank dough
+  const [selectedBase, setSelectedBase] = useState(0);
   const [dropped, setDropped] = useState<number[]>([]);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [pizzaName, setPizzaName] = useState("");
   const pizzaViewRef = useRef<View>(null);
   const [pizzaLayout, setPizzaLayout] = useState<{
     x: number;
@@ -305,13 +347,24 @@ export default function BuilderScreen() {
         fetch(`${BASE_URL}/api/ingredients`)
           .then((r) => r.json())
           .catch(() => []),
-      ]).then(([prods, ings]) => {
+        fetch(`${BASE_URL}/api/products/custom`)
+          .then((r) => r.json())
+          .catch(() => null),
+      ]).then(([prods, ings, custom]) => {
         if (!active) return;
-        // filter only pizza category
+        setCustomBase(custom && custom.id ? custom : null);
+        // filter only pizza category (id === 1) and ensure products have pizza-sized items
         const pizzaProds = Array.isArray(prods)
           ? prods
-              .flatMap((cat: any) => cat.products ?? [cat])
-              .filter((p: any) => p.items?.length)
+              .filter((cat: any) => cat.id === 1)
+              .flatMap((cat: any) => cat.products ?? [])
+              .filter(
+                (p: any) =>
+                  Array.isArray(p.items) &&
+                  p.items.some((it: any) =>
+                    [20, 30, 40].includes(it.size),
+                  ),
+              )
           : [];
         setPizzas(pizzaProds);
         setAllIngredients(Array.isArray(ings) ? ings : []);
@@ -323,19 +376,19 @@ export default function BuilderScreen() {
     }, []),
   );
 
-  // All bases: blank dough + real pizzas
+  // All bases: blank dough (real custom-pizza product) + real pizzas
   const bases = useMemo(
     () => [
       {
-        id: -1,
+        id: customBase?.id ?? -1,
         name: "Пустое тесто",
         imageUrl: "",
         isBlank: true,
-        items: pizzas[0]?.items ?? [],
+        items: customBase?.items ?? pizzas[0]?.items ?? [],
       },
       ...pizzas.map((p) => ({ ...p, isBlank: false })),
     ],
-    [pizzas],
+    [pizzas, customBase],
   );
 
   const currentBase = bases[selectedBase] ?? bases[0];
@@ -349,6 +402,19 @@ export default function BuilderScreen() {
     return sum + (ing?.price ?? 0);
   }, 0);
   const totalPrice = basePrice + extraPrice;
+
+  // Calorie calculation — uses current selected size (default 30 if unknown)
+  const currentSize = cheapestItem?.size ?? 30;
+  const totalCalories = useMemo(() => {
+    const baseDough = DOUGH_CALORIES[currentSize] ?? 680;
+    const extra = dropped.reduce((sum, id) => {
+      const ing = allIngredients.find((i) => i.id === id);
+      return sum + (ing ? getIngredientCalories(ing.name) : 40);
+    }, 0);
+    return baseDough + extra;
+  }, [currentSize, dropped, allIngredients]);
+  const slices = 8;
+  const caloriesPerSlice = Math.round(totalCalories / slices);
 
   const measurePizza = () => {
     pizzaViewRef.current?.measureInWindow((x, y, w, h) => {
@@ -369,9 +435,19 @@ export default function BuilderScreen() {
     }
     setAddingToCart(true);
     try {
-      await addItem(cheapestItem.id, dropped);
-      Alert.alert("Добавлено", "Пицца добавлена в корзину!");
+      const trimmedName = pizzaName.trim();
+      const isCustom = currentBase.isBlank || dropped.length > 0;
+      const finalName =
+        trimmedName || (isCustom ? "Своя пицца" : undefined);
+      await addItem(cheapestItem.id, dropped, finalName);
+      Alert.alert(
+        "Добавлено",
+        finalName
+          ? `«${finalName}» добавлена в корзину!`
+          : "Пицца добавлена в корзину!",
+      );
       setDropped([]);
+      setPizzaName("");
     } catch {
       Alert.alert("Ошибка", "Не удалось добавить в корзину");
     } finally {
@@ -419,6 +495,31 @@ export default function BuilderScreen() {
           </Text>
         </View>
 
+        {/* Pizza name input */}
+        <View style={styles.section}>
+          <View
+            style={[
+              styles.nameInputWrap,
+              { backgroundColor: theme.surface, borderColor: theme.border },
+            ]}
+          >
+            <Ionicons name="pencil" size={16} color={theme.textSubtle} />
+            <TextInput
+              value={pizzaName}
+              onChangeText={(v) => setPizzaName(v.slice(0, 40))}
+              placeholder="Назови свою пиццу…"
+              placeholderTextColor={theme.textSubtle}
+              maxLength={40}
+              style={[styles.nameInput, { color: theme.text }]}
+            />
+            {pizzaName.length > 0 && (
+              <Text style={[styles.nameCounter, { color: theme.textSubtle }]}>
+                {pizzaName.length}/40
+              </Text>
+            )}
+          </View>
+        </View>
+
         {/* Pizza canvas */}
         <View style={styles.canvasWrap}>
           <View
@@ -464,8 +565,10 @@ export default function BuilderScreen() {
               const imgSize = PIZZA_SIZE * pos.scale;
               return (
                 <TouchableOpacity
-                  key={id}
-                  onPress={() => setDropped((p) => p.filter((i) => i !== id))}
+                  key={`${id}-${idx}`}
+                  onPress={() =>
+                    setDropped((p) => p.filter((_, i) => i !== idx))
+                  }
                   style={{
                     position: "absolute",
                     left: PIZZA_SIZE * pos.cx - imgSize / 2,
@@ -571,6 +674,39 @@ export default function BuilderScreen() {
           </View>
         </View>
 
+        {/* Calorie counter */}
+        <View style={styles.section}>
+          <View
+            style={[
+              styles.calorieBox,
+              { backgroundColor: theme.surface, borderColor: theme.border },
+            ]}
+          >
+            <View style={styles.calorieLeft}>
+              <LinearGradient
+                colors={["#ff8a3d", "#ff5400"] as any}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.calorieIcon}
+              >
+                <Ionicons name="flame" size={20} color="#fff" />
+              </LinearGradient>
+              <View>
+                <Text style={[styles.calorieLabel, { color: theme.textSubtle }]}>
+                  КАЛОРИЙНОСТЬ
+                </Text>
+                <Text style={[styles.calorieHint, { color: theme.textMuted }]}>
+                  ~{caloriesPerSlice} ккал/кусок · {slices} кусков
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.calorieTotal}>
+              {totalCalories}
+              <Text style={styles.calorieUnit}> ккал</Text>
+            </Text>
+          </View>
+        </View>
+
         {/* Price + CTA */}
         <View style={[styles.footer, { backgroundColor: theme.surface }]}>
           <View>
@@ -583,10 +719,14 @@ export default function BuilderScreen() {
               {totalPrice} TJS
             </Text>
           </View>
+          {(() => {
+            const blankPending = currentBase.isBlank && !customBase;
+            const disabled = addingToCart || !cheapestItem || blankPending;
+            return (
           <TouchableOpacity
             onPress={handleAddToCart}
-            disabled={addingToCart || !cheapestItem}
-            style={{ opacity: addingToCart || !cheapestItem ? 0.6 : 1 }}
+            disabled={disabled}
+            style={{ opacity: disabled ? 0.6 : 1 }}
           >
             <LinearGradient
               colors={grad.primary}
@@ -604,6 +744,8 @@ export default function BuilderScreen() {
               )}
             </LinearGradient>
           </TouchableOpacity>
+            );
+          })()}
         </View>
       </ScrollView>
     </View>
@@ -701,4 +843,55 @@ const makeStyles = (t: Theme) =>
       elevation: 6,
     },
     cartBtnText: { color: "#fff", fontSize: 15, fontWeight: "900" },
+    nameInputWrap: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      borderRadius: 18,
+      borderWidth: 1.5,
+    },
+    nameInput: {
+      flex: 1,
+      fontSize: 14,
+      fontWeight: "600",
+      padding: 0,
+    },
+    nameCounter: { fontSize: 10, fontWeight: "700" },
+    calorieBox: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderRadius: 22,
+      borderWidth: 1.5,
+    },
+    calorieLeft: { flexDirection: "row", alignItems: "center", gap: 12, flex: 1 },
+    calorieIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: "#ff5400",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.35,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    calorieLabel: {
+      fontSize: 10,
+      fontWeight: "800",
+      letterSpacing: 0.6,
+    },
+    calorieHint: { fontSize: 12, fontWeight: "500", marginTop: 2 },
+    calorieTotal: {
+      fontSize: 22,
+      fontWeight: "900",
+      color: "#ff5400",
+      letterSpacing: -0.4,
+    },
+    calorieUnit: { fontSize: 11, fontWeight: "700", opacity: 0.7 },
   });

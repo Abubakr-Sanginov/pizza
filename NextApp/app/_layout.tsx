@@ -17,7 +17,7 @@ import { palettes } from '@/constants/Colors';
 Notifications.setNotificationHandler({
   handleNotification: async (notification) => {
     const data = (notification?.request?.content?.data ?? {}) as any;
-    // Allow caller to suppress banner via data.silent === true (e.g. data-only updates)
+
     const silent = data?.silent === true;
     return {
       shouldShowBanner: !silent,
@@ -56,16 +56,15 @@ const NavDarkTheme: NavTheme = {
 };
 
 export {
-  // Catch any errors thrown by the Layout component.
+
   ErrorBoundary,
 } from 'expo-router';
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
+
   initialRouteName: '(tabs)',
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -74,7 +73,6 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
   }, [error]);
@@ -109,6 +107,8 @@ function RootLayoutNav() {
           }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="favorites" options={{ headerShown: false }} />
+          <Stack.Screen name="delivery" options={{ headerShown: false }} />
         </Stack>
       </ThemeProvider>
     </SafeAreaProvider>

@@ -1,6 +1,7 @@
 import { prisma } from '@/back/prisma/prisma-client';
 import { Title, Container, DeleteButton, EmptyState, LiveOrderStatus, LocalTime } from '@/shared/components/shared';
 import { RepeatOrderButton } from '@/shared/components/shared/repeat-order-button';
+import { OrderTipButton } from '@/shared/components/shared/order-tip-button';
 import { getUserSession } from '@/back/lib/get-user-session';
 import { redirect } from 'next/navigation';
 import { OrderStatus } from '@prisma/client';
@@ -19,6 +20,9 @@ export default async function UserOrdersPage() {
   const orders = await prisma.order.findMany({
     where: {
       userId: Number(session.id),
+    },
+    include: {
+      tip: true,
     },
     orderBy: {
       createdAt: 'desc',
@@ -93,6 +97,16 @@ export default async function UserOrdersPage() {
                     initialDeliveryType={order.deliveryType}
                   />
                 </div>
+
+                {isCompleted && (
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <OrderTipButton
+                      orderId={order.id}
+                      orderAmount={order.totalAmount}
+                      existingTip={order.tip}
+                    />
+                  </div>
+                )}
 
                 {willAutoDelete && (
                   <div className="mt-3 text-xs text-muted-foreground">

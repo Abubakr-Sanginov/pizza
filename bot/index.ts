@@ -19,7 +19,6 @@ interface MyContext extends Context {
 
 const bot = new Telegraf<MyContext>(token);
 
-// Middleware для авторизации и прав доступа
 bot.use(async (ctx, next) => {
   if (!ctx.chat || !ctx.from) return;
 
@@ -32,7 +31,6 @@ bot.use(async (ctx, next) => {
       include: { store: true },
     });
 
-    // Бутстрап главного админа из .env
     if (mainAdminId && chatId === mainAdminId.toString()) {
       if (!user) {
         user = await prisma.botUser.create({
@@ -53,7 +51,7 @@ bot.use(async (ctx, next) => {
     }
 
     if (!user) {
-      // Отвечаем только на /start, чтобы человек мог узнать свой ник для админа
+
       if (ctx.message && 'text' in ctx.message && ctx.message.text === '/start') {
         return ctx.reply(`🚫 Доступ ограничен.\n\nЧтобы получить права администратора, передайте свой Username главному админу.\n\nВаш Username: @${username || 'не установлен'}\nВаш ID: ${chatId}`);
       }
@@ -84,7 +82,7 @@ bot.command('addadmin', async (ctx) => {
   const targetUsername = text[1].replace('@', '');
 
   try {
-    // Находим пользователя по username (он должен был хотя бы раз написать боту /start)
+
     const targetUser = await prisma.botUser.findUnique({
       where: { username: targetUsername },
     });
@@ -93,7 +91,7 @@ bot.command('addadmin', async (ctx) => {
 
     await prisma.botUser.update({
       where: { id: targetUser.id },
-      data: { isSuperAdmin: false }, // Просто подтверждаем статус админа (не супер)
+      data: { isSuperAdmin: false },
     });
 
     ctx.reply(`Пользователь @${targetUsername} теперь имеет доступ к боту.`);
@@ -271,7 +269,7 @@ bot.on('callback_query', async (ctx) => {
          if (!order.courierId && status === 'DELIVERING') {
             // Курьер берет заказ
             // Нужно найти веб-юзера
-            const webUser = await prisma.user.findFirst({ where: { fullName: user.username || '' } }); 
+            const webUser = await prisma.user.findFirst({ where: { fullName: user.username || '' } });
             if (webUser) {
                await prisma.order.update({ where: { id: orderId }, data: { courierId: webUser.id, status: 'DELIVERING' } });
                return ctx.answerCbQuery('Вы взяли заказ!');
@@ -336,7 +334,7 @@ export async function notifyNewOrder(orderId: number) {
     if (!order) return;
 
     const admins = await prisma.botUser.findMany({ where: { OR: [{ isSuperAdmin: true }, { storeId: order.storeId }] } });
-    
+
     const text = `🔔 *Новый заказ #${order.id}*\n💰 Сумма: ${order.totalAmount} TJS\n🏢 Заведение: ${order.store?.name || 'Самовывоз'}\n📍 Адрес: ${order.address || 'В заведении'}\n📞 Тел: ${order.phone}`;
 
     for (const admin of admins) {
@@ -360,13 +358,13 @@ export async function notifyCouriers(orderId: number) {
       const order = await prisma.order.findUnique({ where: { id: orderId } });
       if (!order) return;
 
-      const couriers = await prisma.user.findMany({ 
-         where: { 
+      const couriers = await prisma.user.findMany({
+         where: {
             role: 'COURIER',
             telegramUsername: { not: null }
-         } 
+         }
       });
-      
+
       if (couriers.length === 0) return;
 
       const text = `🚴‍♂️ *Заказ #${order.id} готов к доставке!*\n📍 Адрес: ${order.address}\n💰 Оплата: ${order.totalAmount} TJS\n📞 Клиент: ${order.fullName} (${order.phone})`;
@@ -374,7 +372,7 @@ export async function notifyCouriers(orderId: number) {
       // Ищем всех курьеров в боте по их юзернеймам
       const telegramUsernames = couriers.map(c => c.telegramUsername?.replace('@', ''));
       const botCouriers = await prisma.botUser.findMany({
-         where: { 
+         where: {
             username: { in: telegramUsernames as string[] },
             isCourier: true
          }
@@ -418,18 +416,18 @@ setInterval(async () => {
   });
 
   if (unassignedOrders.length > 0) {
-     const couriers = await prisma.user.findMany({ 
-        where: { 
+     const couriers = await prisma.user.findMany({
+        where: {
            role: 'COURIER',
-           telegramUsername: { not: null } 
-        } 
+           telegramUsername: { not: null }
+        }
      });
 
      if (couriers.length > 0) {
         for (const order of unassignedOrders) {
            const courier = couriers[Math.floor(Math.random() * couriers.length)];
            await prisma.order.update({ where: { id: order.id }, data: { courierId: courier.id } });
-           
+
            // Уведомляем курьера в телеграм
            const tgUsername = courier.telegramUsername?.replace('@', '');
            const botCourier = await prisma.botUser.findFirst({ where: { username: tgUsername } });

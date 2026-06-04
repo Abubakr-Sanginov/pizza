@@ -4,15 +4,32 @@ import { z } from "zod";
 import { prisma } from "@/back/prisma/prisma-client";
 import { getUserSession } from "@/back/lib/get-user-session";
 
-export async function GET() {
+async function resolveUserId(req: NextRequest): Promise<number | null> {
+  const session = await getUserSession();
+  if (session) return Number(session.id);
+
+  const queryUserId = req.nextUrl.searchParams.get("userId");
+  const token =
+    req.cookies.get("cartToken")?.value || req.headers.get("x-cart-token");
+  if (queryUserId && token) {
+    const cart = await prisma.cart.findFirst({
+      where: { token, userId: Number(queryUserId) },
+      select: { userId: true },
+    });
+    if (cart?.userId) return cart.userId;
+  }
+  return null;
+}
+
+export async function GET(req: NextRequest) {
   try {
-    const session = await getUserSession();
-    if (!session) {
+    const userId = await resolveUserId(req);
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const favorites = await prisma.favorite.findMany({
-      where: { userId: Number(session.id) },
+      where: { userId },
       include: {
         product: {
           include: {
@@ -36,8 +53,8 @@ const ToggleBody = z.object({ productId: z.coerce.number().int().positive() });
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getUserSession();
-    if (!session) {
+    const userId = await resolveUserId(req);
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -49,7 +66,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const userId = Number(session.id);
     const { productId } = parsed.data;
 
     const existing = await prisma.favorite.findUnique({

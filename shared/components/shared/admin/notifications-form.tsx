@@ -46,7 +46,7 @@ export const NotificationsForm: React.FC = () => {
       const webError = results?.web?.error || 0;
       const expoSuccess = results?.expo?.success || 0;
       const expoError = results?.expo?.error || 0;
-      
+
       const totalSuccess = webSuccess + expoSuccess;
       const totalError = webError + expoError;
 
@@ -64,7 +64,7 @@ export const NotificationsForm: React.FC = () => {
       setTitle('');
       setBody('');
       setImageUrl('');
-      
+
       if (data.notification) {
         setHistory(prev => [data.notification, ...prev]);
       }
@@ -107,32 +107,32 @@ export const NotificationsForm: React.FC = () => {
         <form onSubmit={onSubmit} className="flex flex-col gap-5">
           <div>
             <label className="text-sm font-medium mb-1 block">Заголовок</label>
-            <Input 
-              value={title} 
-              onChange={(e) => setTitle(e.target.value)} 
-              placeholder="Например: Скидка 20% на все пиццы!" 
-              required 
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Например: Скидка 20% на все пиццы!"
+              required
             />
           </div>
 
           <div>
             <label className="text-sm font-medium mb-1 block">Текст сообщения</label>
-            <Textarea 
-              value={body} 
-              onChange={(e) => setBody(e.target.value)} 
-              placeholder="Текст уведомления..." 
-              rows={4} 
-              required 
+            <Textarea
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              placeholder="Текст уведомления..."
+              rows={4}
+              required
             />
           </div>
 
           <div>
             <label className="text-sm font-medium mb-1 block">Изображение (необязательно)</label>
             <div className="flex gap-2 mb-2">
-              <Input 
-                value={imageUrl} 
-                onChange={(e) => setImageUrl(e.target.value)} 
-                placeholder="https://example.com/image.jpg" 
+              <Input
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="https://example.com/image.jpg"
                 className="flex-1"
               />
               <Input
@@ -185,7 +185,7 @@ export const NotificationsForm: React.FC = () => {
 
       <div className="max-w-[800px] mx-auto w-full p-10 bg-card text-card-foreground rounded-3xl shadow-sm border border-border mb-20">
         <Title text="История уведомлений" size="md" className="font-bold mb-5" />
-        
+
         <div className="flex flex-col gap-4">
           {history.length === 0 ? (
             <p className="text-muted-foreground text-center py-10">История пуста</p>

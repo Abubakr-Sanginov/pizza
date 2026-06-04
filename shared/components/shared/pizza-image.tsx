@@ -18,10 +18,10 @@ export const PizzaImage: React.FC<Props> = ({ imageUrl, size, className }) => {
           key={size}
           initial={{ scale: 0.8, opacity: 0, rotate: -15 }}
           animate={{ scale: 1, opacity: 1, rotate: 0 }}
-          transition={{ 
-            type: 'spring', 
-            stiffness: 260, 
-            damping: 20 
+          transition={{
+            type: 'spring',
+            stiffness: 260,
+            damping: 20
           }}
           src={imageUrl}
           alt="Pizza"
@@ -33,14 +33,14 @@ export const PizzaImage: React.FC<Props> = ({ imageUrl, size, className }) => {
           style={{ gridArea: '1/1' }}
         />
 
-        <motion.div 
+        <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1, duration: 0.5 }}
           className="absolute border-dashed border-2 rounded-full border-border w-[260px] h-[260px] md:w-[450px] md:h-[450px] z-0"
           style={{ gridArea: '1/1' }}
         />
-        <motion.div 
+        <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}

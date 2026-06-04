@@ -16,7 +16,6 @@ export default function AdminLoginPage() {
     return <div className="flex items-center justify-center h-screen">Загрузка...</div>;
   }
 
-  // Если уже залогинен и админ - кидаем в дашборд
   if (session?.user.role === 'ADMIN') {
     return redirect('/dashboard');
   }

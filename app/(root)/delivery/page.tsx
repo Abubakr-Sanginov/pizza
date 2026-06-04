@@ -75,7 +75,7 @@ export default async function DeliveryPage() {
 
   return (
     <Container className="mt-10 pb-20">
-      {/* Header */}
+      {}
       <div className="mb-8">
         <Title
           text="Доставка и рестораны"
@@ -88,7 +88,7 @@ export default async function DeliveryPage() {
         </p>
       </div>
 
-      {/* Stats */}
+      {}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {STATS.map(({ label, value, Icon }) => (
           <div
@@ -106,10 +106,10 @@ export default async function DeliveryPage() {
         ))}
       </div>
 
-      {/* Map */}
+      {}
       <DeliveryMap stores={stores} />
 
-      {/* FAQ */}
+      {}
       <div className="mt-10">
         <div className="flex items-center gap-2 mb-5">
           <HelpCircle size={20} className="text-primary" />

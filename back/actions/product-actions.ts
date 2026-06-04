@@ -54,7 +54,7 @@ export async function createProduct(data: ProductInput) {
 
 export async function updateProduct(id: number, data: ProductInput) {
   try {
-    // First delete CartItems referencing the old ProductItems
+
     const oldItems = await prisma.productItem.findMany({ where: { productId: id }, select: { id: true } });
     if (oldItems.length > 0) {
       await prisma.cartItem.deleteMany({
@@ -62,7 +62,6 @@ export async function updateProduct(id: number, data: ProductInput) {
       });
     }
 
-    // Now safe to delete old items and recreate them
     await prisma.productItem.deleteMany({
       where: { productId: id },
     });
@@ -100,7 +99,7 @@ export async function updateProduct(id: number, data: ProductInput) {
 
 export async function deleteProduct(id: number) {
   try {
-    // Delete CartItems referencing these ProductItems first
+
     const items = await prisma.productItem.findMany({ where: { productId: id }, select: { id: true } });
     if (items.length > 0) {
       await prisma.cartItem.deleteMany({
@@ -108,7 +107,6 @@ export async function deleteProduct(id: number) {
       });
     }
 
-    // Now safe to delete related items
     await prisma.productItem.deleteMany({
       where: { productId: id },
     });

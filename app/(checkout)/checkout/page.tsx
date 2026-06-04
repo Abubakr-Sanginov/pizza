@@ -52,6 +52,7 @@ export default function CheckoutPage() {
       address: '',
       deliveryType: 'DELIVERY',
       comment: '',
+      paymentMethod: 'CASH_ON_DELIVERY',
     },
   });
 
@@ -118,7 +119,7 @@ export default function CheckoutPage() {
       <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className="flex flex-col lg:flex-row gap-10">
-            {/* Левая часть */}
+            {}
             <div className="flex flex-col gap-10 flex-1 mb-20">
               <CheckoutCart
                 onClickCountButton={onClickCountButton}
@@ -132,7 +133,7 @@ export default function CheckoutPage() {
               <CheckoutAddressForm stores={stores} className={loading ? 'opacity-40 pointer-events-none' : ''} />
             </div>
 
-            {/* Правая часть */}
+            {}
             <div className="w-full lg:w-[450px]">
               <CheckoutSidebar
                 totalAmount={totalAmount}

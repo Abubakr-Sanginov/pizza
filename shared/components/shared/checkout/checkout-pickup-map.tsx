@@ -6,28 +6,27 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Navigation, LocateFixed, Clock, Footprints } from 'lucide-react';
 
-// Custom pizza marker for the store
 const storeIcon = L.divIcon({
   html: `
     <div style="
-      background-color: white; 
-      border-radius: 12px; 
-      padding: 6px; 
-      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.25); 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      width: 42px; 
+      background-color: white;
+      border-radius: 12px;
+      padding: 6px;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
       height: 42px;
       border: 2.5px solid #f97316;
     ">
       <span style="font-size: 22px; line-height: 1;">🍕</span>
     </div>
     <div style="
-      width: 0; height: 0; 
-      border-left: 8px solid transparent; 
-      border-right: 8px solid transparent; 
-      border-top: 10px solid #f97316; 
+      width: 0; height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-top: 10px solid #f97316;
       margin: 0 auto; margin-top: -2px;
     "></div>
   `,
@@ -36,13 +35,12 @@ const storeIcon = L.divIcon({
   iconAnchor: [21, 52],
 });
 
-// Custom user location marker
 const userIcon = L.divIcon({
   html: `
     <div style="
-      background-color: #3b82f6; 
-      border-radius: 50%; 
-      width: 16px; 
+      background-color: #3b82f6;
+      border-radius: 50%;
+      width: 16px;
       height: 16px;
       border: 3px solid white;
       box-shadow: 0 0 0 3px rgba(59,130,246,0.4), 0 4px 6px -1px rgb(0 0 0 / 0.2);
@@ -54,8 +52,8 @@ const userIcon = L.divIcon({
 });
 
 interface RouteInfo {
-  distance: number; // meters
-  duration: number; // seconds
+  distance: number;
+  duration: number;
 }
 
 function RoutingLayer({
@@ -73,13 +71,11 @@ function RoutingLayer({
   useEffect(() => {
     if (!userPos) return;
 
-    // Remove previous route
     if (routeLayerRef.current) {
       map.removeLayer(routeLayerRef.current);
       routeLayerRef.current = null;
     }
 
-    // Fetch route from OSRM (free, no API key needed)
     const url = `https://router.project-osrm.org/route/v1/walking/${userPos[1]},${userPos[0]};${storePos[1]},${storePos[0]}?overview=full&geometries=geojson`;
 
     fetch(url)

@@ -95,7 +95,7 @@ export default function CourierPage() {
 
               <div className="flex flex-col gap-2">
                 {order.status === 'READY' ? (
-                  <Button 
+                  <Button
                     className="w-full h-12 text-base font-bold rounded-xl"
                     onClick={() => updateStatus(order.id, OrderStatus.DELIVERING)}
                   >
@@ -103,7 +103,7 @@ export default function CourierPage() {
                     {t('courier.takeOrder')}
                   </Button>
                 ) : (
-                  <Button 
+                  <Button
                     variant="secondary"
                     className="w-full h-12 text-base font-bold rounded-xl bg-green-500 text-white hover:bg-green-600"
                     onClick={() => updateStatus(order.id, OrderStatus.SUCCEEDED)}

@@ -28,12 +28,11 @@ export const NotificationsManager: React.FC = () => {
     try {
       const VAPID_PUB = 'BHjNmaZUTX9bX3hatdV8Q7mK3ezc0B2Xp33EGQNux_AES54o4HBllLsPErzSQ2ZLIJ6kW-_GyUACfJjtl_Oxe3w';
       const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || VAPID_PUB;
-      
+
       if (!publicKey) return;
 
       const existingSubscription = await registration.pushManager.getSubscription();
-      
-      // Если подписка уже есть, мы её удаляем и создаем заново с новым ключом
+
       if (existingSubscription) {
         await existingSubscription.unsubscribe();
         console.log('Old subscription removed');

@@ -11,10 +11,6 @@ function getToken(req: NextRequest): string | null {
   return req.cookies.get('cartToken')?.value || req.headers.get('x-cart-token') || null;
 }
 
-/**
- * Verify the cartItem belongs to the cart bound to this token.
- * Without this anyone with a token could PATCH/DELETE arbitrary items by id.
- */
 async function loadOwnedItem(itemId: number, token: string) {
   return prisma.cartItem.findFirst({
     where: { id: itemId, cart: { token } },

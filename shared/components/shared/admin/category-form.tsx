@@ -20,7 +20,7 @@ const categorySchema = z.object({
 type CategoryFormValues = z.infer<typeof categorySchema>;
 
 interface Props {
-  initialData?: any; // Use any to avoid prisma type mismatch before regen
+  initialData?: any;
 }
 
 export const CategoryForm: React.FC<Props> = ({ initialData }) => {

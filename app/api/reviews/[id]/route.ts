@@ -23,7 +23,6 @@ export async function DELETE(
       return NextResponse.json({ message: 'Отзыв не найден' }, { status: 404 });
     }
 
-    // Проверяем, что отзыв принадлежит пользователю или пользователь - админ
     if (review.userId !== Number(session.id) && session.role !== 'ADMIN') {
       return NextResponse.json({ message: 'Нет прав на удаление' }, { status: 403 });
     }

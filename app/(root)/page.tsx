@@ -29,7 +29,7 @@ export default async function Home({
 
   return (
     <>
-      {/* Premium hero */}
+      {}
       <Container className="mt-10 md:mt-16">
         <div className="flex flex-col items-start gap-4 max-w-3xl">
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-[11px] font-bold tracking-widest uppercase text-primary">
@@ -75,7 +75,7 @@ export default async function Home({
 
       <Container className="mt-10 pb-14">
         <div className="flex flex-col lg:flex-row gap-10 lg:gap-[80px]">
-          {/* Фильтрация */}
+          {}
           <div className="w-full lg:w-[250px] hidden lg:block">
             <Suspense>
               <Filters />
@@ -85,7 +85,7 @@ export default async function Home({
             </div>
           </div>
 
-          {/* Список товаров */}
+          {}
           <div className="flex-1">
             <div className="flex flex-col gap-10 md:gap-16">
               {categories.map(

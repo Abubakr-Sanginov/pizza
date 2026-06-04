@@ -35,7 +35,7 @@ export const Filters: React.FC<Props> = ({ className }) => {
     <div className={className}>
       <Title text={mounted ? t('filters.title') : ''} size="sm" className="mb-5 font-bold" />
 
-      {/* Верхние чекбоксы */}
+      {}
       <CheckboxFiltersGroup
         title={mounted ? t('filters.pizzaTypes') : ''}
         name="pizzaTypes"

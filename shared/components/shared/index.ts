@@ -21,6 +21,7 @@ export { CheckoutItemDetails } from "./checkout-item-details";
 export { CheckoutItem } from "./checkout-item";
 export { CheckoutItemSkeleton } from "./checkout-item-skeleton";
 export { CheckoutSidebar } from "./checkout-sidebar";
+export { PaymentMethodSelector } from "./payment-method-selector";
 export { ErrorText } from "./error-text";
 export { RequiredSymbol } from "./required-symbol";
 export { ClearButton } from "./clear-button";
@@ -48,5 +49,6 @@ export { CartCrossSell } from "./cart-cross-sell";
 export { RecentlyViewed } from "./recently-viewed";
 export { PizzaOfTheDayServer } from "./pizza-of-the-day-server";
 export { PizzaConstructor } from "./pizza-constructor";
-// DeliveryMap intentionally NOT exported here — Leaflet uses window/document.
-// Use next/dynamic in the page directly.
+export { CourierTipDialog } from "./courier-tip-dialog";
+export { OrderTipButton } from "./order-tip-button";
+

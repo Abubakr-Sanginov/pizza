@@ -8,7 +8,7 @@ interface Props {
   orderId: number;
   initialStatus: OrderStatus;
   initialDeliveryType?: DeliveryType;
-  /** Polling interval in ms. Default 6000. */
+
   intervalMs?: number;
   className?: string;
 }

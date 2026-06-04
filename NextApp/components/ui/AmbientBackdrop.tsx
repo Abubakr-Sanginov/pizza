@@ -4,10 +4,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { useTheme } from '@/hooks/useTheme';
 
-/**
- * Soft ambient gradient that gives Liquid Glass surfaces something
- * interesting to "refract". Two diagonal radial-ish glows + base background.
- */
 export const AmbientBackdrop: React.FC = () => {
   const theme = useTheme();
   const isDark = theme.mode === 'dark';

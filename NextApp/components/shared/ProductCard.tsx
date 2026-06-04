@@ -19,10 +19,10 @@ export const ProductCard: React.FC<Props> = ({ name, price, imageUrl, onPress })
       <View style={styles.imageContainer}>
         <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="contain" />
       </View>
-      
+
       <View style={styles.content}>
         <Text style={styles.title}>{name}</Text>
-        
+
         <View style={styles.footer}>
           <Text style={styles.price}>от {price} TJS</Text>
           <View style={styles.addButton}>

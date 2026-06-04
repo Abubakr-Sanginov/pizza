@@ -12,9 +12,8 @@ export const TopProducts: React.FC<Props> = async ({ className }) => {
     let products: any[] = [];
     let topQueries: any[] = [];
 
-    // 1. Try to find products based on search queries
     try {
-      // @ts-ignore
+
       if (prisma.searchQuery) {
         topQueries = await prisma.searchQuery.findMany({
           take: 10,
@@ -38,7 +37,6 @@ export const TopProducts: React.FC<Props> = async ({ className }) => {
       });
     }
 
-    // 2. Top reviewed
     if (products.length < 4) {
       const reviewedProducts = await prisma.product.findMany({
         where: { id: { notIn: products.map((p: any) => p.id) } },
@@ -53,7 +51,6 @@ export const TopProducts: React.FC<Props> = async ({ className }) => {
       products = [...products, ...reviewedProducts];
     }
 
-    // 3. Fallback: any products
     if (products.length < 4) {
       const additionalProducts = await prisma.product.findMany({
         where: { id: { notIn: products.map((p: any) => p.id) } },

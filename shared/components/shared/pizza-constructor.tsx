@@ -12,14 +12,61 @@ import { PizzaSize, PizzaType, pizzaTypes } from "@/shared/constants/pizza";
 import { usePizzaOptions } from "@/shared/hooks";
 import { calcTotalPizzaPrice } from "@/shared/lib/calc-total-pizza-price";
 import { useCartStore } from "@/shared/store/cart";
-import { X, ShoppingCart, GripVertical } from "lucide-react";
+import { X, ShoppingCart, GripVertical, Flame, Pencil } from "lucide-react";
 
-// ─── Single position per ingredient, Fibonacci spiral for even coverage ────────
-// Each ingredient gets ONE position. The spiral guarantees no clustering.
+
+const INGREDIENT_CALORIES: Record<string, number> = {
+  пепперони: 120,
+  ветчина: 80,
+  бекон: 110,
+  курица: 70,
+  говядина: 90,
+  колбаса: 100,
+  сосиски: 95,
+  тунец: 60,
+  креветки: 50,
+  моцарелла: 85,
+  сыр: 90,
+  пармезан: 95,
+  чеддер: 88,
+  томат: 20,
+  помидор: 20,
+  перец: 15,
+  лук: 18,
+  грибы: 12,
+  шампиньоны: 12,
+  оливки: 35,
+  маслины: 35,
+  ананас: 25,
+  базилик: 5,
+  орегано: 5,
+  чеснок: 20,
+  соус: 30,
+  майонез: 65,
+  кетчуп: 25,
+  горчица: 15,
+  яйцо: 55,
+  яйца: 55,
+  шпинат: 10,
+  руккола: 8,
+};
+
+function getIngredientCalories(name: string): number {
+  const lower = name.toLowerCase();
+  for (const [key, cal] of Object.entries(INGREDIENT_CALORIES)) {
+    if (lower.includes(key)) return cal;
+  }
+  return 40;
+}
+
+
+const DOUGH_CALORIES: Record<number, number> = { 20: 420, 30: 680, 40: 980 };
+
+
 function buildPizzaPositions(n: number) {
   const golden = 137.508 * (Math.PI / 180);
   return Array.from({ length: n }, (_, i) => {
-    // r goes from 12% (center) to 76% (near crust), skipping the very center
+
     const t = (i + 0.5) / n;
     const r = 12 + t * 64;
     const angle = i * golden;
@@ -365,6 +412,7 @@ export const PizzaConstructor: React.FC<Props> = ({
   const [droppedIngredients, setDroppedIngredients] = React.useState<number[]>(
     [],
   );
+  const [pizzaName, setPizzaName] = React.useState("");
   const [isDragOver, setIsDragOver] = React.useState(false);
   const [ghost, setGhost] = React.useState<GhostState | null>(null);
   const pizzaRef = React.useRef<HTMLDivElement>(null);
@@ -429,6 +477,21 @@ export const PizzaConstructor: React.FC<Props> = ({
     allIngredients,
     selectedIngredients,
   );
+
+  // Calorie calculation — thin dough has ~30% fewer calories than traditional
+  const totalCalories = React.useMemo(() => {
+    const baseDough = DOUGH_CALORIES[size] ?? 680;
+    const base = type === 2 ? Math.round(baseDough * 0.7) : baseDough;
+    const extra = droppedIngredients.reduce((sum, id) => {
+      const ing = allIngredients.find((i) => i.id === id);
+      return sum + (ing ? getIngredientCalories(ing.name) : 40);
+    }, 0);
+    return base + extra;
+  }, [size, type, droppedIngredients, allIngredients]);
+
+  // Per-slice calories (8 slices for 20cm, 10 for 30cm, 12 for 40cm)
+  const slices = size === 20 ? 8 : size === 30 ? 10 : 12;
+  const caloriesPerSlice = Math.round(totalCalories / slices);
   const { addCartItem } = useCartStore();
 
   // ── Document-level pointer handlers (avoids event bubbling issues) ──────────
@@ -535,13 +598,20 @@ export const PizzaConstructor: React.FC<Props> = ({
     if (!currentItemId) return;
     setAddingToCart(true);
     try {
+      const trimmedName = pizzaName.trim();
       await addCartItem({
         productItemId: currentItemId,
         ingredients: Array.from(selectedIngredients),
+        customName: trimmedName || undefined,
       });
-      toast.success("Пицца добавлена в корзину!");
+      toast.success(
+        trimmedName
+          ? `«${trimmedName}» добавлена в корзину!`
+          : "Пицца добавлена в корзину!",
+      );
       const toRemove = [...droppedIngredients];
       setDroppedIngredients([]);
+      setPizzaName("");
       toRemove.forEach((id) => {
         if (selectedIngredients.has(id)) addIngredient(id);
       });
@@ -584,6 +654,26 @@ export const PizzaConstructor: React.FC<Props> = ({
         {/* ══ LEFT ══ */}
         <div className="flex-1 flex flex-col items-center gap-5 rounded-3xl glass p-6 xl:p-8">
           <div className="w-full max-w-[400px] flex flex-col gap-3">
+            {/* Pizza name input */}
+            <div className="relative">
+              <Pencil
+                size={16}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+              />
+              <input
+                type="text"
+                value={pizzaName}
+                onChange={(e) => setPizzaName(e.target.value.slice(0, 40))}
+                placeholder="Назови свою пиццу…"
+                className="w-full pl-11 pr-14 py-3 rounded-2xl bg-card border-2 border-transparent focus:border-primary/40 outline-none text-sm font-semibold transition-colors placeholder:text-muted-foreground/70 placeholder:font-normal"
+                maxLength={40}
+              />
+              {pizzaName.length > 0 && (
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground tabular-nums">
+                  {pizzaName.length}/40
+                </span>
+              )}
+            </div>
             <GroupVariants
               items={availableSizes}
               value={String(size)}
@@ -671,6 +761,37 @@ export const PizzaConstructor: React.FC<Props> = ({
                 {totalPrice} TJS
               </span>
             </div>
+
+            {/* Calorie counter */}
+            <motion.div
+              layout
+              className="rounded-2xl bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/20 px-5 py-3 flex items-center justify-between"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shadow-md">
+                  <Flame size={20} className="text-white" strokeWidth={2.5} />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+                    Калорийность
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    ~{caloriesPerSlice} ккал/кусок · {slices} кусков
+                  </p>
+                </div>
+              </div>
+              <motion.span
+                key={totalCalories}
+                initial={{ scale: 0.85, opacity: 0.6 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                className="text-2xl font-black text-orange-600 dark:text-orange-400 tabular-nums"
+              >
+                {totalCalories}
+                <span className="text-xs font-bold ml-1 opacity-70">ккал</span>
+              </motion.span>
+            </motion.div>
+
             <Button
               onClick={handleAdd}
               loading={addingToCart}

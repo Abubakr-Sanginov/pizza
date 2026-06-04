@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       });
       return NextResponse.json(pushToken);
     } catch (dbError: any) {
-      // Table may not exist in production yet — return 200 to avoid client errors
+
       if (
         dbError?.code === "P2021" ||
         dbError?.message?.includes("does not exist")

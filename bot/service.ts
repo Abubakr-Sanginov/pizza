@@ -28,7 +28,7 @@ export const sendOrderNotification = async (
     )
     .join('\n');
 
-  const addressDetails = deliveryDetails 
+  const addressDetails = deliveryDetails
     ? `\n🚪 *Подъезд:* ${deliveryDetails.entrance || '-'} | *Этаж:* ${deliveryDetails.floor || '-'} | *Кв:* ${deliveryDetails.apartment || '-'}\n🔑 *Код двери:* ${deliveryDetails.doorCode || '-'}`
     : '';
 
@@ -48,7 +48,7 @@ ${itemsList}
   const url = `https://api.telegram.org/bot${token}/sendMessage`;
 
   try {
-    // Находим всех админов из БД
+
     const admins = await prisma.botUser.findMany({
       include: { store: true }
     });
@@ -56,9 +56,7 @@ ${itemsList}
     const notifications = [];
 
     for (const admin of admins) {
-      // Отправляем если:
-      // 1. Это супер-админ (видит всё)
-      // 2. Это админ заведения, к которому относится заказ
+
       const isSuper = admin.isSuperAdmin || (mainAdminId && admin.chatId === mainAdminId.toString());
       const isStoreAdmin = storeId && admin.storeId === storeId;
 

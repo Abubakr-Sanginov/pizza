@@ -61,7 +61,7 @@ export const OrderStatusTracker: React.FC<Props> = ({ status, deliveryType, clas
   return (
     <div className={cn('w-full', className)}>
       <div className="relative flex items-start justify-between">
-        {/* connector line */}
+        {}
         <div className="absolute top-5 left-5 right-5 h-0.5 bg-border rounded-full -z-0" />
         <motion.div
           initial={{ scaleX: 0 }}

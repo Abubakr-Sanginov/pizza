@@ -11,7 +11,8 @@
     "prisma:studio": "prisma studio --schema=back/prisma/schema.prisma",
     "prisma:seed": "prisma db seed",
     "postinstall": "prisma generate --schema=back/prisma/schema.prisma",
-    "bot": "tsx bot/index.ts"
+    "bot": "tsx bot/index.ts",
+    "bot:payments": "tsx bot/payments.ts"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} back/prisma/seed.ts"

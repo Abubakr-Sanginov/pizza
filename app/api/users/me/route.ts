@@ -8,8 +8,7 @@ const PatchBody = z.object({
   fullName: z.string().trim().min(2).max(100).optional(),
   password: z.string().min(6).max(72).optional(),
   address: z.string().trim().max(500).optional(),
-  // email change is intentionally NOT supported here — would require
-  // re-verification flow (otherwise account takeover via session).
+
 });
 
 export async function PATCH(req: NextRequest) {

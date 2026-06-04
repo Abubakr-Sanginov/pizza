@@ -74,12 +74,12 @@ export const PizzaOfTheDay: React.FC<Props> = ({ pizza, className }) => {
       transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
       className={cn("relative overflow-hidden rounded-3xl", className)}
     >
-      {/* Background gradient */}
+      {}
       <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-primary/10 to-transparent" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_hsl(22_100%_50%_/_0.15),_transparent_60%)]" />
 
       <div className="relative flex flex-col md:flex-row items-center gap-6 md:gap-10 p-6 md:p-8 glass border border-primary/20 rounded-3xl">
-        {/* Badge */}
+        {}
         <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-primary to-orange-500 text-white shadow-soft">
           <Trophy size={13} strokeWidth={2.5} />
           <span className="text-[11px] font-black tracking-widest uppercase">
@@ -87,7 +87,7 @@ export const PizzaOfTheDay: React.FC<Props> = ({ pizza, className }) => {
           </span>
         </div>
 
-        {/* Pizza image */}
+        {}
         <div className="relative flex-shrink-0 mt-6 md:mt-0">
           <div className="absolute inset-0 rounded-full bg-primary/20 blur-3xl scale-75" />
           <motion.img
@@ -97,7 +97,7 @@ export const PizzaOfTheDay: React.FC<Props> = ({ pizza, className }) => {
             animate={{ rotate: [0, 3, -3, 0] }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
           />
-          {/* Flame icon */}
+          {}
           <motion.div
             className="absolute -top-2 -right-2 w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shadow-soft"
             animate={{ scale: [1, 1.15, 1] }}
@@ -107,13 +107,13 @@ export const PizzaOfTheDay: React.FC<Props> = ({ pizza, className }) => {
           </motion.div>
         </div>
 
-        {/* Info */}
+        {}
         <div className="flex-1 flex flex-col items-center md:items-start gap-3 text-center md:text-left">
           <h2 className="text-2xl md:text-3xl font-black tracking-tight leading-tight">
             {pizza.name}
           </h2>
 
-          {/* Stats row */}
+          {}
           <div className="flex items-center gap-4 flex-wrap justify-center md:justify-start">
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass text-sm">
               <Star size={14} className="text-yellow-400 fill-yellow-400" />
@@ -129,7 +129,7 @@ export const PizzaOfTheDay: React.FC<Props> = ({ pizza, className }) => {
             </div>
           </div>
 
-          {/* Price */}
+          {}
           <div className="flex items-baseline gap-1">
             <span className="text-sm text-muted-foreground">от</span>
             <span className="text-3xl font-black tracking-tight">
@@ -140,9 +140,9 @@ export const PizzaOfTheDay: React.FC<Props> = ({ pizza, className }) => {
             </span>
           </div>
 
-          {/* Countdown + CTA */}
+          {}
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto mt-1">
-            {/* Timer */}
+            {}
             <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl glass border border-border/50">
               <Clock
                 size={14}

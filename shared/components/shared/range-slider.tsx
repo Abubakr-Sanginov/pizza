@@ -24,7 +24,7 @@ const RangeSlider = React.forwardRef(
     const [localValues, setLocalValues] = React.useState(initialValue);
 
     React.useEffect(() => {
-      // Update localValues when the external value prop changes
+
       setLocalValues(Array.isArray(value) ? value : [min, max]);
     }, [min, max, value]);
 

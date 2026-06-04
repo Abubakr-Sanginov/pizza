@@ -13,7 +13,7 @@ const ALLOWED_MIME = new Set([
   'image/gif',
   'image/avif',
 ]);
-const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+const MAX_BYTES = 5 * 1024 * 1024;
 
 function extFromMime(mime: string): string | null {
   switch (mime) {
@@ -34,7 +34,7 @@ function extFromMime(mime: string): string | null {
 
 export async function POST(req: NextRequest) {
   try {
-    // Admin-only — uploads write to disk under public/, can't be open.
+
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -58,8 +58,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Bad extension' }, { status: 400 });
     }
 
-    // Ignore user-supplied filename — derive from MIME to avoid path traversal
-    // or HTML/SVG payloads served from /uploads.
     const fileName = `${crypto.randomUUID()}${ext}`;
     const uploadDir = join(process.cwd(), 'public/uploads');
     await mkdir(uploadDir, { recursive: true });

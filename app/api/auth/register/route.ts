@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     if (user) {
       if (!user.verified) {
-        // Re-issue a code so the user can finish verification
+
         const code = Math.floor(100000 + Math.random() * 900000).toString();
         await prisma.verificationCode.upsert({
           where: { userId: user.id },
