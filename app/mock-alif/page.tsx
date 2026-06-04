@@ -1,9 +1,9 @@
+'use client';
+
 import React from 'react';
 import axios from 'axios';
 import { useSearchParams } from 'next/navigation';
 import { Loader2, CreditCard, CheckCircle2, XCircle } from 'lucide-react';
-
-export const dynamic = 'force-dynamic';
 
 function MockAlifPageInner() {
   const params = useSearchParams();
