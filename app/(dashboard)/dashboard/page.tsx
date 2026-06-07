@@ -71,7 +71,8 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <Title text="Панель управления" size="lg" className="font-bold" />
+      <div className="flex items-center justify-between mb-8">
+        <Title text="Панель управления" size="lg" className="font-bold" />
         <AiTranslateButton />
       </div>
 

@@ -12,7 +12,9 @@
       "Bash(npx tsx *)",
       "Bash(npm run *)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(python -c \"open\\(r'D:/Projects/next-pizza-main/app/api/payments/alif/callback/route.ts','rb'\\).read\\(\\).decode\\('utf-8'\\); print\\('OK utf8'\\)\")",
+      "Bash(python *)"
     ]
   }
 }

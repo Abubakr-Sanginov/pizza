@@ -439,39 +439,56 @@ setInterval(async () => {
   }
 }, 60 * 1000); // Раз в минуту
 
-// Защита от двойного запуска через PID-файл
-import fsSync from 'fs';
+// ── Защита от двойного запуска через PID-файл ──────────────
+import fs from 'fs';
 import path from 'path';
+
 const PID_FILE = path.join(__dirname, '..', '.bot.pid');
 
 function acquireLock(): boolean {
   try {
-    if (fsSync.existsSync(PID_FILE)) {
-      const oldPid = parseInt(fsSync.readFileSync(PID_FILE, 'utf8').trim(), 10);
+    if (fs.existsSync(PID_FILE)) {
+      const oldPid = parseInt(fs.readFileSync(PID_FILE, 'utf8').trim(), 10);
+      // Проверяем, жив ли старый процесс
       try {
-        process.kill(oldPid, 0);
-        console.error('[BOT] Уже запущен (PID ' + oldPid + '). Выхожу.');
+        process.kill(oldPid, 0); // 0 = просто проверить, не убивать
+        console.error(`[BOT] Already running (PID ${oldPid}). Exiting.`);
         return false;
-      } catch { /* Процесс не жив */ }
+      } catch {
+        // Процесс не существует — PID-файл устарел, перезаписываем
+      }
     }
-    fsSync.writeFileSync(PID_FILE, String(process.pid), 'utf8');
+    fs.writeFileSync(PID_FILE, String(process.pid), 'utf8');
     return true;
-  } catch { return true; }
+  } catch (e) {
+    console.warn('[BOT] Could not acquire PID lock:', e);
+    return true; // Не блокируем запуск если нет прав на запись
+  }
 }
 
-function releaseLock() { try { fsSync.unlinkSync(PID_FILE); } catch {} }
+function releaseLock() {
+  try { fs.unlinkSync(PID_FILE); } catch {}
+}
 
 if (!acquireLock()) process.exit(1);
 
-bot.launch({ dropPendingUpdates: true }).then(() => {
-  console.log('✅ Bot running, PID:', process.pid);
-}).catch((e: any) => {
-  console.error('[BOT] Launch failed:', e?.message ?? e);
+bot.launch({
+  dropPendingUpdates: true, // Сбросить накопившиеся обновления при рестарте
+}).then(() => {
+  console.log('✅ Multi-Admin Bot is running (PID:', process.pid, ')');
+}).catch((e) => {
+  console.error('[BOT] Failed to launch:', e?.message ?? e);
   releaseLock();
   process.exit(1);
 });
 
-const shutdown = (sig: string) => { bot.stop(sig); releaseLock(); process.exit(0); };
+const shutdown = (signal: string) => {
+  console.log(`[BOT] ${signal} received — stopping...`);
+  bot.stop(signal);
+  releaseLock();
+  process.exit(0);
+};
+
 process.once('SIGINT', () => shutdown('SIGINT'));
 process.once('SIGTERM', () => shutdown('SIGTERM'));
 process.once('exit', releaseLock);
