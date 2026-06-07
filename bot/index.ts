@@ -439,8 +439,39 @@ setInterval(async () => {
   }
 }, 60 * 1000); // Раз в минуту
 
-bot.launch();
-console.log('Multi-Admin Bot is running with Courier support...');
+// Защита от двойного запуска через PID-файл
+import fsSync from 'fs';
+import path from 'path';
+const PID_FILE = path.join(__dirname, '..', '.bot.pid');
 
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+function acquireLock(): boolean {
+  try {
+    if (fsSync.existsSync(PID_FILE)) {
+      const oldPid = parseInt(fsSync.readFileSync(PID_FILE, 'utf8').trim(), 10);
+      try {
+        process.kill(oldPid, 0);
+        console.error('[BOT] Уже запущен (PID ' + oldPid + '). Выхожу.');
+        return false;
+      } catch { /* Процесс не жив */ }
+    }
+    fsSync.writeFileSync(PID_FILE, String(process.pid), 'utf8');
+    return true;
+  } catch { return true; }
+}
+
+function releaseLock() { try { fsSync.unlinkSync(PID_FILE); } catch {} }
+
+if (!acquireLock()) process.exit(1);
+
+bot.launch({ dropPendingUpdates: true }).then(() => {
+  console.log('✅ Bot running, PID:', process.pid);
+}).catch((e: any) => {
+  console.error('[BOT] Launch failed:', e?.message ?? e);
+  releaseLock();
+  process.exit(1);
+});
+
+const shutdown = (sig: string) => { bot.stop(sig); releaseLock(); process.exit(0); };
+process.once('SIGINT', () => shutdown('SIGINT'));
+process.once('SIGTERM', () => shutdown('SIGTERM'));
+process.once('exit', releaseLock);

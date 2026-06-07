@@ -10,6 +10,7 @@ import {
   BackToTop,
   RecentlyViewed,
   PizzaOfTheDayServer,
+  CombosSection,
 } from "@/shared/components/shared";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
@@ -66,6 +67,12 @@ export default async function Home({
       <Container className="my-10">
         <Suspense fallback={null}>
           <TopProducts />
+        </Suspense>
+      </Container>
+
+      <Container className="my-10">
+        <Suspense fallback={null}>
+          <CombosSection />
         </Suspense>
       </Container>
 

@@ -41,10 +41,36 @@ export async function POST(req: NextRequest) {
   }
 
   if (!order.iikoOrderId) {
+    // FIX: безопасный парсинг — если JSON сломан, записываем ошибку в БД
+    // чтобы retry-воркер подхватил заказ позже
+    let cartItems: any[];
     try {
-      await sendOrderToIiko(updated, JSON.parse(order.items as any));
-    } catch (e) {
-      console.error('[Payments] iiko sync failed', e);
+      cartItems =
+        typeof order.items === 'string'
+          ? JSON.parse(order.items)
+          : (order.items as any) ?? [];
+    } catch (parseErr) {
+      console.error('[Payments] failed to parse order.items', parseErr);
+      await prisma.order.update({
+        where: { id: updated.id },
+        data: {
+          iikoSyncAttempts: { increment: 1 },
+          iikoSyncError: 'Failed to parse order items JSON (telegram confirm)',
+        },
+      });
+      cartItems = [];
+    }
+    if (cartItems.length > 0) {
+      try {
+        const result = await sendOrderToIiko(updated, cartItems);
+        if (result.status === 'failed') {
+          console.warn('[Payments] iiko sync failed for order '+order.id+': '+result.reason);
+        } else if (result.status === 'skipped') {
+          console.info('[Payments] iiko skipped for order '+order.id+': '+result.reason);
+        }
+      } catch (e) {
+        console.error('[Payments] iiko sync crashed', e);
+      }
     }
   }
 

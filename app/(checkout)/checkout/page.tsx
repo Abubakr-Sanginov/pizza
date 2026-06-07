@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,6 +10,7 @@ import {
   CheckoutAddressForm,
   CheckoutCart,
   CheckoutPersonalForm,
+  CheckoutScheduleForm,
 } from '@/shared/components';
 import { CheckoutFormValues, checkoutFormSchema } from '@/shared/constants';
 import { useCart } from '@/shared/hooks';
@@ -92,7 +93,7 @@ export default function CheckoutPage() {
       const url = await createOrder(data);
 
       toast.success(t('checkout.success'), {
-        icon: '✅',
+        icon: 'вњ…',
       });
 
       if (url) {
@@ -102,7 +103,7 @@ export default function CheckoutPage() {
       console.log(err);
       setSubmitting(false);
       toast.error(t('checkout.error'), {
-        icon: '❌',
+        icon: 'вќЊ',
       });
     }
   };
@@ -127,6 +128,8 @@ export default function CheckoutPage() {
                 items={items}
                 loading={loading}
               />
+
+              <CheckoutScheduleForm className={loading ? 'opacity-40 pointer-events-none' : ''}  />
 
               <CheckoutPersonalForm className={loading ? 'opacity-40 pointer-events-none' : ''} />
 

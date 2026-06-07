@@ -17,6 +17,7 @@ import { Button } from "../ui";
 import { useSession } from "next-auth/react";
 import { useFavoritesStore } from "@/shared/store";
 import { ThemeToggle } from "./theme-toggle";
+import { LanguageToggle } from "./language-toggle";
 
 interface Props {
   hasSearch?: boolean;
@@ -116,6 +117,7 @@ export const Header: React.FC<Props> = ({
             />
 
             <ThemeToggle />
+            <LanguageToggle />
 
             <Link href="/profile/favorites" aria-label="Избранное">
               <Button

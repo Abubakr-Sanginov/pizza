@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 import { prisma } from '@/back/prisma/prisma-client';
-import { Title } from '@/shared/components/shared';
+import { Title, AiTranslateButton } from '@/shared/components/shared';
 import { ShoppingBag, Users, Wallet, TrendingUp } from 'lucide-react';
 
 export default async function DashboardPage() {
@@ -71,7 +71,9 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <Title text="Панель управления" size="lg" className="font-bold mb-10" />
+      <Title text="Панель управления" size="lg" className="font-bold" />
+        <AiTranslateButton />
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => (

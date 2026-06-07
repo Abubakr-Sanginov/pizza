@@ -148,6 +148,9 @@ export async function createOrder(data: CheckoutFormValues) {
         discount: discountAmount,
         promoCode: promoCodeApplied,
         status: OrderStatus.PENDING,
+        scheduledAt: data.scheduledAt
+          ? (() => { const [h, m] = data.scheduledAt!.split(':').map(Number); const d = new Date(); d.setHours(h, m, 0, 0); return d; })()
+          : null,
         paymentMethod: (data.paymentMethod ?? 'CASH_ON_DELIVERY') as any,
         paymentStatus: 'PENDING',
         items: JSON.stringify(userCart.items),
@@ -414,8 +417,7 @@ export async function recordSearch(query: string) {
   try {
     if (!query || query.length < 3) return;
 
-    // @ts-ignore
-    if (prisma.searchQuery) {
+    if ((prisma as any).searchQuery) {
       await prisma.searchQuery.upsert({
         where: { query },
         update: { count: { increment: 1 } },

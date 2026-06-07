@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/back/prisma/prisma-client';
 import { verifyAlifCallback } from '@/back/services/alif';
 import { sendOrderToIiko } from '@/back/services/iiko';
+import { accrueBonus } from '@/back/lib/bonus';
 
 export async function POST(req: NextRequest) {
   let body: any;
@@ -60,10 +61,47 @@ export async function POST(req: NextRequest) {
       }
 
       if (!order.iikoOrderId) {
+        // FIX: безопасный парсинг Ч если JSON сломан, записываем ошибку в Ѕƒ
+        // чтобы retry-воркер подхватил заказ позже
+        let cartItems: any[];
         try {
-          await sendOrderToIiko(updated, JSON.parse(order.items as any));
+          cartItems =
+            typeof order.items === 'string'
+              ? JSON.parse(order.items)
+              : (order.items as any) ?? [];
+        } catch (parseErr) {
+          console.error('[Alif callback] failed to parse order.items', parseErr);
+          await prisma.order.update({
+            where: { id: updated.id },
+            data: {
+              iikoSyncAttempts: { increment: 1 },
+              iikoSyncError: 'Failed to parse order items JSON (alif callback)',
+            },
+          });
+          return NextResponse.json({ ok: true });
+        }
+        try {
+          const result = await sendOrderToIiko(updated, cartItems);
+          if (result.status === 'failed') {
+            console.warn(\[Alif callback] iiko sync failed for order \: \\);
+          } else if (result.status === 'skipped') {
+            console.info(\[Alif callback] iiko skipped for order \: \\);
+          }
         } catch (e) {
-          console.error('[Alif callback] iiko sync failed', e);
+          console.error('[Alif callback] iiko sync crashed', e);
+        }
+      }
+
+      // Bonus accrual for paid order
+      if (updated.userId) {
+        try {
+          await accrueBonus({
+            userId: updated.userId,
+            orderTotal: updated.totalAmount,
+            orderId: updated.id,
+          });
+        } catch (e) {
+          console.error('[Alif callback] accrueBonus failed', e);
         }
       }
     }

@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
       userId,
       paymentMethod,
       promoCode,
+      bonusToSpend,
     } = data;
 
     if (!cartToken) {
@@ -109,13 +110,27 @@ export async function POST(req: NextRequest) {
     }
 
     const vatPrice = Math.floor((userCart.totalAmount * vatPercent) / 100);
-    const finalTotal = Math.max(0, userCart.totalAmount + deliveryPrice + vatPrice - discountAmount);
+    const baseTotal = Math.max(0, userCart.totalAmount + deliveryPrice + vatPrice - discountAmount);
+
+    // Bonus spend validation
+    let bonusSpent = 0;
+    if (userId && bonusToSpend && Number(bonusToSpend) > 0) {
+      const { ensureBonus, BONUS_MAX_SPEND_RATE } = await import('@/back/lib/bonus');
+      const bonus = await ensureBonus(Number(userId));
+      const maxAllowed = Math.floor(baseTotal * BONUS_MAX_SPEND_RATE);
+      bonusSpent = Math.min(Number(bonusToSpend), bonus.balance, maxAllowed);
+    }
+    const finalTotal = Math.max(0, baseTotal - bonusSpent);
 
     const method = (paymentMethod ?? 'CASH_ON_DELIVERY') as
       | 'CASH_ON_DELIVERY'
       | 'TELEGRAM_STARS'
-      | 'MANUAL_TRANSFER';
-    const isOnlinePayment = method === 'TELEGRAM_STARS' || method === 'MANUAL_TRANSFER';
+      | 'MANUAL_TRANSFER'
+      | 'ALIF_PAY';
+    const isOnlinePayment =
+      method === 'TELEGRAM_STARS' ||
+      method === 'MANUAL_TRANSFER' ||
+      method === 'ALIF_PAY';
 
     const order = await prisma.order.create({
       data: {
@@ -146,6 +161,27 @@ export async function POST(req: NextRequest) {
 
     if (promoCodeApplied) {
       bumpPromoUsage(promoCodeApplied).catch(() => {});
+    }
+
+    // Spend bonuses if requested
+    if (userId && bonusSpent > 0) {
+      const { spendBonus } = await import('@/back/lib/bonus');
+      await spendBonus({
+        userId: Number(userId),
+        amount: bonusSpent,
+        orderTotal: baseTotal,
+        orderId: order.id,
+      }).catch((e: unknown) => console.error('[API_ORDER] spendBonus failed', e));
+    }
+
+    // Accrue bonuses for cash orders
+    if (userId && method === 'CASH_ON_DELIVERY') {
+      const { accrueBonus } = await import('@/back/lib/bonus');
+      accrueBonus({
+        userId: Number(userId),
+        orderTotal: finalTotal,
+        orderId: order.id,
+      }).catch((e: unknown) => console.error('[API_ORDER] accrueBonus failed', e));
     }
 
     if (!isOnlinePayment) {

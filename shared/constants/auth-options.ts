@@ -37,21 +37,6 @@ export const authOptions: AuthOptions = {
           return null;
         }
 
-        if (credentials.email === 'admin' && credentials.password === 'admin') {
-          const adminUser = await prisma.user.findFirst({
-            where: { role: 'ADMIN' },
-          });
-
-          if (adminUser) {
-            return {
-              id: adminUser.id,
-              email: adminUser.email,
-              name: adminUser.fullName,
-              role: adminUser.role,
-            };
-          }
-        }
-
         const values = {
           email: credentials.email,
         };

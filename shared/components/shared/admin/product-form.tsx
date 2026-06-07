@@ -20,6 +20,10 @@ const productSchema = z.object({
   categoryId: z.string(),
   ingredients: z.array(z.number()),
   tags: z.array(z.string()).default([]),
+  calories: z.coerce.number().min(0).optional(),
+  proteins: z.coerce.number().min(0).optional(),
+  fats: z.coerce.number().min(0).optional(),
+  carbs: z.coerce.number().min(0).optional(),
   items: z.array(z.object({
     id: z.number().optional(),
     price: z.coerce.number().min(1, 'Минимум 1 TJS'),
@@ -50,6 +54,10 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
       categoryId: String(initialData?.categoryId || categories[0]?.id || ''),
       ingredients: initialData?.ingredients.map((i) => i.id) || [],
       tags: ((initialData as any)?.tags as string[] | undefined) ?? [],
+      calories: (initialData as any)?.calories ?? undefined,
+      proteins: (initialData as any)?.proteins ?? undefined,
+      fats: (initialData as any)?.fats ?? undefined,
+      carbs: (initialData as any)?.carbs ?? undefined,
       items: initialData?.items.map(item => ({
         id: item.id,
         price: item.priceOld && item.priceOld > item.price ? item.priceOld : item.price,
@@ -202,6 +210,20 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
                 </div>
               </div>
             </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">КБЖУ (на 100 г)</label>
+                <div className="grid grid-cols-4 gap-2">
+                  <div><label className="block text-xs text-muted-foreground mb-1">Ккал</label>
+                    <Input {...form.register('calories')} type="number" step="0.1" placeholder="250" /></div>
+                  <div><label className="block text-xs text-muted-foreground mb-1">Белки (г)</label>
+                    <Input {...form.register('proteins')} type="number" step="0.1" placeholder="12" /></div>
+                  <div><label className="block text-xs text-muted-foreground mb-1">Жиры (г)</label>
+                    <Input {...form.register('fats')} type="number" step="0.1" placeholder="10" /></div>
+                  <div><label className="block text-xs text-muted-foreground mb-1">Углев. (г)</label>
+                    <Input {...form.register('carbs')} type="number" step="0.1" placeholder="30" /></div>
+                </div>
+              </div>
           </div>
 
           <div className="border-t pt-10">

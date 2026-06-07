@@ -15,6 +15,7 @@ import { usePizzaOptions } from '@/shared/hooks';
 import { ProductTagBadges } from './product-tag-badges';
 
 import { useTranslation } from 'react-i18next';
+import { NutritionBadge } from './nutrition-badge';
 
 interface Props {
   imageUrl: string;
@@ -25,6 +26,10 @@ interface Props {
   onSubmit: (itemId: number, ingredients: number[]) => void;
   className?: string;
   tags?: string[];
+  calories?: number | null;
+  proteins?: number | null;
+  fats?: number | null;
+  carbs?: number | null;
 }
 
 
@@ -37,6 +42,10 @@ export const ChoosePizzaForm: React.FC<Props> = ({
   onSubmit,
   className,
   tags,
+  calories,
+  proteins,
+  fats,
+  carbs,
 }) => {
   const { t } = useTranslation();
   const {
@@ -75,6 +84,10 @@ export const ChoosePizzaForm: React.FC<Props> = ({
         {tags && tags.length > 0 && <ProductTagBadges tags={tags} size="md" className="mb-2" />}
 
         <p className="text-muted-foreground">{textDetaills}</p>
+
+        {(calories || proteins || fats || carbs) && (
+          <NutritionBadge calories={calories} proteins={proteins} fats={fats} carbs={carbs} className="mt-2" />
+        )}
 
         <div className="flex flex-col gap-4 mt-5">
           <GroupVariants

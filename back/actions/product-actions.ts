@@ -1,4 +1,5 @@
 'use server';
+import { aiTranslateAll } from '@/back/services/ai-translate';
 
 import { prisma } from '@/back/prisma/prisma-client';
 import { revalidatePath } from 'next/cache';
@@ -18,6 +19,10 @@ interface ProductInput {
   ingredientIds: number[];
   items: ProductItemInput[];
   tags?: string[];
+  calories?: number;
+  proteins?: number;
+  fats?: number;
+  carbs?: number;
 }
 
 export async function createProduct(data: ProductInput) {
@@ -27,6 +32,10 @@ export async function createProduct(data: ProductInput) {
         name: data.name,
         imageUrl: data.imageUrl,
         tags: data.tags ?? [],
+        calories: data.calories ?? null,
+        proteins: data.proteins ?? null,
+        fats: data.fats ?? null,
+        carbs: data.carbs ?? null,
         category: { connect: { id: data.categoryId } },
         ingredients: {
           connect: data.ingredientIds.map((id) => ({ id })),
@@ -41,6 +50,13 @@ export async function createProduct(data: ProductInput) {
         },
       } as any,
     });
+
+    // Auto-translate in background (fire-and-forget)
+    aiTranslateAll(product.name, {}).then((r) => {
+      if (r.en || r.tg) {
+        prisma.product.update({ where: { id: product.id }, data: { ...(r.en ? { nameEn: r.en } : {}), ...(r.tg ? { nameTg: r.tg } : {}) } }).catch(console.error);
+      }
+    }).catch(console.error);
 
     revalidatePath('/dashboard/products');
     revalidatePath('/');
@@ -72,6 +88,10 @@ export async function updateProduct(id: number, data: ProductInput) {
         name: data.name,
         imageUrl: data.imageUrl,
         tags: data.tags ?? [],
+        calories: data.calories ?? null,
+        proteins: data.proteins ?? null,
+        fats: data.fats ?? null,
+        carbs: data.carbs ?? null,
         category: { connect: { id: data.categoryId } },
         ingredients: {
           set: data.ingredientIds.map((id) => ({ id })),

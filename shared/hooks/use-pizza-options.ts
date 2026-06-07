@@ -1,4 +1,4 @@
-import { PizzaSize, PizzaType } from '@/shared/constants/pizza';
+﻿import { PizzaSize, PizzaType } from '@/shared/constants/pizza';
 import React from 'react';
 import { Variant } from '../components/shared/group-variants';
 import { useSet } from 'react-use';
@@ -34,7 +34,8 @@ export const usePizzaOptions = (items: ProductItem[]): ReturnProps => {
     if (!isAvailableSize && availableSize) {
       setSize(Number(availableSize.value) as PizzaSize);
     }
-  }, [type]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type, availableSizes]);
 
   return {
     size,

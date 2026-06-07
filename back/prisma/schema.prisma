@@ -104,10 +104,19 @@ model Product {
   id Int @id @default(autoincrement())
 
   name     String
+  nameEn   String?
+  nameTg   String?
   imageUrl String
 
   // Dietary / allergen tags: VEGAN, VEGETARIAN, SPICY, GLUTEN_FREE, LACTOSE_FREE, NEW, HIT
   tags String[] @default([])
+
+  calories  Float?
+  proteins  Float?
+  fats      Float?
+  carbs     Float?
+
+  comboItems ComboItem[]
 
   ingredients Ingredient[]
   items       ProductItem[]
@@ -142,6 +151,8 @@ model Ingredient {
   id Int @id @default(autoincrement())
 
   name     String
+  nameEn   String?
+  nameTg   String?
   price    Int
   imageUrl String
 
@@ -225,6 +236,7 @@ model Order {
   apartment    String?
   deliveryType DeliveryType @default(DELIVERY)
   comment      String?
+  scheduledAt  DateTime?
   lat          Float?
   lng          Float?
 
@@ -496,6 +508,32 @@ model PushToken {
   user      User?    @relation(fields: [userId], references: [id])
   userId    Int?
   createdAt DateTime @default(now())
+}
+
+
+model Combo {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+  imageUrl    String
+  price       Int
+  discount    Int     @default(0)
+  active      Boolean @default(true)
+
+  items ComboItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ComboItem {
+  id        Int @id @default(autoincrement())
+  comboId   Int
+  productId Int
+  quantity  Int @default(1)
+
+  combo   Combo   @relation(fields: [comboId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
 }
 
 model Notification {

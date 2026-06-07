@@ -3,6 +3,7 @@
 import { prisma } from '@/back/prisma/prisma-client';
 import { Prisma } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
+import { aiTranslateAll } from '@/back/services/ai-translate';
 
 export async function createIngredient(data: Prisma.IngredientCreateInput) {
   try {

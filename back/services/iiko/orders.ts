@@ -109,6 +109,14 @@ export async function sendOrderToIiko(
 
   const items = buildItems(cartItems);
   if (items.length === 0) {
+    // FIX: записываем в БД, чтобы retry-воркер подхватил после синхронизации меню
+    await prisma.order.update({
+      where: { id: order.id },
+      data: {
+        iikoSyncAttempts: { increment: 1 },
+        iikoSyncError: 'no items have iikoId — sync menu first',
+      },
+    });
     return { status: 'skipped', reason: 'no items have iikoId — sync menu first' };
   }
 
@@ -241,6 +249,8 @@ export async function retryFailedOrders(limit = 20): Promise<{ retried: number; 
       iikoOrderId: null,
       iikoSyncError: { not: null },
       iikoSyncAttempts: { lt: 5 },
+      // FIX: только оплаченные заказы — не отправлять неоплаченные в iiko
+      paymentStatus: 'PAID',
     },
     orderBy: { createdAt: 'asc' },
     take: limit,
@@ -248,14 +258,26 @@ export async function retryFailedOrders(limit = 20): Promise<{ retried: number; 
 
   let sent = 0;
   for (const order of orders) {
-    let cartItems: CartItemRecord[] = [];
+    // FIX: безопасный парсинг — при ошибке пишем в БД, чтобы не было бесконечной петли
+    let cartItems: CartItemRecord[];
     try {
       cartItems = typeof order.items === 'string' ? JSON.parse(order.items) : (order.items as any);
     } catch {
+      await prisma.order.update({
+        where: { id: order.id },
+        data: {
+          iikoSyncAttempts: { increment: 1 },
+          iikoSyncError: 'Failed to parse order items JSON',
+        },
+      });
+      console.error(`[IIKO RETRY] order ${order.id}: invalid items JSON`);
       continue;
     }
     const result = await sendOrderToIiko(order, cartItems);
     if (result.status === 'sent') sent++;
+    else if (result.status === 'failed') {
+      console.warn(`[IIKO RETRY] order ${order.id} failed: ${result.reason}`);
+    }
   }
   return { retried: orders.length, sent };
 }
