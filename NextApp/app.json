@@ -24,8 +24,7 @@
       "bundleIdentifier": "com.nextpizza.app",
       "infoPlist": {
         "UIBackgroundModes": ["remote-notification", "fetch"]
-      },
-      "googleServicesFile": "./GoogleService-Info.plist"
+      }
     },
     "android": {
       "package": "com.nextpizza.app",

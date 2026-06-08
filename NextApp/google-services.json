@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "207582796273",
+    "project_id": "pizza-eb3bd",
+    "storage_bucket": "pizza-eb3bd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:207582796273:android:9efa570d4204adc4f04c50",
+        "android_client_info": {
+          "package_name": "com.nextpizza.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAsSNX1cXgUPwfRL0P8NeSsUiFu9Zfb-VU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
