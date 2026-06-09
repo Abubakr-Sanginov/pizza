@@ -5,8 +5,10 @@ import { Title } from '@/shared/components/shared';
 import { UserRole } from '@prisma/client';
 import { updateUserData } from './actions';
 import { revalidatePath } from 'next/cache';
+import { getAdminT } from '@/shared/lib/admin-i18n';
 
 export default async function DashboardUsersPage() {
+  const t = getAdminT();
   const users = await prisma.user.findMany({
     orderBy: {
       createdAt: 'desc',
@@ -15,17 +17,17 @@ export default async function DashboardUsersPage() {
 
   return (
     <div>
-      <Title text="Управление пользователями" size="lg" className="font-bold mb-10" />
+      <Title text={t('admin.users.title')} size="lg" className="font-bold mb-10" />
 
       <div className="bg-card text-card-foreground rounded-2xl border border-border shadow-sm overflow-x-auto scrollbar-hide">
         <table className="w-full text-sm text-left">
           <thead className="bg-muted border-b border-border">
             <tr>
-              <th className="px-6 py-4 font-semibold text-muted-foreground">ID</th>
-              <th className="px-6 py-4 font-semibold text-muted-foreground">Имя</th>
-              <th className="px-6 py-4 font-semibold text-muted-foreground">Email</th>
-              <th className="px-6 py-4 font-semibold text-muted-foreground">Роль</th>
-              <th className="px-6 py-4 font-semibold text-muted-foreground text-right">Действие</th>
+              <th className="px-6 py-4 font-semibold text-muted-foreground">{t('admin.common.id')}</th>
+              <th className="px-6 py-4 font-semibold text-muted-foreground">{t('admin.users.userName')}</th>
+              <th className="px-6 py-4 font-semibold text-muted-foreground">{t('admin.users.email')}</th>
+              <th className="px-6 py-4 font-semibold text-muted-foreground">{t('admin.users.role')}</th>
+              <th className="px-6 py-4 font-semibold text-muted-foreground text-right">{t('admin.common.action')}</th>
             </tr>
           </thead>
           <tbody>
@@ -56,7 +58,7 @@ export default async function DashboardUsersPage() {
                          <option value="ADMIN">ADMIN</option>
                       </select>
                       <button type="submit" className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded hover:opacity-90">
-                         Сохранить
+                         {t('admin.common.save')}
                       </button>
                    </form>
                 </td>

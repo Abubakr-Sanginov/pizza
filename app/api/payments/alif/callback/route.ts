@@ -83,9 +83,9 @@ export async function POST(req: NextRequest) {
         try {
           const result = await sendOrderToIiko(updated, cartItems);
           if (result.status === 'failed') {
-            console.warn(\[Alif callback] iiko sync failed for order \: \\);
+            console.warn(`[Alif callback] iiko sync failed for order ${updated.id}: ${result.reason}`);
           } else if (result.status === 'skipped') {
-            console.info(\[Alif callback] iiko skipped for order \: \\);
+            console.info(`[Alif callback] iiko skipped for order ${updated.id}: ${result.reason}`);
           }
         } catch (e) {
           console.error('[Alif callback] iiko sync crashed', e);

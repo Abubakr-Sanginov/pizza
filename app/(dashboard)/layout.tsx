@@ -7,13 +7,15 @@ import React from 'react';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/shared/components/ui';
 import { cn } from '@/shared/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const { data: session, status } = useSession();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   if (status === 'loading') {
-    return <div className="flex items-center justify-center h-screen">Загрузка...</div>;
+    return <div className="flex items-center justify-center h-screen">{t('admin.common.loading')}</div>;
   }
 
   if (!session || session.user.role !== 'ADMIN') {
@@ -29,7 +31,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="md:hidden flex items-center justify-between p-4 bg-card border-b border-border sticky top-0 z-50">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Logo" width={30} height={30} />
-          <span className="font-bold">Админка</span>
+          <span className="font-bold">{t('admin.common.panel')}</span>
         </div>
         <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
           {sidebarOpen ? <X /> : <Menu />}

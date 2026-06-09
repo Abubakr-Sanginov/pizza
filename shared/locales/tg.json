@@ -206,5 +206,150 @@
     "searchPlaceholder": "Ҷустуҷӯ...",
     "showAll": "Ҳамаашро нишон додан",
     "hide": "Пинҳон кардан"
+  },
+  "admin": {
+    "common": {
+      "id": "ID",
+      "name": "Ном",
+      "actions": "Амалҳо",
+      "action": "Амал",
+      "price": "Нарх",
+      "photo": "Сурат",
+      "loading": "Боргузорӣ...",
+      "save": "Нигоҳ доштан",
+      "panel": "Админка",
+      "courier": "Курйер",
+      "backToSite": "Ба сайт"
+    },
+    "nav": {
+      "home": "Асосӣ",
+      "orders": "Фармоишҳо",
+      "products": "Маҳсулот",
+      "categories": "Категорияҳо",
+      "ingredients": "Компонентҳо",
+      "promo": "Промокодҳо",
+      "notifications": "Огоҳиномаҳо",
+      "stores": "Тарабхонаҳо",
+      "stories": "Сторис",
+      "reviews": "Шарҳҳо",
+      "users": "Корбарон",
+      "settings": "Танзимот",
+      "myDeliveries": "Расонидани ман"
+    },
+    "dashboard": {
+      "title": "Лавҳаи идоракунӣ",
+      "totalOrders": "Ҳамаи фармоишҳо (All-time)",
+      "totalRevenue": "Ҳамаи даромад (All-time)",
+      "users": "Корбарон",
+      "todayRevenue": "Даромади имрӯза",
+      "recentOrders": "Фармоишҳои охирин",
+      "order": "Фармоиш",
+      "noOrders": "Ҳоло фармоиш нест",
+      "topProducts": "Маҳсулоти машҳур (аз рӯи шарҳҳо)",
+      "reviewsCount": "шарҳ",
+      "noProducts": "Ҳоло маҳсулот нест"
+    },
+    "orders": {
+      "title": "Идоракунии фармоишҳо",
+      "orderId": "ID Фармоиш",
+      "client": "Муштарӣ",
+      "amount": "Маблағ",
+      "status": "Ҳолат",
+      "courier": "Курйер",
+      "noOrders": "Ҳоло фармоиш нест"
+    },
+    "categories": {
+      "title": "Идоракунии категорияҳо",
+      "add": "Илова кардани категория",
+      "entityName": "категория"
+    },
+    "ingredients": {
+      "title": "Идоракунии компонентҳо",
+      "add": "Илова кардани компонент",
+      "entityName": "компонент"
+    },
+    "products": {
+      "title": "Идоракунии маҳсулот",
+      "add": "Илова кардани маҳсулот",
+      "category": "Категория",
+      "prices": "Нархҳо",
+      "entityName": "маҳсулот"
+    },
+    "stores": {
+      "title": "Идоракунии тарабхонаҳо",
+      "add": "Илова кардани тарабхона",
+      "address": "Суроға",
+      "phone": "Телефон",
+      "entityName": "тарабхона"
+    },
+    "stories": {
+      "title": "Идоракунии сторис",
+      "add": "Илова кардани таърих",
+      "preview": "Пешнамоиш",
+      "slidesCount": "Шумораи слайдҳо",
+      "createdAt": "Санаи эҷод",
+      "slides": "слайд",
+      "entityName": "таърих",
+      "empty": "Ҳоло таърих нест. Барои эҷоди аввалин «Илова кардани таърих»-ро пахш кунед."
+    },
+    "reviews": {
+      "title": "Идоракунии шарҳҳо",
+      "user": "Корбар",
+      "product": "Маҳсулот",
+      "rating": "Баҳо",
+      "comment": "Шарҳ",
+      "date": "Сана",
+      "noComment": "Шарҳ нест",
+      "empty": "Ҳоло шарҳ нест"
+    },
+    "users": {
+      "title": "Идоракунии корбарон",
+      "userName": "Ном",
+      "email": "Email",
+      "role": "Нақш"
+    },
+    "courier": {
+      "title": "Расонидани ман",
+      "order": "Фармоиш",
+      "address": "Суроға:",
+      "notSpecified": "Нишон дода нашуд",
+      "entrance": "Даромадгоҳ:",
+      "floor": "Ошёна:",
+      "apartment": "Хона/Офис:",
+      "client": "Муштарӣ:",
+      "phone": "Тел:",
+      "emptyTitle": "Шумо ҳоло расонидани фаъол надоред.",
+      "emptyText": "Таъиноти фармоишҳои навро интизор шавед."
+    },
+    "promo": {
+      "title": "Промокодҳо"
+    },
+    "status": {
+      "PENDING": "Дар интизорӣ",
+      "COOKING": "Тайёр мешавад",
+      "READY": "Тайёр",
+      "DELIVERING": "Дар расонидан",
+      "SUCCEEDED": "Иҷрошуда",
+      "CANCELLED": "Бекоршуда"
+    },
+    "courierSelector": {
+      "none": "Бе курйер"
+    },
+    "aiTranslate": {
+      "idle": "AI-тарҷума",
+      "loading": "Тарҷума мекунем...",
+      "error": "Хато",
+      "translateError": "Хатои тарҷума",
+      "translated": "Тарҷума шуд: ",
+      "positions": " мавқеъ",
+      "errorsPrefix": " (хатоҳо: ",
+      "errorsSuffix": ")"
+    },
+    "toast": {
+      "statusUpdated": "Ҳолати фармоиш нав шуд",
+      "statusUpdateError": "Ҳолатро нав кардан нашуд",
+      "courierAssigned": "Курйер таъин шуд",
+      "courierAssignError": "Курйерро таъин кардан нашуд"
+    }
   }
 }

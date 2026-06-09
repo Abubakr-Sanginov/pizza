@@ -7,8 +7,10 @@ import { Plus, Edit } from 'lucide-react';
 import { DeleteButton } from '@/shared/components/shared/admin/delete-button';
 import { deleteProduct } from '@/back/actions/product-actions';
 import Link from 'next/link';
+import { getAdminT } from '@/shared/lib/admin-i18n';
 
 export default async function DashboardProducts() {
+  const t = getAdminT();
   const [products] = await Promise.all([
     prisma.product.findMany({
       include: {
@@ -24,11 +26,11 @@ export default async function DashboardProducts() {
   return (
     <div>
       <div className="flex items-center justify-between mb-10">
-        <Title text="Управление продуктами" size="lg" className="font-bold" />
+        <Title text={t('admin.products.title')} size="lg" className="font-bold" />
         <Link href="/dashboard/products/new">
           <Button className="flex items-center gap-2">
             <Plus size={20} />
-            Добавить продукт
+            {t('admin.products.add')}
           </Button>
         </Link>
       </div>
@@ -37,12 +39,12 @@ export default async function DashboardProducts() {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-muted border-b border-border">
-              <th className="px-6 py-4 font-bold text-muted-foreground">ID</th>
-              <th className="px-6 py-4 font-bold text-muted-foreground">Фото</th>
-              <th className="px-6 py-4 font-bold text-muted-foreground">Название</th>
-              <th className="px-6 py-4 font-bold text-muted-foreground">Категория</th>
-              <th className="px-6 py-4 font-bold text-muted-foreground">Цены</th>
-              <th className="px-6 py-4 font-bold text-muted-foreground text-right">Действия</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">{t('admin.common.id')}</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">{t('admin.common.photo')}</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">{t('admin.common.name')}</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">{t('admin.products.category')}</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">{t('admin.products.prices')}</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground text-right">{t('admin.common.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -64,7 +66,7 @@ export default async function DashboardProducts() {
                         <Edit size={18} />
                       </Button>
                     </Link>
-                    <DeleteButton id={product.id} deleteAction={deleteProduct} entityName="продукт" />
+                    <DeleteButton id={product.id} deleteAction={deleteProduct} entityName={t('admin.products.entityName')} />
                   </div>
                 </td>
               </tr>

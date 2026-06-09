@@ -7,8 +7,10 @@ import { Plus, Edit } from 'lucide-react';
 import { DeleteButton } from '@/shared/components/shared/admin/delete-button';
 import { deleteCategory } from '@/back/actions/category-actions';
 import Link from 'next/link';
+import { getAdminT } from '@/shared/lib/admin-i18n';
 
 export default async function CategoriesPage() {
+  const t = getAdminT();
   const categories = await prisma.category.findMany({
     orderBy: { id: 'desc' },
   });
@@ -16,11 +18,11 @@ export default async function CategoriesPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-10">
-        <Title text="Управление категориями" size="lg" className="font-bold" />
+        <Title text={t('admin.categories.title')} size="lg" className="font-bold" />
         <Link href="/dashboard/categories/new">
           <Button className="flex items-center gap-2">
             <Plus size={20} />
-            Добавить категорию
+            {t('admin.categories.add')}
           </Button>
         </Link>
       </div>
@@ -29,9 +31,9 @@ export default async function CategoriesPage() {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-muted border-b border-border">
-              <th className="px-6 py-4 font-bold text-muted-foreground">ID</th>
-              <th className="px-6 py-4 font-bold text-muted-foreground">Название</th>
-              <th className="px-6 py-4 font-bold text-muted-foreground text-right">Действия</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">{t('admin.common.id')}</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">{t('admin.common.name')}</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground text-right">{t('admin.common.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -46,7 +48,7 @@ export default async function CategoriesPage() {
                         <Edit size={18} />
                       </Button>
                     </Link>
-                    <DeleteButton id={item.id} deleteAction={deleteCategory} entityName="категорию" />
+                    <DeleteButton id={item.id} deleteAction={deleteCategory} entityName={t('admin.categories.entityName')} />
                   </div>
                 </td>
               </tr>

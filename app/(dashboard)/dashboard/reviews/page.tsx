@@ -5,8 +5,10 @@ import { Title, DeleteButton } from '@/shared/components/shared';
 import { Star } from 'lucide-react';
 import { deleteReview } from '@/back/actions/review-actions';
 import { revalidatePath } from 'next/cache';
+import { getAdminT } from '@/shared/lib/admin-i18n';
 
 export default async function ReviewsPage() {
+  const t = getAdminT();
   const reviews = await prisma.review.findMany({
     include: {
       user: true,
@@ -25,19 +27,19 @@ export default async function ReviewsPage() {
 
   return (
     <div className="p-0 md:p-10">
-      <Title text="Управление отзывами" size="lg" className="font-bold mb-10 px-4 md:px-0" />
+      <Title text={t('admin.reviews.title')} size="lg" className="font-bold mb-10 px-4 md:px-0" />
 
       <div className="bg-card text-card-foreground rounded-2xl border border-border shadow-sm overflow-x-auto scrollbar-hide">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-muted border-b border-border">
-              <th className="p-4 font-bold text-muted-foreground">ID</th>
-              <th className="p-4 font-bold text-muted-foreground">Пользователь</th>
-              <th className="p-4 font-bold text-muted-foreground">Товар</th>
-              <th className="p-4 font-bold text-muted-foreground">Оценка</th>
-              <th className="p-4 font-bold text-muted-foreground">Комментарий</th>
-              <th className="p-4 font-bold text-muted-foreground">Дата</th>
-              <th className="p-4 font-bold text-muted-foreground">Действия</th>
+              <th className="p-4 font-bold text-muted-foreground">{t('admin.common.id')}</th>
+              <th className="p-4 font-bold text-muted-foreground">{t('admin.reviews.user')}</th>
+              <th className="p-4 font-bold text-muted-foreground">{t('admin.reviews.product')}</th>
+              <th className="p-4 font-bold text-muted-foreground">{t('admin.reviews.rating')}</th>
+              <th className="p-4 font-bold text-muted-foreground">{t('admin.reviews.comment')}</th>
+              <th className="p-4 font-bold text-muted-foreground">{t('admin.reviews.date')}</th>
+              <th className="p-4 font-bold text-muted-foreground">{t('admin.common.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -53,7 +55,7 @@ export default async function ReviewsPage() {
                   </div>
                 </td>
                 <td className="p-4 text-sm text-muted-foreground max-w-xs truncate">
-                  {review.comment || <span className="text-muted-foreground/50 italic">Нет комментария</span>}
+                  {review.comment || <span className="text-muted-foreground/50 italic">{t('admin.reviews.noComment')}</span>}
                 </td>
                 <td className="p-4 text-sm text-muted-foreground">
                   {new Date(review.createdAt).toLocaleDateString()}
@@ -73,7 +75,7 @@ export default async function ReviewsPage() {
             {reviews.length === 0 && (
               <tr>
                 <td colSpan={7} className="p-10 text-center text-muted-foreground">
-                  Отзывов пока нет
+                  {t('admin.reviews.empty')}
                 </td>
               </tr>
             )}

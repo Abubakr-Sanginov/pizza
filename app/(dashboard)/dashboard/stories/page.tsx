@@ -7,8 +7,10 @@ import { Plus } from 'lucide-react';
 import { DeleteButton } from '@/shared/components/shared/admin/delete-button';
 import { deleteStory } from '@/back/actions/story-actions';
 import Link from 'next/link';
+import { getAdminT } from '@/shared/lib/admin-i18n';
 
 export default async function StoriesPage() {
+  const t = getAdminT();
   const stories = await prisma.story.findMany({
     include: {
       items: true,
@@ -19,11 +21,11 @@ export default async function StoriesPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-10">
-        <Title text="Управление сториз" size="lg" className="font-bold" />
+        <Title text={t('admin.stories.title')} size="lg" className="font-bold" />
         <Link href="/dashboard/stories/new">
           <Button className="flex items-center gap-2">
             <Plus size={20} />
-            Добавить историю
+            {t('admin.stories.add')}
           </Button>
         </Link>
       </div>
@@ -32,11 +34,11 @@ export default async function StoriesPage() {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-muted border-b border-border">
-              <th className="px-6 py-4 font-bold text-muted-foreground">ID</th>
-              <th className="px-6 py-4 font-bold text-muted-foreground">Превью</th>
-              <th className="px-6 py-4 font-bold text-muted-foreground">Кол-во слайдов</th>
-              <th className="px-6 py-4 font-bold text-muted-foreground">Дата создания</th>
-              <th className="px-6 py-4 font-bold text-muted-foreground text-right">Действия</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">{t('admin.common.id')}</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">{t('admin.stories.preview')}</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">{t('admin.stories.slidesCount')}</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">{t('admin.stories.createdAt')}</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground text-right">{t('admin.common.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -46,13 +48,13 @@ export default async function StoriesPage() {
                 <td className="px-6 py-4">
                   <img src={item.previewImageUrl} alt="Preview" className="w-12 h-16 object-cover rounded-md border border-border" />
                 </td>
-                <td className="px-6 py-4 font-medium">{item.items.length} слайдов</td>
+                <td className="px-6 py-4 font-medium">{item.items.length} {t('admin.stories.slides')}</td>
                 <td className="px-6 py-4 text-muted-foreground text-sm">
                   {new Date(item.createdAt).toLocaleDateString('ru-RU')}
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-2">
-                    <DeleteButton id={item.id} deleteAction={deleteStory} entityName="историю" />
+                    <DeleteButton id={item.id} deleteAction={deleteStory} entityName={t('admin.stories.entityName')} />
                   </div>
                 </td>
               </tr>
@@ -60,7 +62,7 @@ export default async function StoriesPage() {
             {stories.length === 0 && (
               <tr>
                 <td colSpan={5} className="px-6 py-10 text-center text-muted-foreground">
-                  Историй пока нет. Нажмите «Добавить историю», чтобы создать первую.
+                  {t('admin.stories.empty')}
                 </td>
               </tr>
             )}

@@ -7,8 +7,10 @@ import { Plus, Edit } from 'lucide-react';
 import { DeleteButton } from '@/shared/components/shared/admin/delete-button';
 import { deleteStore } from '@/back/actions/store-actions';
 import Link from 'next/link';
+import { getAdminT } from '@/shared/lib/admin-i18n';
 
 export default async function StoresPage() {
+  const t = getAdminT();
   const stores = await prisma.store.findMany({
     orderBy: { id: 'desc' },
   });
@@ -16,11 +18,11 @@ export default async function StoresPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-10">
-        <Title text="Управление заведениями" size="lg" className="font-bold" />
+        <Title text={t('admin.stores.title')} size="lg" className="font-bold" />
         <Link href="/dashboard/stores/new">
           <Button className="flex items-center gap-2">
             <Plus size={20} />
-            Добавить заведение
+            {t('admin.stores.add')}
           </Button>
         </Link>
       </div>
@@ -29,11 +31,11 @@ export default async function StoresPage() {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-muted border-b border-border">
-              <th className="px-6 py-4 font-bold text-muted-foreground">ID</th>
-              <th className="px-6 py-4 font-bold text-muted-foreground">Название</th>
-              <th className="px-6 py-4 font-bold text-muted-foreground">Адрес</th>
-              <th className="px-6 py-4 font-bold text-muted-foreground">Телефон</th>
-              <th className="px-6 py-4 font-bold text-muted-foreground text-right">Действия</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">{t('admin.common.id')}</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">{t('admin.common.name')}</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">{t('admin.stores.address')}</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">{t('admin.stores.phone')}</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground text-right">{t('admin.common.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -50,7 +52,7 @@ export default async function StoresPage() {
                         <Edit size={18} />
                       </Button>
                     </Link>
-                    <DeleteButton id={item.id} deleteAction={deleteStore} entityName="заведение" />
+                    <DeleteButton id={item.id} deleteAction={deleteStore} entityName={t('admin.stores.entityName')} />
                   </div>
                 </td>
               </tr>

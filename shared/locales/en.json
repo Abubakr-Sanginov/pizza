@@ -206,5 +206,150 @@
     "searchPlaceholder": "Search...",
     "showAll": "Show all",
     "hide": "Hide"
+  },
+  "admin": {
+    "common": {
+      "id": "ID",
+      "name": "Name",
+      "actions": "Actions",
+      "action": "Action",
+      "price": "Price",
+      "photo": "Photo",
+      "loading": "Loading...",
+      "save": "Save",
+      "panel": "Admin",
+      "courier": "Courier",
+      "backToSite": "To website"
+    },
+    "nav": {
+      "home": "Home",
+      "orders": "Orders",
+      "products": "Products",
+      "categories": "Categories",
+      "ingredients": "Ingredients",
+      "promo": "Promo codes",
+      "notifications": "Notifications",
+      "stores": "Restaurants",
+      "stories": "Stories",
+      "reviews": "Reviews",
+      "users": "Users",
+      "settings": "Settings",
+      "myDeliveries": "My deliveries"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "totalOrders": "Total orders (All-time)",
+      "totalRevenue": "Total revenue (All-time)",
+      "users": "Users",
+      "todayRevenue": "Today's revenue",
+      "recentOrders": "Recent orders",
+      "order": "Order",
+      "noOrders": "No orders yet",
+      "topProducts": "Top products (by reviews)",
+      "reviewsCount": "reviews",
+      "noProducts": "No products yet"
+    },
+    "orders": {
+      "title": "Orders management",
+      "orderId": "Order ID",
+      "client": "Client",
+      "amount": "Amount",
+      "status": "Status",
+      "courier": "Courier",
+      "noOrders": "No orders yet"
+    },
+    "categories": {
+      "title": "Categories management",
+      "add": "Add category",
+      "entityName": "category"
+    },
+    "ingredients": {
+      "title": "Ingredients management",
+      "add": "Add ingredient",
+      "entityName": "ingredient"
+    },
+    "products": {
+      "title": "Products management",
+      "add": "Add product",
+      "category": "Category",
+      "prices": "Prices",
+      "entityName": "product"
+    },
+    "stores": {
+      "title": "Restaurants management",
+      "add": "Add restaurant",
+      "address": "Address",
+      "phone": "Phone",
+      "entityName": "restaurant"
+    },
+    "stories": {
+      "title": "Stories management",
+      "add": "Add story",
+      "preview": "Preview",
+      "slidesCount": "Slides count",
+      "createdAt": "Created at",
+      "slides": "slides",
+      "entityName": "story",
+      "empty": "No stories yet. Click \"Add story\" to create the first one."
+    },
+    "reviews": {
+      "title": "Reviews management",
+      "user": "User",
+      "product": "Product",
+      "rating": "Rating",
+      "comment": "Comment",
+      "date": "Date",
+      "noComment": "No comment",
+      "empty": "No reviews yet"
+    },
+    "users": {
+      "title": "Users management",
+      "userName": "Name",
+      "email": "Email",
+      "role": "Role"
+    },
+    "courier": {
+      "title": "My deliveries",
+      "order": "Order",
+      "address": "Address:",
+      "notSpecified": "Not specified",
+      "entrance": "Entrance:",
+      "floor": "Floor:",
+      "apartment": "Apt/Office:",
+      "client": "Client:",
+      "phone": "Phone:",
+      "emptyTitle": "You have no active deliveries yet.",
+      "emptyText": "Wait for new orders to be assigned."
+    },
+    "promo": {
+      "title": "Promo codes"
+    },
+    "status": {
+      "PENDING": "Pending",
+      "COOKING": "Cooking",
+      "READY": "Ready",
+      "DELIVERING": "Delivering",
+      "SUCCEEDED": "Completed",
+      "CANCELLED": "Cancelled"
+    },
+    "courierSelector": {
+      "none": "No courier"
+    },
+    "aiTranslate": {
+      "idle": "AI translate",
+      "loading": "Translating...",
+      "error": "Error",
+      "translateError": "Translation error",
+      "translated": "Translated: ",
+      "positions": " items",
+      "errorsPrefix": " (errors: ",
+      "errorsSuffix": ")"
+    },
+    "toast": {
+      "statusUpdated": "Order status updated",
+      "statusUpdateError": "Failed to update status",
+      "courierAssigned": "Courier assigned",
+      "courierAssignError": "Failed to assign courier"
+    }
   }
 }

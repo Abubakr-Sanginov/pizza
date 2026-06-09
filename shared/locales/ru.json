@@ -209,5 +209,150 @@
     "searchPlaceholder": "Поиск...",
     "showAll": "Показать все",
     "hide": "Скрыть"
+  },
+  "admin": {
+    "common": {
+      "id": "ID",
+      "name": "Название",
+      "actions": "Действия",
+      "action": "Действие",
+      "price": "Цена",
+      "photo": "Фото",
+      "loading": "Загрузка...",
+      "save": "Сохранить",
+      "panel": "Админка",
+      "courier": "Курьер",
+      "backToSite": "На сайт"
+    },
+    "nav": {
+      "home": "Главная",
+      "orders": "Заказы",
+      "products": "Продукты",
+      "categories": "Категории",
+      "ingredients": "Ингредиенты",
+      "promo": "Промокоды",
+      "notifications": "Уведомления",
+      "stores": "Рестораны",
+      "stories": "Сториз",
+      "reviews": "Отзывы",
+      "users": "Пользователи",
+      "settings": "Настройки",
+      "myDeliveries": "Мои доставки"
+    },
+    "dashboard": {
+      "title": "Панель управления",
+      "totalOrders": "Всего заказов (All-time)",
+      "totalRevenue": "Всего выручки (All-time)",
+      "users": "Пользователей",
+      "todayRevenue": "Выручка за сегодня",
+      "recentOrders": "Последние заказы",
+      "order": "Заказ",
+      "noOrders": "Заказов пока нет",
+      "topProducts": "Популярные товары (по отзывам)",
+      "reviewsCount": "отзывов",
+      "noProducts": "Товаров пока нет"
+    },
+    "orders": {
+      "title": "Управление заказами",
+      "orderId": "ID Заказа",
+      "client": "Клиент",
+      "amount": "Сумма",
+      "status": "Статус",
+      "courier": "Курьер",
+      "noOrders": "Заказов пока нет"
+    },
+    "categories": {
+      "title": "Управление категориями",
+      "add": "Добавить категорию",
+      "entityName": "категорию"
+    },
+    "ingredients": {
+      "title": "Управление ингредиентами",
+      "add": "Добавить ингредиент",
+      "entityName": "ингредиент"
+    },
+    "products": {
+      "title": "Управление продуктами",
+      "add": "Добавить продукт",
+      "category": "Категория",
+      "prices": "Цены",
+      "entityName": "продукт"
+    },
+    "stores": {
+      "title": "Управление заведениями",
+      "add": "Добавить заведение",
+      "address": "Адрес",
+      "phone": "Телефон",
+      "entityName": "заведение"
+    },
+    "stories": {
+      "title": "Управление сториз",
+      "add": "Добавить историю",
+      "preview": "Превью",
+      "slidesCount": "Кол-во слайдов",
+      "createdAt": "Дата создания",
+      "slides": "слайдов",
+      "entityName": "историю",
+      "empty": "Историй пока нет. Нажмите «Добавить историю», чтобы создать первую."
+    },
+    "reviews": {
+      "title": "Управление отзывами",
+      "user": "Пользователь",
+      "product": "Товар",
+      "rating": "Оценка",
+      "comment": "Комментарий",
+      "date": "Дата",
+      "noComment": "Нет комментария",
+      "empty": "Отзывов пока нет"
+    },
+    "users": {
+      "title": "Управление пользователями",
+      "userName": "Имя",
+      "email": "Email",
+      "role": "Роль"
+    },
+    "courier": {
+      "title": "Мои доставки",
+      "order": "Заказ",
+      "address": "Адрес:",
+      "notSpecified": "Не указан",
+      "entrance": "Подъезд:",
+      "floor": "Этаж:",
+      "apartment": "Кв/Офис:",
+      "client": "Клиент:",
+      "phone": "Тел:",
+      "emptyTitle": "У вас пока нет активных доставок.",
+      "emptyText": "Ожидайте назначения новых заказов."
+    },
+    "promo": {
+      "title": "Промокоды"
+    },
+    "status": {
+      "PENDING": "В ожидании",
+      "COOKING": "Готовится",
+      "READY": "Готов",
+      "DELIVERING": "В доставке",
+      "SUCCEEDED": "Выполнен",
+      "CANCELLED": "Отменен"
+    },
+    "courierSelector": {
+      "none": "Без курьера"
+    },
+    "aiTranslate": {
+      "idle": "AI-перевод",
+      "loading": "Переводим...",
+      "error": "Ошибка",
+      "translateError": "Ошибка перевода",
+      "translated": "Переведено: ",
+      "positions": " позиций",
+      "errorsPrefix": " (ошибок: ",
+      "errorsSuffix": ")"
+    },
+    "toast": {
+      "statusUpdated": "Статус заказа обновлен",
+      "statusUpdateError": "Не удалось обновить статус",
+      "courierAssigned": "Курьер назначен",
+      "courierAssignError": "Не удалось назначить курьера"
+    }
   }
 }

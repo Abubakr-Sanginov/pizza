@@ -5,15 +5,21 @@ import { Toaster } from 'react-hot-toast';
 import { SessionProvider } from 'next-auth/react';
 import NextTopLoader from 'nextjs-toploader';
 import i18n from '@/shared/lib/i18n';
+import { LANG_STORAGE_KEY, SUPPORTED_LANGUAGES } from '@/shared/lib/i18n';
 import { NotificationsManager } from './notifications-manager';
 import { ThemeProvider } from './theme-provider';
 import { ReferralCapture } from './referral-capture';
 
 const I18nBootstrap: React.FC = () => {
   React.useEffect(() => {
-    if (i18n.language !== 'ru') {
-      i18n.changeLanguage('ru');
+    let saved: string | null = null;
+    try { saved = localStorage.getItem(LANG_STORAGE_KEY); } catch {}
+    const lang = saved && (SUPPORTED_LANGUAGES as readonly string[]).includes(saved) ? saved : 'ru';
+    if (i18n.language !== lang) {
+      i18n.changeLanguage(lang);
     }
+    // держим cookie в синхроне, чтобы серверные компоненты видели тот же язык
+    try { document.cookie = `${LANG_STORAGE_KEY}=${lang}; path=/; max-age=31536000`; } catch {}
   }, []);
   return null;
 };

@@ -3,21 +3,13 @@
 import React from 'react';
 import { OrderStatus } from '@prisma/client';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { updateOrderStatus } from '../actions';
 
 interface Props {
   orderId: number;
   initialStatus: OrderStatus;
 }
-
-const statusTranslations: Record<OrderStatus, string> = {
-  PENDING: 'В ожидании',
-  COOKING: 'Готовится',
-  READY: 'Готов',
-  DELIVERING: 'В доставке',
-  SUCCEEDED: 'Выполнен',
-  CANCELLED: 'Отменен',
-};
 
 const statusColors: Record<OrderStatus, string> = {
   PENDING: 'bg-yellow-500/15 text-yellow-800 dark:text-yellow-300',
@@ -28,7 +20,10 @@ const statusColors: Record<OrderStatus, string> = {
   CANCELLED: 'bg-red-500/15 text-red-800 dark:text-red-300',
 };
 
+const STATUS_KEYS: OrderStatus[] = ['PENDING', 'COOKING', 'READY', 'DELIVERING', 'SUCCEEDED', 'CANCELLED'];
+
 export const OrderStatusSelector: React.FC<Props> = ({ orderId, initialStatus }) => {
+  const { t } = useTranslation();
   const [status, setStatus] = React.useState<OrderStatus>(initialStatus);
   const [loading, setLoading] = React.useState(false);
 
@@ -37,9 +32,9 @@ export const OrderStatusSelector: React.FC<Props> = ({ orderId, initialStatus })
       setLoading(true);
       setStatus(newStatus);
       await updateOrderStatus(orderId, newStatus);
-      toast.success('Статус заказа обновлен');
+      toast.success(t('admin.toast.statusUpdated'));
     } catch (error) {
-      toast.error('Не удалось обновить статус');
+      toast.error(t('admin.toast.statusUpdateError'));
       setStatus(status);
     } finally {
       setLoading(false);
@@ -53,9 +48,9 @@ export const OrderStatusSelector: React.FC<Props> = ({ orderId, initialStatus })
       disabled={loading}
       className={`px-3 py-1.5 rounded-lg text-sm font-medium border-0 cursor-pointer focus:ring-2 focus:ring-offset-1 focus:ring-primary ${statusColors[status]}`}
     >
-      {Object.entries(statusTranslations).map(([key, label]) => (
+      {STATUS_KEYS.map((key) => (
         <option key={key} value={key} className="bg-card text-card-foreground">
-          {label}
+          {t(`admin.status.${key}`)}
         </option>
       ))}
     </select>

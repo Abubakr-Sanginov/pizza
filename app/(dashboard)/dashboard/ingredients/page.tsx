@@ -7,8 +7,10 @@ import { Plus, Edit } from 'lucide-react';
 import { DeleteButton } from '@/shared/components/shared/admin/delete-button';
 import { deleteIngredient } from '@/back/actions/ingredient-actions';
 import Link from 'next/link';
+import { getAdminT } from '@/shared/lib/admin-i18n';
 
 export default async function IngredientsPage() {
+  const t = getAdminT();
   const ingredients = await prisma.ingredient.findMany({
     orderBy: { id: 'desc' },
   });
@@ -16,11 +18,11 @@ export default async function IngredientsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-10">
-        <Title text="Управление ингредиентами" size="lg" className="font-bold" />
+        <Title text={t('admin.ingredients.title')} size="lg" className="font-bold" />
         <Link href="/dashboard/ingredients/new">
           <Button className="flex items-center gap-2">
             <Plus size={20} />
-            Добавить ингредиент
+            {t('admin.ingredients.add')}
           </Button>
         </Link>
       </div>
@@ -29,11 +31,11 @@ export default async function IngredientsPage() {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-muted border-b border-border">
-              <th className="px-6 py-4 font-bold text-muted-foreground">ID</th>
-              <th className="px-6 py-4 font-bold text-muted-foreground">Фото</th>
-              <th className="px-6 py-4 font-bold text-muted-foreground">Название</th>
-              <th className="px-6 py-4 font-bold text-muted-foreground">Цена</th>
-              <th className="px-6 py-4 font-bold text-muted-foreground text-right">Действия</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">{t('admin.common.id')}</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">{t('admin.common.photo')}</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">{t('admin.common.name')}</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground">{t('admin.common.price')}</th>
+              <th className="px-6 py-4 font-bold text-muted-foreground text-right">{t('admin.common.actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -52,7 +54,7 @@ export default async function IngredientsPage() {
                         <Edit size={18} />
                       </Button>
                     </Link>
-                    <DeleteButton id={item.id} deleteAction={deleteIngredient} entityName="ингредиент" />
+                    <DeleteButton id={item.id} deleteAction={deleteIngredient} entityName={t('admin.ingredients.entityName')} />
                   </div>
                 </td>
               </tr>

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { assignCourier } from '../actions';
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export const CourierSelector: React.FC<Props> = ({ orderId, couriers, initialCourierId }) => {
+  const { t } = useTranslation();
   const [courierId, setCourierId] = React.useState<number | string>(initialCourierId || '');
   const [loading, setLoading] = React.useState(false);
 
@@ -20,9 +22,9 @@ export const CourierSelector: React.FC<Props> = ({ orderId, couriers, initialCou
       const id = val === '' ? null : Number(val);
       setCourierId(val);
       await assignCourier(orderId, id);
-      toast.success('Курьер назначен');
+      toast.success(t('admin.toast.courierAssigned'));
     } catch (error) {
-      toast.error('Не удалось назначить курьера');
+      toast.error(t('admin.toast.courierAssignError'));
     } finally {
       setLoading(false);
     }
@@ -35,7 +37,7 @@ export const CourierSelector: React.FC<Props> = ({ orderId, couriers, initialCou
       disabled={loading}
       className="px-2 py-1 border border-border rounded text-xs bg-card text-card-foreground focus:ring-2 focus:ring-primary outline-none"
     >
-      <option value="">Без курьера</option>
+      <option value="">{t('admin.courierSelector.none')}</option>
       {couriers.map((c) => (
         <option key={c.id} value={c.id}>
           {c.fullName}

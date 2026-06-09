@@ -18,6 +18,7 @@ export const LanguageToggle: React.FC<{ className?: string }> = ({ className }) 
     const next = SUPPORTED_LANGUAGES[(idx + 1) % SUPPORTED_LANGUAGES.length];
     i18n.changeLanguage(next);
     try { localStorage.setItem(LANG_STORAGE_KEY, next); } catch {}
+    try { document.cookie = `${LANG_STORAGE_KEY}=${next}; path=/; max-age=31536000`; } catch {}
   };
   return (
     <Button variant="secondary" onClick={cycle}

@@ -3,8 +3,10 @@ export const revalidate = 0;
 import { prisma } from '@/back/prisma/prisma-client';
 import { Title, AiTranslateButton } from '@/shared/components/shared';
 import { ShoppingBag, Users, Wallet, TrendingUp } from 'lucide-react';
+import { getAdminT } from '@/shared/lib/admin-i18n';
 
 export default async function DashboardPage() {
+  const t = getAdminT();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -40,28 +42,28 @@ export default async function DashboardPage() {
 
   const stats = [
     {
-      title: 'Всего заказов (All-time)',
+      title: t('admin.dashboard.totalOrders'),
       value: globalStats?.totalOrders || 0,
       icon: ShoppingBag,
       color: 'text-blue-500 dark:text-blue-400',
       bgColor: 'bg-blue-500/10',
     },
     {
-      title: 'Всего выручки (All-time)',
+      title: t('admin.dashboard.totalRevenue'),
       value: `${globalStats?.totalRevenue || 0} TJS`,
       icon: Wallet,
       color: 'text-green-500 dark:text-green-400',
       bgColor: 'bg-green-500/10',
     },
     {
-      title: 'Пользователей',
+      title: t('admin.dashboard.users'),
       value: totalUsers,
       icon: Users,
       color: 'text-purple-500 dark:text-purple-400',
       bgColor: 'bg-purple-500/10',
     },
     {
-      title: 'Выручка за сегодня',
+      title: t('admin.dashboard.todayRevenue'),
       value: `${todayStats._sum.totalAmount || 0} TJS`,
       icon: TrendingUp,
       color: 'text-primary',
@@ -72,7 +74,7 @@ export default async function DashboardPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
-        <Title text="Панель управления" size="lg" className="font-bold" />
+        <Title text={t('admin.dashboard.title')} size="lg" className="font-bold" />
         <AiTranslateButton />
       </div>
 
@@ -94,13 +96,13 @@ export default async function DashboardPage() {
         <div className="bg-card text-card-foreground p-6 rounded-2xl border border-border shadow-sm">
           <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
             <ShoppingBag size={20} className="text-muted-foreground" />
-            Последние заказы
+            {t('admin.dashboard.recentOrders')}
           </h3>
           <div className="space-y-4">
             {recentOrders.map((order) => (
               <div key={order.id} className="flex items-center justify-between p-4 rounded-xl bg-muted hover:bg-accent transition-colors">
                 <div>
-                  <p className="font-bold">Заказ #{order.id}</p>
+                  <p className="font-bold">{t('admin.dashboard.order')} #{order.id}</p>
                   <p className="text-xs text-muted-foreground">{order.fullName} • {new Date(order.createdAt).toLocaleTimeString()}</p>
                 </div>
                 <div className="text-right">
@@ -111,14 +113,14 @@ export default async function DashboardPage() {
                 </div>
               </div>
             ))}
-            {recentOrders.length === 0 && <p className="text-muted-foreground text-center py-10">Заказов пока нет</p>}
+            {recentOrders.length === 0 && <p className="text-muted-foreground text-center py-10">{t('admin.dashboard.noOrders')}</p>}
           </div>
         </div>
 
         <div className="bg-card text-card-foreground p-6 rounded-2xl border border-border shadow-sm">
           <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
             <TrendingUp size={20} className="text-muted-foreground" />
-            Популярные товары (по отзывам)
+            {t('admin.dashboard.topProducts')}
           </h3>
           <div className="space-y-4">
             {topProducts.map((product) => (
@@ -126,14 +128,14 @@ export default async function DashboardPage() {
                 <img src={product.imageUrl} alt={product.name} className="w-12 h-12 object-contain" />
                 <div className="flex-1">
                   <p className="font-bold text-sm">{product.name}</p>
-                  <p className="text-xs text-muted-foreground">{product._count.reviews} отзывов</p>
+                  <p className="text-xs text-muted-foreground">{product._count.reviews} {t('admin.dashboard.reviewsCount')}</p>
                 </div>
                 <div className="text-right font-bold text-primary">
                   {product.items[0]?.price} TJS
                 </div>
               </div>
             ))}
-            {topProducts.length === 0 && <p className="text-muted-foreground text-center py-10">Товаров пока нет</p>}
+            {topProducts.length === 0 && <p className="text-muted-foreground text-center py-10">{t('admin.dashboard.noProducts')}</p>}
           </div>
         </div>
       </div>

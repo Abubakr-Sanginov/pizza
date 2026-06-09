@@ -39,34 +39,26 @@ export const NotificationsForm: React.FC = () => {
         imageUrl: imageUrl || null,
       });
 
-      console.log('Send notification response:', data);
+      const summary = data.summary || {};
+      const totalSuccess = (summary.expoSent || 0) + (summary.webSent || 0);
+      const totalError = (summary.expoFailed || 0) + (summary.webFailed || 0);
 
-      const results = data.results || data.details;
-      const webSuccess = results?.web?.success || 0;
-      const webError = results?.web?.error || 0;
-      const expoSuccess = results?.expo?.success || 0;
-      const expoError = results?.expo?.error || 0;
-
-      const totalSuccess = webSuccess + expoSuccess;
-      const totalError = webError + expoError;
-
-      if (totalSuccess > 0) {
+      if (summary.noDevices) {
+          toast.error('Нет зарегистрированных устройств');
+      } else if (totalSuccess > 0) {
           toast.success(`Отправлено успешно: ${totalSuccess}${totalError > 0 ? ` (Ошибок: ${totalError})` : ''}`);
       } else if (totalError > 0) {
-          const errorDetails = [...(results?.web?.details || []), ...(results?.expo?.details || [])].join(', ');
-          toast.error(`Не удалось отправить: ${errorDetails || 'Ошибка сервиса рассылки'}`, { duration: 6000 });
-      } else if (data.count === 0) {
-          toast.error('Нет зарегистрированных устройств');
+          toast.error('Не удалось отправить ни одному устройству', { duration: 6000 });
       } else {
-          toast.error('Произошла неизвестная ошибка при обработке ответа');
+          toast.success('Уведомление сохранено');
       }
 
       setTitle('');
       setBody('');
       setImageUrl('');
 
-      if (data.notification) {
-        setHistory(prev => [data.notification, ...prev]);
+      if (summary.notification) {
+        setHistory(prev => [summary.notification, ...prev]);
       }
     } catch (error) {
       console.error(error);

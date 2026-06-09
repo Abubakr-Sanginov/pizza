@@ -35,6 +35,7 @@ export interface SendPushSummary {
   removedTokens: number;
   receiptIds?: string[];
   noDevices?: boolean;
+  notification?: { id: number; title: string; body: string; imageUrl: string | null; createdAt: Date };
 }
 
 interface SendOptions {
@@ -48,19 +49,6 @@ export async function sendPushToUsers(
 ): Promise<SendPushSummary> {
   const { userIds, recordNotification = false } = options;
 
-  if (recordNotification) {
-    await prisma.notification.create({
-      data: {
-        title: payload.title,
-        body: payload.body,
-        imageUrl: payload.imageUrl ?? null,
-      },
-    });
-  }
-
-  const where = userIds && userIds.length > 0 ? { userId: { in: userIds } } : {};
-  const tokens = await prisma.pushToken.findMany({ where });
-
   const summary: SendPushSummary = {
     expoSent: 0,
     expoFailed: 0,
@@ -69,6 +57,20 @@ export async function sendPushToUsers(
     removedTokens: 0,
     receiptIds: [],
   };
+
+  if (recordNotification) {
+    const created = await prisma.notification.create({
+      data: {
+        title: payload.title,
+        body: payload.body,
+        imageUrl: payload.imageUrl ?? null,
+      },
+    });
+    summary.notification = created;
+  }
+
+  const where = userIds && userIds.length > 0 ? { userId: { in: userIds } } : {};
+  const tokens = await prisma.pushToken.findMany({ where });
 
   if (tokens.length === 0) {
     summary.noDevices = true;
@@ -190,18 +192,38 @@ async function verifyReceipts(receiptIds: string[]) {
 
 async function sendWeb(_tokenId: number, raw: string, payload: SendPushPayload) {
   const subscription = JSON.parse(raw);
-  await webpush.sendNotification(
-    subscription,
-    JSON.stringify({
-      title: payload.title,
-      body: payload.body,
-      imageUrl: payload.imageUrl,
-      url: payload.url || '/',
-      icon: '/logo.png',
-      data: payload.data,
-    }),
-    { TTL: 60 * 60 * 24, urgency: 'high' },
+  // 10s timeout so a single stuck push endpoint can't hang the whole request
+  await withTimeout(
+    webpush.sendNotification(
+      subscription,
+      JSON.stringify({
+        title: payload.title,
+        body: payload.body,
+        imageUrl: payload.imageUrl,
+        url: payload.url || '/',
+        icon: '/logo.png',
+        data: payload.data,
+      }),
+      { TTL: 60 * 60 * 24, urgency: 'high' },
+    ),
+    10_000,
   );
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`push timeout after ${ms}ms`)), ms);
+    promise.then(
+      (v) => {
+        clearTimeout(timer);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(timer);
+        reject(e);
+      },
+    );
+  });
 }
 
 async function maybeRemoveInvalidWebToken(id: number, err: any): Promise<boolean> {

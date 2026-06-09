@@ -4,8 +4,10 @@ export const revalidate = 0;
 import { prisma } from '@/back/prisma/prisma-client';
 import { Title } from '@/shared/components/shared';
 import { PromoAdmin } from '@/shared/components/shared/admin/promo-admin';
+import { getAdminT } from '@/shared/lib/admin-i18n';
 
 export default async function PromoPage() {
+  const t = getAdminT();
   const [promos, products, categories] = await Promise.all([
     prisma.promoCode.findMany({ orderBy: { createdAt: 'desc' } }),
     prisma.product.findMany({
@@ -17,7 +19,7 @@ export default async function PromoPage() {
 
   return (
     <div>
-      <Title text="Промокоды" size="lg" className="font-bold mb-10" />
+      <Title text={t('admin.promo.title')} size="lg" className="font-bold mb-10" />
       <PromoAdmin
         initial={promos.map((p: any) => ({
           ...p,
