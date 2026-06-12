@@ -1,12 +1,12 @@
-# 🍕 Next Pizza — Инструкция по запуску (RU)
+# Next Pizza — Инструкция по запуску (RU)
 
 Полноценный интернет-магазин пиццы на **Next.js 14** + **Prisma** + **PostgreSQL**, с админкой, оплатами, push-уведомлениями, Telegram-ботом и мобильным приложением (Expo).
 
-> 📖 English version: [SETUP.en.md](./SETUP.en.md)
+> English version: [SETUP.en.md](./SETUP.en.md)
 
 ---
 
-## 📋 Требования
+## Требования
 
 - **Node.js** 18+ (рекомендуется 20 LTS)
 - **PostgreSQL** база данных (подойдёт [Neon](https://neon.tech) — бесплатный serverless Postgres, проект изначально на нём)
@@ -14,7 +14,7 @@
 
 ---
 
-## 🚀 Быстрый старт
+## Быстрый старт
 
 ```bash
 # 1. Установить зависимости (заодно сгенерируется Prisma Client)
@@ -44,7 +44,7 @@ npm run start
 
 ---
 
-## 🔐 Вход в админку
+## Вход в админку
 
 После `npm run prisma:seed` создаётся администратор:
 
@@ -52,17 +52,17 @@ npm run start
 - **Email:** `admin@pizza.tg`
 - **Пароль:** `111111`
 
-> ⚠️ **Обязательно смените пароль** (или сами данные в `back/prisma/seed.ts`) перед публикацией сайта.
+> **Обязательно смените пароль** (или сами данные в `back/prisma/seed.ts`) перед публикацией сайта.
 
 Тестовый покупатель: `user@test.ru` / `111111`.
 
 ---
 
-## ⚙️ Переменные окружения (`.env.local`)
+## Переменные окружения (`.env.local`)
 
-Создайте файл `.env.local` в корне проекта. Ниже — что означает каждая переменная. **Обязательные** помечены 🔴, без них сайт не запустится корректно.
+Создайте файл `.env.local` в корне проекта. Ниже — что означает каждая переменная. Без обязательных сайт не запустится корректно.
 
-### 🔴 База данных (обязательно)
+### База данных (обязательно)
 ```env
 POSTGRES_URL=postgresql://user:pass@host:5432/dbname?sslmode=require
 POSTGRES_URL_NON_POOLING=postgresql://user:pass@host:5432/dbname?sslmode=require
@@ -72,7 +72,7 @@ POSTGRES_URL_NON_POOLING=postgresql://user:pass@host:5432/dbname?sslmode=require
 - Обязательно добавьте `?sslmode=require` в конце.
 - **Если видите ошибку `P1001 Can't reach database` или `the URL must start with postgresql://`** — значит строка пустая/неверная, либо база Neon «уснула» (на бесплатном тарифе просыпается за несколько секунд — повторите запрос).
 
-### 🔴 NextAuth — авторизация (обязательно)
+### NextAuth — авторизация (обязательно)
 ```env
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=сгенерируйте_случайную_строку
@@ -80,7 +80,7 @@ NEXTAUTH_SECRET=сгенерируйте_случайную_строку
 - `NEXTAUTH_URL` — публичный адрес сайта. Локально `http://localhost:3000`, на проде — ваш домен `https://example.com`.
 - `NEXTAUTH_SECRET` — секрет для подписи сессий. Сгенерируйте: `openssl rand -base64 32` (или любой длинный случайный набор символов).
 
-### 🔵 SMTP — отправка писем (подтверждение почты)
+### SMTP — отправка писем (подтверждение почты)
 ```env
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=465
@@ -92,7 +92,7 @@ SMTP_SECURE=true
 - Нужно для подтверждения e-mail при регистрации. Без этого регистрация по почте работать не будет, но сайт запустится.
 - Для Gmail используйте **App Password**, а не обычный пароль.
 
-### 🔵 OAuth — вход через соцсети (необязательно)
+### OAuth — вход через соцсети (необязательно)
 ```env
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
@@ -106,7 +106,7 @@ APPLE_CLIENT_SECRET=
 - **GitHub:** Settings → Developer settings → OAuth Apps.
 - **Apple:** Service ID + JWT из `.p8` ключа. Сгенерировать секрет: https://bal.so/apple-gen-secret
 
-### 🟢 Telegram-бот (РАБОТАЕТ ✅)
+### Telegram-бот (РАБОТАЕТ)
 ```env
 TELEGRAM_BOT_TOKEN=токен_от_BotFather
 TELEGRAM_CHAT_ID=id_чата_для_уведомлений
@@ -115,7 +115,7 @@ TELEGRAM_CHAT_ID=id_чата_для_уведомлений
 - `TELEGRAM_CHAT_ID` — ID чата/группы, куда бот шлёт уведомления о заказах.
 - Запуск бота: `npm run bot` (см. раздел «Telegram-боты» ниже).
 
-### 🟢 Push-уведомления (Web Push / VAPID)
+### Push-уведомления (Web Push / VAPID)
 ```env
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=
 VAPID_PRIVATE_KEY=
@@ -125,7 +125,7 @@ VAPID_SUBJECT=mailto:no-reply@example.com
 - Сгенерировать ключи: `npx web-push generate-vapid-keys`
 - Без них push просто отключится (сайт работает, в логах будет предупреждение).
 
-### 🟡 Оплата через Telegram-бота (РАБОТАЕТ ✅)
+### Оплата через Telegram-бота (РАБОТАЕТ)
 ```env
 PAYMENTS_BOT_TOKEN=токен_платёжного_бота
 PAYMENTS_BOT_USERNAME=username_бота_без_@
@@ -144,7 +144,27 @@ STAR_PRICE_TJS=1.5
 - `PAYMENT_INTERNAL_SECRET` — общий секрет между сайтом и ботом (любая длинная случайная строка).
 - `STARS_FEE_PERCENT` / `STAR_PRICE_TJS` — настройки оплаты звёздами Telegram.
 
-### 🟠 iiko Cloud — интеграция с системой ресторана (⚠️ НЕ ПРОТЕСТИРОВАНО)
+### Хранилище картинок (S3-совместимое) — рекомендуется для прода
+```env
+S3_BUCKET=
+S3_REGION=us-east-1
+S3_ACCESS_KEY_ID=
+S3_SECRET_ACCESS_KEY=
+S3_PUBLIC_URL=https://cdn.example.com
+# Для Cloudflare R2 / Backblaze B2 / MinIO укажите endpoint:
+S3_ENDPOINT=
+# Для MinIO / некоторых R2-конфигов:
+S3_FORCE_PATH_STYLE=false
+```
+- Загрузка картинок (товары, ингредиенты, сторис, уведомления) идёт через `/api/upload`.
+- **Если S3 не настроен — файлы сохраняются в локальную папку `public/uploads`.** Это работает локально, но **НЕ переживает редеплой на serverless-хостингах (Vercel, Railway)** — картинки пропадут. Для боевого использования обязательно настройте S3.
+- Поддерживается любое **S3-совместимое** хранилище:
+  - **AWS S3** — задайте `S3_BUCKET`, `S3_REGION`, ключи. `S3_ENDPOINT` оставьте пустым.
+  - **Cloudflare R2** — `S3_ENDPOINT=https://<account>.r2.cloudflarestorage.com`, `S3_PUBLIC_URL` = публичный домен бакета.
+  - **Backblaze B2 / Supabase Storage / MinIO** — задайте `S3_ENDPOINT` и при необходимости `S3_FORCE_PATH_STYLE=true`.
+- `S3_PUBLIC_URL` — публичный URL (CDN-домен), по которому отдаются файлы. Если не задан — URL соберётся автоматически из bucket/endpoint.
+
+### iiko Cloud — интеграция с системой ресторана (НЕ ПРОТЕСТИРОВАНО)
 ```env
 IIKO_API_LOGIN=
 IIKO_ORGANIZATION_ID=
@@ -157,14 +177,14 @@ IIKO_REQUEST_TIMEOUT_MS=15000
 IIKO_MAX_RETRIES=2
 CRON_SECRET=случайная_строка
 ```
-> ⚠️ **ВНИМАНИЕ:** интеграция с iiko написана, но **автор её не тестировал на реальном аккаунте iiko** — она может не работать или работать некорректно. Используйте на свой риск и тщательно проверьте перед боевым использованием.
+> **ВНИМАНИЕ:** интеграция с iiko написана, но **автор её не тестировал на реальном аккаунте iiko** — она может не работать или работать некорректно. Используйте на свой риск и тщательно проверьте перед боевым использованием.
 >
 > **Если iiko вам не нужен — просто оставьте `IIKO_API_LOGIN` пустым.** Интеграция автоматически отключится, на работу остального сайта это никак не влияет.
 
 - `IIKO_API_LOGIN` — главный API-ключ из личного кабинета iiko Cloud. Пустой = интеграция выключена.
 - `CRON_SECRET` — секрет для cron-эндпоинтов (`/api/iiko/poll-orders`, `/retry-orders`, `/sync-stoplist`).
 
-### 🟢 AI-перевод контента (Google Gemini)
+### AI-перевод контента (Google Gemini)
 ```env
 GEMINI_API_KEY=
 ```
@@ -180,7 +200,7 @@ NEXT_PUBLIC_API_URL=/api
 
 ---
 
-## 🤖 Telegram-боты
+## Telegram-боты
 
 В проекте два бота (запускаются отдельными процессами):
 
@@ -193,19 +213,19 @@ NEXT_PUBLIC_API_URL=/api
 
 ---
 
-## 🌍 Мультиязычность
+## Мультиязычность
 
-Сайт и админка переведены на **3 языка**: русский 🇷🇺, таджикский 🇹🇯, английский 🇬🇧. Переключатель языка — в шапке сайта. Тексты лежат в `shared/locales/{ru,tg,en}.json`.
+Сайт и админка переведены на **3 языка**: русский, таджикский, английский. Переключатель языка — в шапке сайта. Тексты лежат в `shared/locales/{ru,tg,en}.json`.
 
 ---
 
-## 📱 Мобильное приложение (Expo)
+## Мобильное приложение (Expo)
 
 В папке `NextApp/` — мобильное приложение на React Native (Expo). Для push-уведомлений на Android нужен `google-services.json` из Firebase (положить в `NextApp/google-services.json`). Подробности — в `NextApp/`.
 
 ---
 
-## 🛠 Полезные команды
+## Полезные команды
 
 | Команда | Описание |
 |---------|----------|
@@ -220,7 +240,7 @@ NEXT_PUBLIC_API_URL=/api
 
 ---
 
-## ❓ Частые проблемы
+## Частые проблемы
 
 - **`P1001 Can't reach database`** — база недоступна. Проверьте `POSTGRES_URL`; если это Neon на бесплатном тарифе — база «спит», повторите запрос через несколько секунд.
 - **`the URL must start with postgresql://`** — переменная `POSTGRES_URL` пустая или неправильная.
@@ -230,7 +250,7 @@ NEXT_PUBLIC_API_URL=/api
 
 ---
 
-## ✅ Минимум для запуска «чтобы просто заработало»
+## Минимум для запуска «чтобы просто заработало»
 
 Чтобы сайт поднялся локально, достаточно заполнить:
 1. `POSTGRES_URL` + `POSTGRES_URL_NON_POOLING`

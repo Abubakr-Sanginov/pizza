@@ -16,7 +16,9 @@
       "Bash(python -c \"open\\(r'D:/Projects/next-pizza-main/app/api/payments/alif/callback/route.ts','rb'\\).read\\(\\).decode\\('utf-8'\\); print\\('OK utf8'\\)\")",
       "Bash(python *)",
       "Bash(git check-ignore *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(grep -oE '\\\\.[a-zA-Z0-9]+$')",
+      "Bash(npx next *)"
     ]
   }
 }

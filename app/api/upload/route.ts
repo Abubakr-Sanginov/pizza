@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
 import crypto from 'crypto';
 import { getServerSession } from 'next-auth';
 
 import { authOptions } from '@/shared/constants/auth-options';
+import { putObject } from '@/back/lib/storage';
 
 const ALLOWED_MIME = new Set([
   'image/jpeg',
@@ -59,14 +58,16 @@ export async function POST(req: NextRequest) {
     }
 
     const fileName = `${crypto.randomUUID()}${ext}`;
-    const uploadDir = join(process.cwd(), 'public/uploads');
-    await mkdir(uploadDir, { recursive: true });
-
-    const path = join(uploadDir, fileName);
     const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(path, buffer);
 
-    return NextResponse.json({ url: `/uploads/${fileName}` });
+    // Uploads to S3-compatible storage if configured, else local public/uploads.
+    const url = await putObject({
+      buffer,
+      key: `uploads/${fileName}`,
+      contentType: file.type,
+    });
+
+    return NextResponse.json({ url });
   } catch (error) {
     console.error('Error [UPLOAD_API]', error);
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });

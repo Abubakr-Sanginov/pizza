@@ -1,12 +1,12 @@
-# 🍕 Next Pizza — Setup Guide (EN)
+# Next Pizza — Setup Guide (EN)
 
 A full-featured pizza e-commerce store built with **Next.js 14** + **Prisma** + **PostgreSQL**, including an admin panel, payments, push notifications, a Telegram bot, and a mobile app (Expo).
 
-> 📖 Русская версия: [SETUP.ru.md](./SETUP.ru.md)
+> Русская версия: [SETUP.ru.md](./SETUP.ru.md)
 
 ---
 
-## 📋 Requirements
+## Requirements
 
 - **Node.js** 18+ (20 LTS recommended)
 - **PostgreSQL** database ([Neon](https://neon.tech) works great — free serverless Postgres, the project was originally built on it)
@@ -14,7 +14,7 @@ A full-featured pizza e-commerce store built with **Next.js 14** + **Prisma** + 
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 # 1. Install dependencies (also generates the Prisma Client)
@@ -43,7 +43,7 @@ npm run start
 
 ---
 
-## 🔐 Admin login
+## Admin login
 
 After `npm run prisma:seed`, an admin account is created:
 
@@ -51,17 +51,17 @@ After `npm run prisma:seed`, an admin account is created:
 - **Email:** `admin@pizza.tg`
 - **Password:** `111111`
 
-> ⚠️ **Change this password** (or edit the credentials in `back/prisma/seed.ts`) before going live.
+> **Change this password** (or edit the credentials in `back/prisma/seed.ts`) before going live.
 
 Demo customer: `user@test.ru` / `111111`.
 
 ---
 
-## ⚙️ Environment variables (`.env.local`)
+## Environment variables (`.env.local`)
 
-Create a `.env.local` file in the project root. Below is what each variable does. **Required** ones are marked 🔴 — the site won't run properly without them.
+Create a `.env.local` file in the project root. Below is what each variable does. The site won't run properly without the required ones.
 
-### 🔴 Database (required)
+### Database (required)
 ```env
 POSTGRES_URL=postgresql://user:pass@host:5432/dbname?sslmode=require
 POSTGRES_URL_NON_POOLING=postgresql://user:pass@host:5432/dbname?sslmode=require
@@ -71,7 +71,7 @@ POSTGRES_URL_NON_POOLING=postgresql://user:pass@host:5432/dbname?sslmode=require
 - Always append `?sslmode=require`.
 - **If you see `P1001 Can't reach database` or `the URL must start with postgresql://`** — the string is empty/invalid, or the Neon database is "asleep" (on the free tier it wakes up in a few seconds — just retry).
 
-### 🔴 NextAuth — authentication (required)
+### NextAuth — authentication (required)
 ```env
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=generate_a_random_string
@@ -79,7 +79,7 @@ NEXTAUTH_SECRET=generate_a_random_string
 - `NEXTAUTH_URL` — the public URL of the site. Locally `http://localhost:3000`, in production your domain `https://example.com`.
 - `NEXTAUTH_SECRET` — secret used to sign sessions. Generate one: `openssl rand -base64 32` (or any long random string).
 
-### 🔵 SMTP — sending email (email verification)
+### SMTP — sending email (email verification)
 ```env
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=465
@@ -91,7 +91,7 @@ SMTP_SECURE=true
 - Used to verify email on registration. Without it, email signup won't work, but the site still runs.
 - For Gmail, use an **App Password**, not your regular password.
 
-### 🔵 OAuth — social login (optional)
+### OAuth — social login (optional)
 ```env
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
@@ -105,7 +105,7 @@ APPLE_CLIENT_SECRET=
 - **GitHub:** Settings → Developer settings → OAuth Apps.
 - **Apple:** Service ID + a JWT generated from a `.p8` key. Generate the secret here: https://bal.so/apple-gen-secret
 
-### 🟢 Telegram bot (WORKING ✅)
+### Telegram bot (WORKING)
 ```env
 TELEGRAM_BOT_TOKEN=token_from_BotFather
 TELEGRAM_CHAT_ID=chat_id_for_notifications
@@ -114,7 +114,7 @@ TELEGRAM_CHAT_ID=chat_id_for_notifications
 - `TELEGRAM_CHAT_ID` — the chat/group ID where the bot sends order notifications.
 - Run the bot: `npm run bot` (see the "Telegram bots" section below).
 
-### 🟢 Push notifications (Web Push / VAPID)
+### Push notifications (Web Push / VAPID)
 ```env
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=
 VAPID_PRIVATE_KEY=
@@ -124,7 +124,7 @@ VAPID_SUBJECT=mailto:no-reply@example.com
 - Generate keys: `npx web-push generate-vapid-keys`
 - Without them, push is simply disabled (the site works, you'll see a warning in the logs).
 
-### 🟡 Telegram-bot payments (WORKING ✅)
+### Telegram-bot payments (WORKING)
 ```env
 PAYMENTS_BOT_TOKEN=payment_bot_token
 PAYMENTS_BOT_USERNAME=bot_username_without_@
@@ -143,7 +143,27 @@ STAR_PRICE_TJS=1.5
 - `PAYMENT_INTERNAL_SECRET` — a shared secret between the site and the bot (any long random string).
 - `STARS_FEE_PERCENT` / `STAR_PRICE_TJS` — Telegram Stars payment settings.
 
-### 🟠 iiko Cloud — restaurant POS integration (⚠️ UNTESTED)
+### Image storage (S3-compatible) — recommended for production
+```env
+S3_BUCKET=
+S3_REGION=us-east-1
+S3_ACCESS_KEY_ID=
+S3_SECRET_ACCESS_KEY=
+S3_PUBLIC_URL=https://cdn.example.com
+# For Cloudflare R2 / Backblaze B2 / MinIO, set an endpoint:
+S3_ENDPOINT=
+# For MinIO / some R2 setups:
+S3_FORCE_PATH_STYLE=false
+```
+- Image uploads (products, ingredients, stories, notifications) go through `/api/upload`.
+- **If S3 is not configured, files are saved to the local `public/uploads` folder.** This works in development but **does NOT survive redeploys on serverless hosts (Vercel, Railway)** — images will be lost. For production you must configure S3.
+- Any **S3-compatible** storage is supported:
+  - **AWS S3** — set `S3_BUCKET`, `S3_REGION`, and keys. Leave `S3_ENDPOINT` empty.
+  - **Cloudflare R2** — `S3_ENDPOINT=https://<account>.r2.cloudflarestorage.com`, `S3_PUBLIC_URL` = bucket's public domain.
+  - **Backblaze B2 / Supabase Storage / MinIO** — set `S3_ENDPOINT` and, if needed, `S3_FORCE_PATH_STYLE=true`.
+- `S3_PUBLIC_URL` — the public URL (CDN domain) files are served from. If omitted, the URL is built automatically from the bucket/endpoint.
+
+### iiko Cloud — restaurant POS integration (UNTESTED)
 ```env
 IIKO_API_LOGIN=
 IIKO_ORGANIZATION_ID=
@@ -156,14 +176,14 @@ IIKO_REQUEST_TIMEOUT_MS=15000
 IIKO_MAX_RETRIES=2
 CRON_SECRET=random_string
 ```
-> ⚠️ **WARNING:** the iiko integration is implemented but **the author never tested it against a real iiko account** — it may not work or may behave incorrectly. Use at your own risk and test thoroughly before relying on it in production.
+> **WARNING:** the iiko integration is implemented but **the author never tested it against a real iiko account** — it may not work or may behave incorrectly. Use at your own risk and test thoroughly before relying on it in production.
 >
 > **If you don't need iiko, just leave `IIKO_API_LOGIN` empty.** The integration disables itself automatically and does not affect the rest of the site.
 
 - `IIKO_API_LOGIN` — the main API key from the iiko Cloud dashboard. Empty = integration off.
 - `CRON_SECRET` — secret for the cron endpoints (`/api/iiko/poll-orders`, `/retry-orders`, `/sync-stoplist`).
 
-### 🟢 AI content translation (Google Gemini)
+### AI content translation (Google Gemini)
 ```env
 GEMINI_API_KEY=
 ```
@@ -179,7 +199,7 @@ NEXT_PUBLIC_API_URL=/api
 
 ---
 
-## 🤖 Telegram bots
+## Telegram bots
 
 The project has two bots (run as separate processes):
 
@@ -192,19 +212,19 @@ In production they are usually run via `pm2` or as separate services so they sta
 
 ---
 
-## 🌍 Internationalization
+## Internationalization
 
-Both the storefront and the admin panel are translated into **3 languages**: Russian 🇷🇺, Tajik 🇹🇯, English 🇬🇧. The language switcher is in the site header. Translation strings live in `shared/locales/{ru,tg,en}.json`.
+Both the storefront and the admin panel are translated into **3 languages**: Russian, Tajik, English. The language switcher is in the site header. Translation strings live in `shared/locales/{ru,tg,en}.json`.
 
 ---
 
-## 📱 Mobile app (Expo)
+## Mobile app (Expo)
 
 The `NextApp/` folder contains a React Native (Expo) mobile app. For Android push notifications you need a `google-services.json` from Firebase (place it at `NextApp/google-services.json`). See `NextApp/` for details.
 
 ---
 
-## 🛠 Useful commands
+## Useful commands
 
 | Command | Description |
 |---------|-------------|
@@ -219,7 +239,7 @@ The `NextApp/` folder contains a React Native (Expo) mobile app. For Android pus
 
 ---
 
-## ❓ Common issues
+## Common issues
 
 - **`P1001 Can't reach database`** — DB unreachable. Check `POSTGRES_URL`; if it's Neon on the free tier, the DB is "asleep" — retry in a few seconds.
 - **`the URL must start with postgresql://`** — `POSTGRES_URL` is empty or invalid.
@@ -229,7 +249,7 @@ The `NextApp/` folder contains a React Native (Expo) mobile app. For Android pus
 
 ---
 
-## ✅ Bare minimum to "just get it running"
+## Bare minimum to "just get it running"
 
 To boot the site locally you only need:
 1. `POSTGRES_URL` + `POSTGRES_URL_NON_POOLING`
