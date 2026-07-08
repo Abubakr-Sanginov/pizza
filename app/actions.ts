@@ -195,7 +195,8 @@ export async function createOrder(data: CheckoutFormValues) {
     const isOnlinePayment =
       data.paymentMethod === 'TELEGRAM_STARS' ||
       data.paymentMethod === 'MANUAL_TRANSFER' ||
-      data.paymentMethod === 'ALIF_PAY';
+      data.paymentMethod === 'ALIF_PAY' ||
+      data.paymentMethod === 'YOOKASSA';
 
     if (!isOnlinePayment) {
       await prisma.cart.update({
@@ -262,6 +263,9 @@ export async function createOrder(data: CheckoutFormValues) {
 
     if (data.paymentMethod === 'ALIF_PAY') {
       return `/checkout/pay/${order.id}?method=ALIF`;
+    }
+    if (data.paymentMethod === 'YOOKASSA') {
+      return `/checkout/pay/${order.id}?method=YOOKASSA`;
     }
     if (data.paymentMethod === 'TELEGRAM_STARS') {
       return `/checkout/pay/${order.id}?method=STARS`;

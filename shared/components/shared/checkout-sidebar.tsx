@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import axios from 'axios';
@@ -66,7 +66,7 @@ export const CheckoutSidebar: React.FC<Props> = ({
         // Promo no longer valid for new cart (e.g., scoped items removed)
         setAppliedPromo(null);
         form?.setValue?.('promoCode', undefined);
-        toast.error('РџСЂРѕРјРѕРєРѕРґ Р±РѕР»СЊС€Рµ РЅРµ РґРµР№СЃС‚РІСѓРµС‚ РґР»СЏ С‚РµРєСѓС‰РµР№ РєРѕСЂР·РёРЅС‹');
+        toast.error('Промокод больше не действует для текущей корзины');
       });
     return () => {
       cancelled = true;
@@ -85,9 +85,9 @@ export const CheckoutSidebar: React.FC<Props> = ({
       });
       setAppliedPromo({ code: data.code, discount: data.appliedDiscount });
       form?.setValue?.('promoCode', data.code);
-      toast.success(`РџСЂРѕРјРѕРєРѕРґ РїСЂРёРјРµРЅС‘РЅ: в€’${data.appliedDiscount} TJS`);
+      toast.success(`Промокод применён: −${data.appliedDiscount} TJS`);
     } catch (e: any) {
-      toast.error(e?.response?.data?.error ?? 'РќРµ СѓРґР°Р»РѕСЃСЊ РїСЂРёРјРµРЅРёС‚СЊ РїСЂРѕРјРѕРєРѕРґ');
+      toast.error(e?.response?.data?.error ?? 'Не удалось применить промокод');
     } finally {
       setApplying(false);
     }
@@ -161,7 +161,7 @@ export const CheckoutSidebar: React.FC<Props> = ({
             className="w-full h-10 inline-flex items-center justify-between gap-2 px-4 rounded-xl glass text-sm font-bold text-foreground hover:bg-muted transition">
             <span className="flex items-center gap-2">
               <Check size={16} className="text-primary" />
-              РџСЂРѕРјРѕРєРѕРґ РїСЂРёРјРµРЅС‘РЅ
+              Промокод применён
             </span>
             <X size={14} className="text-muted-foreground" />
           </button>
@@ -170,7 +170,7 @@ export const CheckoutSidebar: React.FC<Props> = ({
             <Input
               value={promoInput}
               onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
-              placeholder="РџСЂРѕРјРѕРєРѕРґ"
+              placeholder="Промокод"
               className="h-10 uppercase tracking-wider font-bold"
               maxLength={50}
             />
@@ -181,7 +181,7 @@ export const CheckoutSidebar: React.FC<Props> = ({
               loading={applying}
               disabled={!promoInput.trim() || loading}
               className="h-10 rounded-xl font-bold">
-              РћРљ
+              Ок
             </Button>
           </div>
         )}
@@ -192,10 +192,10 @@ export const CheckoutSidebar: React.FC<Props> = ({
           title={
             <div className="flex items-center text-amber-600 font-semibold">
               <Ticket size={18} className="mr-2" />
-              Р‘РѕРЅСѓСЃС‹
+              Бонусы
             </div>
           }
-          value={<span className="text-amber-600 font-bold">в€’{bonusSpend} TJS</span>}
+          value={<span className="text-amber-600 font-bold">−{bonusSpend} TJS</span>}
         />
       )}
 
@@ -204,7 +204,7 @@ export const CheckoutSidebar: React.FC<Props> = ({
       </div>
 
       <div className="mt-6">
-        <div className="text-sm font-bold mb-2 text-muted-foreground">РЎРїРѕСЃРѕР± РѕРїР»Р°С‚С‹</div>
+        <div className="text-sm font-bold mb-2 text-muted-foreground">Способ оплаты</div>
         <PaymentMethodSelector />
       </div>
 

@@ -42,11 +42,26 @@ function buildHttp(): AxiosInstance {
 const http = buildHttp();
 
 async function fetchAccessToken(): Promise<string> {
-  if (!IIKO_CONFIG.apiLogin) {
-    throw new IikoError('IIKO_API_LOGIN is not set');
+  const useNewApi = IIKO_CONFIG.appId && IIKO_CONFIG.appSecret;
+
+  if (!useNewApi && !IIKO_CONFIG.apiLogin) {
+    throw new IikoError('IIKO_API_LOGIN or IIKO_APP_ID + IIKO_APP_SECRET is not set');
   }
+
   try {
-    const { data } = await http.post('/access_token', { apiLogin: IIKO_CONFIG.apiLogin });
+    let data: any;
+
+    if (useNewApi) {
+      const res = await http.post('/access_token', {
+        appId: IIKO_CONFIG.appId,
+        appSecret: IIKO_CONFIG.appSecret,
+      });
+      data = res.data;
+    } else {
+      const res = await http.post('/access_token', { apiLogin: IIKO_CONFIG.apiLogin });
+      data = res.data;
+    }
+
     if (!data?.token || typeof data.token !== 'string') {
       throw new IikoError('iiko returned empty access token', 200, data?.correlationId);
     }

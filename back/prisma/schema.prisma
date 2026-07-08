@@ -439,6 +439,7 @@ enum PaymentMethod {
   TELEGRAM_STARS
   MANUAL_TRANSFER
   ALIF_PAY
+  YOOKASSA
 }
 
 model UserBonus {

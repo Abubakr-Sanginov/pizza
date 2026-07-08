@@ -13,8 +13,8 @@ export default function PaymentPendingPage() {
   const params = useSearchParams();
   const router = useRouter();
   const methodParam = params.get('method');
-  const method: 'STARS' | 'TRANSFER' | 'ALIF' =
-    methodParam === 'STARS' ? 'STARS' : methodParam === 'ALIF' ? 'ALIF' : 'TRANSFER';
+  const method: 'STARS' | 'TRANSFER' | 'ALIF' | 'YOOKASSA' =
+    methodParam === 'STARS' ? 'STARS' : methodParam === 'ALIF' ? 'ALIF' : methodParam === 'YOOKASSA' ? 'YOOKASSA' : 'TRANSFER';
 
   const [deepLink, setDeepLink] = React.useState<string | null>(null);
   const [status, setStatus] = React.useState<string>('PENDING');
@@ -32,6 +32,20 @@ export default function PaymentPendingPage() {
           window.location.href = data.url;
         })
         .catch((e) => setError(e?.response?.data?.error ?? 'Не удалось создать платёж Алиф'));
+      return;
+    }
+
+    if (method === 'YOOKASSA') {
+      axios
+        .post('/api/payments/yookassa/init', { orderId: Number(id) })
+        .then(({ data }) => {
+          if (!data.url) {
+            setError('Не удалось получить ссылку YooKassa');
+            return;
+          }
+          window.location.href = data.url;
+        })
+        .catch((e) => setError(e?.response?.data?.error ?? 'Не удалось создать платёж YooKassa'));
       return;
     }
 

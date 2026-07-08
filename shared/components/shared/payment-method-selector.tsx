@@ -2,10 +2,10 @@
 
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
-import { AlertTriangle, Banknote, CreditCard, Send, Star } from 'lucide-react';
+import { AlertTriangle, Banknote, CreditCard, Send, Star, Wallet } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 
-type Method = 'CASH_ON_DELIVERY' | 'TELEGRAM_STARS' | 'MANUAL_TRANSFER' | 'ALIF_PAY';
+type Method = 'CASH_ON_DELIVERY' | 'TELEGRAM_STARS' | 'MANUAL_TRANSFER' | 'ALIF_PAY' | 'YOOKASSA';
 
 const STARS_FEE_PERCENT = Number(process.env.NEXT_PUBLIC_STARS_FEE_PERCENT || '43');
 
@@ -23,6 +23,12 @@ const OPTIONS: Array<{ id: Method; title: string; subtitle: string; icon: React.
   //   subtitle: 'Korti Milli, Visa, Mastercard, Alif Mobi',
   //   icon: <CreditCard size={20} />,
   // },
+  {
+    id: 'YOOKASSA',
+    title: 'YooKassa (картой онлайн)',
+    subtitle: 'Банковская карта, СБП, ЮMoney',
+    icon: <Wallet size={20} />,
+  },
   {
     id: 'TELEGRAM_STARS',
     title: 'Telegram Stars',

@@ -1,6 +1,8 @@
 export const IIKO_CONFIG = {
   apiBase: process.env.IIKO_API_URL || 'https://api-ru.iiko.services/api/1',
   apiLogin: process.env.IIKO_API_LOGIN || '',
+  appId: process.env.IIKO_APP_ID || '',
+  appSecret: process.env.IIKO_APP_SECRET || '',
   defaultOrganizationId: process.env.IIKO_ORGANIZATION_ID || '',
   defaultTerminalGroupId: process.env.IIKO_TERMINAL_GROUP_ID || '',
   paymentTypeIdCash: process.env.IIKO_PAYMENT_TYPE_ID_CASH || '',
@@ -11,5 +13,5 @@ export const IIKO_CONFIG = {
 };
 
 export function isIikoEnabled(): boolean {
-  return Boolean(IIKO_CONFIG.apiLogin);
+  return Boolean(IIKO_CONFIG.apiLogin || (IIKO_CONFIG.appId && IIKO_CONFIG.appSecret));
 }

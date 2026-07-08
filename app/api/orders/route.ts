@@ -126,11 +126,13 @@ export async function POST(req: NextRequest) {
       | 'CASH_ON_DELIVERY'
       | 'TELEGRAM_STARS'
       | 'MANUAL_TRANSFER'
-      | 'ALIF_PAY';
+      | 'ALIF_PAY'
+      | 'YOOKASSA';
     const isOnlinePayment =
       method === 'TELEGRAM_STARS' ||
       method === 'MANUAL_TRANSFER' ||
-      method === 'ALIF_PAY';
+      method === 'ALIF_PAY' ||
+      method === 'YOOKASSA';
 
     const order = await prisma.order.create({
       data: {
