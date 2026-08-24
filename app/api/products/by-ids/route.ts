@@ -18,7 +18,7 @@ export async function GET(req: Request) {
     }
 
     const products = await prisma.product.findMany({
-      where: { id: { in: ids } },
+      where: { id: { in: ids }, name: { not: 'Своя пицца' } },
       include: {
         items: { orderBy: { price: 'asc' } },
         ingredients: true,

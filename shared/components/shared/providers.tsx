@@ -3,6 +3,7 @@
 import React from 'react';
 import { Toaster } from 'react-hot-toast';
 import { SessionProvider } from 'next-auth/react';
+import { MotionConfig } from 'framer-motion';
 import NextTopLoader from 'nextjs-toploader';
 import i18n from '@/shared/lib/i18n';
 import { LANG_STORAGE_KEY, SUPPORTED_LANGUAGES } from '@/shared/lib/i18n';
@@ -26,19 +27,21 @@ const I18nBootstrap: React.FC = () => {
 
 export const Providers: React.FC<React.PropsWithChildren> = ({ children }) => {
   return (
-    <ThemeProvider>
-      <I18nBootstrap />
-      <SessionProvider>{children}</SessionProvider>
-      <Toaster
-        toastOptions={{
-          className: '!bg-card !text-card-foreground !border !border-border',
-        }}
-      />
-      <NextTopLoader />
-      <NotificationsManager />
-      <React.Suspense fallback={null}>
-        <ReferralCapture />
-      </React.Suspense>
-    </ThemeProvider>
+    <MotionConfig reducedMotion="user">
+      <ThemeProvider>
+        <I18nBootstrap />
+        <SessionProvider>{children}</SessionProvider>
+        <Toaster
+          toastOptions={{
+            className: '!bg-card !text-card-foreground !border !border-border',
+          }}
+        />
+        <NextTopLoader />
+        <NotificationsManager />
+        <React.Suspense fallback={null}>
+          <ReferralCapture />
+        </React.Suspense>
+      </ThemeProvider>
+    </MotionConfig>
   );
 };

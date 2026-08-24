@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
     }
 
     const favorites = await prisma.favorite.findMany({
-      where: { userId },
+      where: { userId, product: { name: { not: "Своя пицца" } } },
       include: {
         product: {
           include: {

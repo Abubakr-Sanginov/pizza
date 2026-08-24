@@ -1,7 +1,7 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DarkTheme, DefaultTheme, Theme as NavTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, Theme as NavTheme, ThemeProvider, Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import Constants from 'expo-constants';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
@@ -11,23 +11,27 @@ import '@/lib/i18n';
 import { useColorScheme } from '@/components/useColorScheme';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
-import * as Notifications from 'expo-notifications';
 import { palettes } from '@/constants/Colors';
 
-Notifications.setNotificationHandler({
-  handleNotification: async (notification) => {
-    const data = (notification?.request?.content?.data ?? {}) as any;
+// expo-notifications бросает ошибку при инициализации в Expo Go на Android —
+// настраиваем обработчик только вне Expo Go.
+if (Constants.executionEnvironment !== 'storeClient') {
+  const Notifications = require('expo-notifications') as typeof import('expo-notifications');
+  Notifications.setNotificationHandler({
+    handleNotification: async (notification) => {
+      const data = (notification?.request?.content?.data ?? {}) as any;
 
-    const silent = data?.silent === true;
-    return {
-      shouldShowBanner: !silent,
-      shouldShowList: true,
-      shouldPlaySound: !silent,
-      shouldSetBadge: true,
-      shouldShowAlert: !silent,
-    };
-  },
-});
+      const silent = data?.silent === true;
+      return {
+        shouldShowBanner: !silent,
+        shouldShowList: true,
+        shouldPlaySound: !silent,
+        shouldSetBadge: true,
+        shouldShowAlert: !silent,
+      };
+    },
+  });
+}
 
 const NavLightTheme: NavTheme = {
   ...DefaultTheme,

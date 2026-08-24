@@ -38,12 +38,12 @@ export const PizzaOfTheDayServer: React.FC<Props> = async ({ className }) => {
 
     if (countMap.size > 0) {
       const pizzaIds = await prisma.product.findMany({
-        where: { categoryId: 1 },
+        where: { categoryId: 1, name: { not: "Своя пицца" } },
         select: { id: true },
       });
       const pizzaIdSet = new Set(pizzaIds.map((p) => p.id));
 
-      for (const [id, count] of countMap.entries()) {
+      for (const [id, count] of Array.from(countMap.entries())) {
         if (pizzaIdSet.has(id) && count > topCount) {
           topCount = count;
           topPizzaId = id;
@@ -54,7 +54,7 @@ export const PizzaOfTheDayServer: React.FC<Props> = async ({ className }) => {
 
     if (!topPizzaId) {
       const fallback = await prisma.product.findFirst({
-        where: { categoryId: 1, items: { some: {} } },
+        where: { categoryId: 1, name: { not: "Своя пицца" }, items: { some: {} } },
         orderBy: { reviews: { _count: "desc" } },
         select: { id: true },
       });

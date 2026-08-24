@@ -17,7 +17,6 @@ import { Button } from "../ui";
 import { useSession } from "next-auth/react";
 import { useFavoritesStore } from "@/shared/store";
 import { ThemeToggle } from "./theme-toggle";
-import { LanguageToggle } from "./language-toggle";
 
 interface Props {
   hasSearch?: boolean;
@@ -92,7 +91,7 @@ export const Header: React.FC<Props> = ({
                 />
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-lg md:text-2xl uppercase font-black leading-none tracking-tight">
+                <h1 className="font-display text-xl md:text-[26px] leading-none">
                   Next Pizza
                 </h1>
                 <p className="text-[10px] md:text-xs text-muted-foreground leading-3 hidden md:block mt-1.5 tracking-wider uppercase font-semibold">
@@ -117,52 +116,60 @@ export const Header: React.FC<Props> = ({
             />
 
             <ThemeToggle />
-            <LanguageToggle />
 
-            <Link href="/profile/favorites" aria-label="Избранное">
+            {}
+            <Link href="/pizza-builder" className="hidden md:block">
               <Button
                 variant="secondary"
-                className="px-2 md:px-4 h-[42px] rounded-2xl"
+                className="px-4 h-[42px] rounded-2xl gap-2 text-sm font-extrabold"
               >
-                <Heart size={18} className="text-muted-foreground" />
+                <ChefHat size={18} className="text-primary" />
+                {t("header.buildPizza")}
               </Button>
             </Link>
 
-            <Link href="/notifications">
-              <Button
-                variant="secondary"
-                className="px-2 md:px-4 h-[42px] rounded-2xl"
-              >
-                <Bell size={18} className="text-muted-foreground" />
-              </Button>
-            </Link>
+            {}
+            <div className="flex items-center gap-0.5">
+              <Link href="/profile/favorites" aria-label={t("header.favorites")}>
+                <Button
+                  variant="ghost"
+                  title={t("header.favorites")}
+                  className="px-2.5 h-[42px] rounded-2xl"
+                >
+                  <Heart size={18} className="text-muted-foreground" />
+                </Button>
+              </Link>
 
-            <Link href="/pizza-builder">
-              <Button
-                variant="secondary"
-                className="px-2 md:px-4 h-[42px] rounded-2xl"
-              >
-                <ChefHat size={18} className="text-muted-foreground" />
-              </Button>
-            </Link>
+              <Link href="/notifications" aria-label={t("tabs.notifications")}>
+                <Button
+                  variant="ghost"
+                  title={t("tabs.notifications")}
+                  className="px-2.5 h-[42px] rounded-2xl hidden sm:inline-flex"
+                >
+                  <Bell size={18} className="text-muted-foreground" />
+                </Button>
+              </Link>
 
-            <Link href="/delivery">
-              <Button
-                variant="secondary"
-                className="px-2 md:px-4 h-[42px] rounded-2xl"
-              >
-                <MapPin size={18} className="text-muted-foreground" />
-              </Button>
-            </Link>
+              <Link href="/delivery" aria-label={t("checkout.delivery")}>
+                <Button
+                  variant="ghost"
+                  title={t("checkout.delivery")}
+                  className="px-2.5 h-[42px] rounded-2xl hidden sm:inline-flex"
+                >
+                  <MapPin size={18} className="text-muted-foreground" />
+                </Button>
+              </Link>
 
-            <Link href="/group-order">
-              <Button
-                variant="secondary"
-                className="px-2 md:px-4 h-[42px] rounded-2xl"
-              >
-                <Users size={18} className="text-muted-foreground" />
-              </Button>
-            </Link>
+              <Link href="/group-order" aria-label={t("header.groupOrder")}>
+                <Button
+                  variant="ghost"
+                  title={t("header.groupOrder")}
+                  className="px-2.5 h-[42px] rounded-2xl hidden lg:inline-flex"
+                >
+                  <Users size={18} className="text-muted-foreground" />
+                </Button>
+              </Link>
+            </div>
 
             <ProfileButton onClickSignIn={() => setOpenAuthModal(true)} />
 

@@ -30,14 +30,14 @@ function GlassEdges({ rounded, theme }: { rounded: number; theme: Theme }) {
         colors={[topColor, 'transparent']}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 0.4 }}
-        style={[StyleSheet.absoluteFillObject, { borderRadius: rounded }]}
+        style={[StyleSheet.absoluteFill, { borderRadius: rounded }]}
       />
       <LinearGradient
         pointerEvents="none"
         colors={['transparent', bottomColor]}
         start={{ x: 0.5, y: 0.6 }}
         end={{ x: 0.5, y: 1 }}
-        style={[StyleSheet.absoluteFillObject, { borderRadius: rounded }]}
+        style={[StyleSheet.absoluteFill, { borderRadius: rounded }]}
       />
     </>
   );
@@ -77,7 +77,7 @@ export const LiquidGlassCard: React.FC<CardProps> = ({
         <View
           pointerEvents="none"
           style={[
-            StyleSheet.absoluteFillObject,
+            StyleSheet.absoluteFill,
             {
               borderRadius: rounded,
               borderWidth: StyleSheet.hairlineWidth,
@@ -184,7 +184,7 @@ export const LiquidGlassButton: React.FC<ButtonProps> = ({
           <View
             pointerEvents="none"
             style={[
-              StyleSheet.absoluteFillObject,
+              StyleSheet.absoluteFill,
               {
                 borderRadius: radii[size],
                 borderWidth: StyleSheet.hairlineWidth,
@@ -249,7 +249,7 @@ export const LiquidGlassPill: React.FC<PillProps> = ({ active, onPress, label, s
           <View
             pointerEvents="none"
             style={[
-              StyleSheet.absoluteFillObject,
+              StyleSheet.absoluteFill,
               {
                 borderRadius: 20,
                 borderWidth: StyleSheet.hairlineWidth,

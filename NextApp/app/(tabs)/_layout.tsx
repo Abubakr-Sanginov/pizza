@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Tabs } from "expo-router";
+import { Tabs } from "expo-router/js-tabs";
 
 import { useUserStore } from "@/store/useUserStore";
 import { useCartStore } from "@/store/useCartStore";

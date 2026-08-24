@@ -62,3 +62,5 @@ export { CheckoutScheduleForm } from "./checkout/checkout-schedule-form";
 
 export { LanguageToggle } from './language-toggle';
 export { AiTranslateButton } from './admin/ai-translate-button';
+export { Hero } from './hero';
+export { SectionHeader } from './section-header';

@@ -1,4 +1,4 @@
-import { Link } from 'expo-router';
+import { Link, type Href } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import React from 'react';
 import { Platform } from 'react-native';
@@ -11,7 +11,7 @@ export function ExternalLink(
       target="_blank"
       {...props}
 
-      href={props.href}
+      href={props.href as Href}
       onPress={(e) => {
         if (Platform.OS !== 'web') {
 

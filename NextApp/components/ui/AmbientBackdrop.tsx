@@ -9,7 +9,7 @@ export const AmbientBackdrop: React.FC = () => {
   const isDark = theme.mode === 'dark';
 
   return (
-    <View pointerEvents="none" style={[StyleSheet.absoluteFillObject, { backgroundColor: theme.background }]}>
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: theme.background }]}>
       <LinearGradient
         colors={
           isDark
@@ -18,7 +18,7 @@ export const AmbientBackdrop: React.FC = () => {
         }
         start={{ x: 0, y: 0 }}
         end={{ x: 0.7, y: 0.6 }}
-        style={[StyleSheet.absoluteFillObject, styles.glow]}
+        style={[StyleSheet.absoluteFill, styles.glow]}
       />
       <LinearGradient
         colors={
@@ -28,7 +28,7 @@ export const AmbientBackdrop: React.FC = () => {
         }
         start={{ x: 1, y: 1 }}
         end={{ x: 0.3, y: 0.3 }}
-        style={[StyleSheet.absoluteFillObject, styles.glow]}
+        style={[StyleSheet.absoluteFill, styles.glow]}
       />
     </View>
   );

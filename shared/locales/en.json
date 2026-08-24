@@ -6,7 +6,10 @@
     "verifiedSuccess": "Email verified successfully!",
     "signIn": "Sign In",
     "profile": "Profile",
-    "cart": "Cart"
+    "cart": "Cart",
+    "buildPizza": "Build your pizza",
+    "favorites": "Favorites",
+    "groupOrder": "Group order"
   },
   "menu": {
     "pizzas": "Pizzas",

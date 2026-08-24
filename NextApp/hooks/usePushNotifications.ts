@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
@@ -10,9 +9,11 @@ import { useRouter } from 'expo-router';
 import { API_URL } from '@/constants/Api';
 import { useUserStore } from '@/store/useUserStore';
 
+type NotificationsModule = typeof import('expo-notifications');
+
 export interface PushNotificationState {
   expoPushToken?: string;
-  notification?: Notifications.Notification;
+  notification?: import('expo-notifications').Notification;
   permissionGranted?: boolean;
   registrationError?: string;
 }
@@ -23,8 +24,14 @@ const PENDING_RETRY_KEY = 'pushTokenPendingRetry';
 
 const isExpoGo = Constants.executionEnvironment === 'storeClient';
 
+// В Expo Go на Android expo-notifications бросает ошибку при инициализации модуля
+// (remote push удалён из Expo Go с SDK 53), поэтому загружаем его только вне Expo Go.
+const Notifications: NotificationsModule | undefined = isExpoGo
+  ? undefined
+  : (require('expo-notifications') as NotificationsModule);
+
 async function ensureAndroidChannels() {
-  if (Platform.OS !== 'android') return;
+  if (!Notifications || Platform.OS !== 'android') return;
   try {
     await Notifications.setNotificationChannelAsync('default', {
       name: 'Основные уведомления',
@@ -76,15 +83,15 @@ async function postTokenToServer(token: string, userId?: number | string) {
 
 export const usePushNotifications = (): PushNotificationState => {
   const [expoPushToken, setExpoPushToken] = useState<string | undefined>();
-  const [notification, setNotification] = useState<Notifications.Notification | undefined>();
+  const [notification, setNotification] = useState<import('expo-notifications').Notification | undefined>();
   const [permissionGranted, setPermissionGranted] = useState<boolean | undefined>();
   const [registrationError, setRegistrationError] = useState<string | undefined>();
 
   const userId = useUserStore((s) => s.user?.id);
   const router = useRouter();
 
-  const notificationListener = useRef<Notifications.Subscription | null>(null);
-  const responseListener = useRef<Notifications.Subscription | null>(null);
+  const notificationListener = useRef<import('expo-notifications').Subscription | null>(null);
+  const responseListener = useRef<import('expo-notifications').Subscription | null>(null);
 
   /**
    * Effect 1: register token. Runs on mount + when userId changes.
@@ -98,7 +105,7 @@ export const usePushNotifications = (): PushNotificationState => {
 
         console.log('[push] starting registration, isExpoGo:', isExpoGo, 'isDevice:', Device.isDevice);
 
-        if (isExpoGo) {
+        if (isExpoGo || !Notifications) {
           setRegistrationError(
             'Push не работает в Expo Go (SDK 53+). Соберите development build.',
           );
@@ -191,9 +198,9 @@ export const usePushNotifications = (): PushNotificationState => {
    * Listeners are stable — we don't recreate them when userId changes.
    */
   useEffect(() => {
-    if (isExpoGo) return;
+    if (isExpoGo || !Notifications) return;
 
-    const handleResponse = (response: Notifications.NotificationResponse) => {
+    const handleResponse = (response: import('expo-notifications').NotificationResponse) => {
       const data = response?.notification?.request?.content?.data as any;
       if (!data) return;
 

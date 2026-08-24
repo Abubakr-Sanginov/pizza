@@ -50,14 +50,14 @@ export const Shimmer: React.FC<ShimmerProps> = ({ width = '100%', height = 16, r
       ]}>
       <Animated.View
         style={[
-          StyleSheet.absoluteFillObject,
+          StyleSheet.absoluteFill,
           { transform: [{ translateX }] },
         ]}>
         <LinearGradient
           colors={['transparent', highlightColor, 'transparent']}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
-          style={StyleSheet.absoluteFillObject}
+          style={StyleSheet.absoluteFill}
         />
       </Animated.View>
     </View>

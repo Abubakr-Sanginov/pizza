@@ -6,7 +6,10 @@
     "verifiedSuccess": "Почта успешно подтверждена!",
     "signIn": "Войти",
     "profile": "Профиль",
-    "cart": "Корзина"
+    "cart": "Корзина",
+    "buildPizza": "Собрать пиццу",
+    "favorites": "Избранное",
+    "groupOrder": "Совместный заказ"
   },
   "menu": {
     "pizzas": "Пиццы",

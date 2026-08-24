@@ -91,7 +91,7 @@ export const ProductCard: React.FC<Props> = ({
 
           {/* Discount badge */}
           {priceOld && priceOld > price && (
-            <div className="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-soft z-10">
+            <div className="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-[hsl(var(--tomato))] text-white shadow-soft z-10">
               <span className="text-sm font-black tracking-tight">
                 −{Math.round((1 - price / priceOld) * 100)}%
               </span>
@@ -153,9 +153,12 @@ export const ProductCard: React.FC<Props> = ({
                 {priceOld} TJS
               </span>
             )}
-            <span className="text-[13px] text-muted-foreground font-medium">{t('menu.from')}</span>
-            <span className="text-2xl font-black text-foreground tracking-tight leading-none mt-0.5">
-              {price} <span className="text-base font-bold text-muted-foreground">TJS</span>
+            <span className="text-2xl font-black text-foreground tracking-tight leading-none">
+              <span className="text-sm font-bold text-muted-foreground mr-1">
+                {t('menu.from')}
+              </span>
+              {price}{' '}
+              <span className="text-base font-bold text-muted-foreground">TJS</span>
             </span>
           </div>
 

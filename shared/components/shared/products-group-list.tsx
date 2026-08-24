@@ -3,7 +3,7 @@
 import React from "react";
 import { useIntersection } from "react-use";
 
-import { Title } from "./title";
+import { SectionHeader } from "./section-header";
 import { cn } from "@/shared/lib/utils";
 import { ProductCard } from "./product-card";
 import { useCategoryStore } from "@/shared/store";
@@ -61,7 +61,7 @@ export const ProductsGroupList: React.FC<Props> = ({
 
   return (
     <div className={className} id={title} ref={intersectionRef}>
-      <Title text={translatedTitle} size="lg" className="font-extrabold mb-5" />
+      <SectionHeader title={translatedTitle} className="mb-5" />
 
       <div
         className={cn(

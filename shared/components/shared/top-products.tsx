@@ -1,5 +1,5 @@
 import React from "react";
-import { Title } from "./title";
+import { SectionHeader } from "./section-header";
 import { ProductCard } from "./product-card";
 import { prisma } from "@/back/prisma/prisma-client";
 
@@ -27,7 +27,10 @@ export const TopProducts: React.FC<Props> = async ({ className }) => {
     if (topQueries.length > 0) {
       const queryNames = topQueries.map((q: any) => q.query);
       products = await prisma.product.findMany({
-        where: { name: { in: queryNames }, items: { some: {} } },
+        where: {
+          name: { in: queryNames, not: "Своя пицца" },
+          items: { some: {} },
+        },
         include: {
           items: true,
           ingredients: true,
@@ -39,7 +42,10 @@ export const TopProducts: React.FC<Props> = async ({ className }) => {
 
     if (products.length < 4) {
       const reviewedProducts = await prisma.product.findMany({
-        where: { id: { notIn: products.map((p: any) => p.id) } },
+        where: {
+          id: { notIn: products.map((p: any) => p.id) },
+          name: { not: "Своя пицца" },
+        },
         include: {
           items: true,
           ingredients: true,
@@ -53,7 +59,10 @@ export const TopProducts: React.FC<Props> = async ({ className }) => {
 
     if (products.length < 4) {
       const additionalProducts = await prisma.product.findMany({
-        where: { id: { notIn: products.map((p: any) => p.id) } },
+        where: {
+          id: { notIn: products.map((p: any) => p.id) },
+          name: { not: "Своя пицца" },
+        },
         include: {
           items: true,
           ingredients: true,
@@ -68,7 +77,7 @@ export const TopProducts: React.FC<Props> = async ({ className }) => {
 
     return (
       <div className={className}>
-        <Title text="Популярное сейчас" size="lg" className="font-bold mb-5" />
+        <SectionHeader title="Популярное сейчас" className="mb-5" />
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[50px]">
           {products.map((product: any) => (
             <ProductCard

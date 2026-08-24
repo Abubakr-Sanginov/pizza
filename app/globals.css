@@ -23,10 +23,13 @@ html {
     --popover: 0 0% 100%;
     --popover-foreground: 20 14.3% 4.1%;
 
-    --primary: 22 100% 50%;
+    /* Палитра ингредиентов */
+    --primary: 22 100% 50%; /* печной апельсин */
     --primary-foreground: 60 9.1% 97.8%;
+    --tomato: 5 70% 51%; /* помидор: скидки, срочность */
+    --basil: 145 45% 33%; /* базилик: свежесть, успех */
 
-    --secondary: 32 100% 98%;
+    --secondary: 33 80% 96%; /* моцарелла: тёплые поверхности */
     --secondary-foreground: 24 9.8% 10%;
 
     --muted: 60 4.8% 95.9%;
@@ -217,6 +220,56 @@ html {
   }
   body {
     @apply text-foreground overflow-x-hidden ambient-bg;
+  }
+
+  /* Видимый фокус с клавиатуры */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
+/* Акцентные заголовки */
+.font-display {
+  font-family: var(--font-nunito), sans-serif;
+  font-weight: 800;
+}
+
+/* Сигнатура: пунктирная «линия меню» между названием и ссылкой */
+.menu-leader {
+  flex: 1 1 auto;
+  min-width: 2rem;
+  border-bottom: 3px dotted hsl(var(--border));
+  transform: translateY(-0.35em);
+}
+
+/* Медленное вращение пиццы в hero */
+@keyframes slow-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.slow-rotate {
+  animation: slow-rotate 90s linear infinite;
+}
+
+/* Уважение к reduced motion для чистого CSS */
+@media (prefers-reduced-motion: reduce) {
+  .lift,
+  .btn-gradient,
+  .btn-gradient:hover {
+    transition: none;
+    transform: none;
+  }
+  .animate-pulse,
+  .slow-rotate {
+    animation: none;
   }
 }
 

@@ -17,8 +17,10 @@ export const ProductForm: React.FC<Props> = ({ product, onSubmit: _onSubmit }) =
   const [addCartItem, loading] = useCartStore((state) => [state.addCartItem, state.loading]);
 
   React.useEffect(() => {
-    pushRecentlyViewed(product.id);
-  }, [product.id]);
+    if (product.name !== 'Своя пицца') {
+      pushRecentlyViewed(product.id);
+    }
+  }, [product.id, product.name]);
 
   const firstItem = product.items[0];
   const isPizzaForm = Boolean(firstItem.pizzaType);

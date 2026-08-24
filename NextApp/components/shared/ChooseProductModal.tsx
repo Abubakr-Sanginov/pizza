@@ -395,7 +395,7 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                 ]}
                 start={{ x: 0.5, y: 0 }}
                 end={{ x: 0.5, y: 0.4 }}
-                style={[StyleSheet.absoluteFillObject, { borderTopLeftRadius: 40, borderTopRightRadius: 40 }]}
+                style={[StyleSheet.absoluteFill, { borderTopLeftRadius: 40, borderTopRightRadius: 40 }]}
               />
               <View style={styles.priceContainer}>
                 {currentItem?.priceOld && (

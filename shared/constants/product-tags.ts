@@ -17,17 +17,17 @@ export const PRODUCT_TAGS: Record<ProductTag, TagMeta> = {
   VEGAN: {
     label: { ru: 'Веган', en: 'Vegan', tg: 'Веган' },
     emoji: '🌱',
-    className: 'bg-green-500/15 text-green-700 dark:text-green-300 border-green-500/30',
+    className: 'bg-[hsl(var(--basil)/0.12)] text-[hsl(var(--basil))] border-[hsl(var(--basil)/0.35)]',
   },
   VEGETARIAN: {
     label: { ru: 'Вегетар.', en: 'Veggie', tg: 'Вегетарианӣ' },
     emoji: '🥗',
-    className: 'bg-lime-500/15 text-lime-700 dark:text-lime-300 border-lime-500/30',
+    className: 'bg-[hsl(var(--basil)/0.12)] text-[hsl(var(--basil))] border-[hsl(var(--basil)/0.35)]',
   },
   SPICY: {
     label: { ru: 'Острое', en: 'Spicy', tg: 'Тунд' },
     emoji: '🌶️',
-    className: 'bg-red-500/15 text-red-700 dark:text-red-300 border-red-500/30',
+    className: 'bg-[hsl(var(--tomato)/0.12)] text-[hsl(var(--tomato))] border-[hsl(var(--tomato)/0.35)]',
   },
   GLUTEN_FREE: {
     label: { ru: 'Без глютена', en: 'Gluten-free', tg: 'Бе глютен' },
@@ -47,7 +47,7 @@ export const PRODUCT_TAGS: Record<ProductTag, TagMeta> = {
   HIT: {
     label: { ru: 'Хит', en: 'Hit', tg: 'Хит' },
     emoji: '🔥',
-    className: 'bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-500/30',
+    className: 'bg-[hsl(var(--primary)/0.12)] text-[hsl(var(--primary))] border-[hsl(var(--primary)/0.35)]',
   },
 };
 

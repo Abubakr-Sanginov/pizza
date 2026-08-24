@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { View, Text, Pressable, StyleSheet, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import { BottomTabBarProps } from "expo-router/js-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
@@ -83,7 +83,7 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = React.memo(
               ]}
               start={{ x: 0.5, y: 0 }}
               end={{ x: 0.5, y: 0.45 }}
-              style={StyleSheet.absoluteFillObject}
+              style={StyleSheet.absoluteFill}
             />
             <LinearGradient
               pointerEvents="none"
@@ -93,12 +93,12 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = React.memo(
               ]}
               start={{ x: 0.5, y: 0.55 }}
               end={{ x: 0.5, y: 1 }}
-              style={StyleSheet.absoluteFillObject}
+              style={StyleSheet.absoluteFill}
             />
             <View
               pointerEvents="none"
               style={[
-                StyleSheet.absoluteFillObject,
+                StyleSheet.absoluteFill,
                 {
                   borderRadius: 36,
                   borderWidth: StyleSheet.hairlineWidth,
@@ -223,7 +223,7 @@ const TabItem: React.FC<{
             colors={["rgba(255,255,255,0.45)", "transparent"]}
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 0.5 }}
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
           />
         </Animated.View>
         <Animated.View

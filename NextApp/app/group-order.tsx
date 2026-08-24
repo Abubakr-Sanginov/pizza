@@ -303,7 +303,7 @@ export default function GroupOrderScreen() {
               </View>
               {p.id === myParticipant.id && (
                 <TouchableOpacity
-                  onPress={() => router.push('/(tabs)/')}
+                  onPress={() => router.push('/')}
                   style={[
                     styles.addBtn,
                     { backgroundColor: theme.primarySoft },

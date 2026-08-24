@@ -1,7 +1,6 @@
 import {
   Container,
   Filters,
-  Title,
   TopBar,
   ProductsGroupList,
   Stories,
@@ -11,6 +10,7 @@ import {
   RecentlyViewed,
   PizzaOfTheDayServer,
   CombosSection,
+  Hero,
 } from "@/shared/components/shared";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
@@ -27,27 +27,31 @@ export default async function Home({
     redirect("/courier");
   }
   const categories = await findPizzas(searchParams);
+  const heroPizza = categories
+    .flatMap((category) => category.products)
+    .find((product) => product.items.length > 0);
 
   return (
     <>
       {}
-      <Container className="mt-10 md:mt-16">
-        <div className="flex flex-col items-start gap-4 max-w-3xl">
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-[11px] font-bold tracking-widest uppercase text-primary">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            Свежее меню
-          </span>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-[0.95]">
-            Любимая пицца{" "}
-            <span className="bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">
-              у тебя дома
-            </span>
-          </h1>
-          <p className="text-base md:text-lg text-muted-foreground max-w-xl leading-relaxed">
-            Готовим из свежих ингредиентов и доставляем горячей. Выбирай, что
-            сегодня будет на столе.
-          </p>
-        </div>
+      <Container className="mt-8 md:mt-14">
+        <Hero
+          pizza={
+            heroPizza && {
+              id: heroPizza.id,
+              name: heroPizza.name,
+              imageUrl: heroPizza.imageUrl,
+              price: heroPizza.items[0]?.price,
+              rating:
+                heroPizza.reviews.length > 0
+                  ? heroPizza.reviews.reduce(
+                      (acc, review) => acc + review.rating,
+                      0,
+                    ) / heroPizza.reviews.length
+                  : null,
+            }
+          }
+        />
       </Container>
 
       <TopBar
