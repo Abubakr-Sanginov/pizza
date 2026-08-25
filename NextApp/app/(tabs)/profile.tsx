@@ -106,26 +106,26 @@ export default function ProfileScreen() {
     try {
       if (isLogin) {
         // Login Logic
-        const res = await fetch(`${BASE_URL}/api/auth/callback/credentials`, {
+        const res = await fetch(`${BASE_URL}/api/auth/mobile/login`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&json=true`
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
         });
 
-        const loginRes = await fetch(`${BASE_URL}/api/users`);
-        const allUsers = await loginRes.json();
-        const foundUser = allUsers.find((u: any) => u.email === email);
-
-        if (foundUser) {
-          setUser({
-            id: foundUser.id.toString(),
-            email: foundUser.email,
-            fullName: foundUser.fullName,
-            role: foundUser.role
-          });
-        } else {
-          Alert.alert(t('profile.updateError'));
+        if (!res.ok) {
+          const err = await res.json().catch(() => null);
+          Alert.alert(err?.error || t('profile.updateError'));
+          return;
         }
+
+        const u = await res.json();
+        setUser({
+          id: String(u.id),
+          email: u.email,
+          fullName: u.fullName,
+          role: u.role,
+        });
+        Alert.alert(`${t('profile.welcomeBack')}, ${u.fullName}!`);
       } else {
         // Register Logic
         const res = await fetch(`${BASE_URL}/api/auth/register`, {
@@ -164,35 +164,33 @@ export default function ProfileScreen() {
       const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
 
       if (result.type === 'success' && result.url) {
-        // Парсим параметры из URL возврата
+        // Мост /auth/success возвращает одноразовый подписанный токен (t)
         const { queryParams } = Linking.parse(result.url);
-        const email = queryParams?.email as string;
-        const name = queryParams?.name as string;
+        const token = queryParams?.t as string;
 
-        if (email) {
-          // Ищем пользователя в нашей базе по email
-          const usersRes = await fetch(`${BASE_URL}/api/users`);
-          const allUsers = await usersRes.json();
-          const foundUser = allUsers.find((u: any) => u.email === email);
-
-          if (foundUser) {
-            setUser({
-              id: foundUser.id.toString(),
-              email: foundUser.email,
-              fullName: foundUser.fullName,
-              role: foundUser.role
-            });
-            Alert.alert(`${t('profile.welcomeBack')}, ${foundUser.fullName}!`);
-          } else {
-            // Если пользователя нет в базе (странно, но вдруг), создаем временный профиль
-            setUser({
-              id: 'social',
-              email: email,
-              fullName: name || email,
-              role: 'USER'
-            });
-          }
+        if (!token) {
+          throw new Error('no token');
         }
+
+        const exRes = await fetch(`${BASE_URL}/api/auth/mobile/exchange`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+        });
+
+        if (!exRes.ok) {
+          const err = await exRes.json().catch(() => null);
+          throw new Error(err?.error || t('profile.socialError'));
+        }
+
+        const u = await exRes.json();
+        setUser({
+          id: String(u.id),
+          email: u.email,
+          fullName: u.fullName,
+          role: u.role,
+        });
+        Alert.alert(`${t('profile.welcomeBack')}, ${u.fullName}!`);
       }
     } catch (e) {
       console.error('Social login error:', e);

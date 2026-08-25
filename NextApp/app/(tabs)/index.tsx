@@ -65,12 +65,6 @@ export default function MenuScreen() {
     fetchData();
   }, []);
 
-  const toggleLanguage = () => {
-    const langs = ['ru', 'tg', 'en'];
-    const nextIdx = (langs.indexOf(i18n.language) + 1) % langs.length;
-    i18n.changeLanguage(langs[nextIdx]);
-  };
-
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchData();
@@ -286,15 +280,6 @@ export default function MenuScreen() {
             <Text style={styles.headerTitle}>Next Pizza</Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 10 }}>
-            <SpringPress onPress={toggleLanguage} scaleTo={0.9}>
-              <LiquidGlassCard rounded={22} shadow="sm" style={styles.profileBtnWrap}>
-                <View style={styles.profileBtn}>
-                  <Text style={{ fontWeight: '900', fontSize: 13, color: theme.primary }}>
-                    {i18n.language.toUpperCase()}
-                  </Text>
-                </View>
-              </LiquidGlassCard>
-            </SpringPress>
             <SpringPress scaleTo={0.9}>
               <LiquidGlassCard rounded={22} shadow="sm" style={styles.profileBtnWrap}>
                 <View style={styles.profileBtn}>

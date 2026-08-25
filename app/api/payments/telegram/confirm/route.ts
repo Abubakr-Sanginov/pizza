@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/back/prisma/prisma-client';
 import { sendOrderToIiko } from '@/back/services/iiko';
 import { accrueBonus } from '@/back/lib/bonus';
+import { sendOrderNotification } from '@/bot/service';
 
 export async function POST(req: NextRequest) {
   const secret = req.headers.get('x-internal-secret');
@@ -40,37 +41,36 @@ export async function POST(req: NextRequest) {
     console.error('[Payments] cart cleanup failed', e);
   }
 
-  if (!order.iikoOrderId) {
-    // FIX: безопасный парсинг — если JSON сломан, записываем ошибку в БД
-    // чтобы retry-воркер подхватил заказ позже
-    let cartItems: any[];
+  // FIX: безопасный парсинг — если JSON сломан, записываем ошибку в БД
+  // чтобы retry-воркер подхватил заказ позже
+  let cartItems: any[];
+  try {
+    cartItems =
+      typeof order.items === 'string'
+        ? JSON.parse(order.items)
+        : (order.items as any) ?? [];
+  } catch (parseErr) {
+    console.error('[Payments] failed to parse order.items', parseErr);
+    await prisma.order.update({
+      where: { id: updated.id },
+      data: {
+        iikoSyncAttempts: { increment: 1 },
+        iikoSyncError: 'Failed to parse order items JSON (telegram confirm)',
+      },
+    });
+    cartItems = [];
+  }
+
+  if (!order.iikoOrderId && cartItems.length > 0) {
     try {
-      cartItems =
-        typeof order.items === 'string'
-          ? JSON.parse(order.items)
-          : (order.items as any) ?? [];
-    } catch (parseErr) {
-      console.error('[Payments] failed to parse order.items', parseErr);
-      await prisma.order.update({
-        where: { id: updated.id },
-        data: {
-          iikoSyncAttempts: { increment: 1 },
-          iikoSyncError: 'Failed to parse order items JSON (telegram confirm)',
-        },
-      });
-      cartItems = [];
-    }
-    if (cartItems.length > 0) {
-      try {
-        const result = await sendOrderToIiko(updated, cartItems);
-        if (result.status === 'failed') {
-          console.warn('[Payments] iiko sync failed for order '+order.id+': '+result.reason);
-        } else if (result.status === 'skipped') {
-          console.info('[Payments] iiko skipped for order '+order.id+': '+result.reason);
-        }
-      } catch (e) {
-        console.error('[Payments] iiko sync crashed', e);
+      const result = await sendOrderToIiko(updated, cartItems);
+      if (result.status === 'failed') {
+        console.warn('[Payments] iiko sync failed for order '+order.id+': '+result.reason);
+      } else if (result.status === 'skipped') {
+        console.info('[Payments] iiko skipped for order '+order.id+': '+result.reason);
       }
+    } catch (e) {
+      console.error('[Payments] iiko sync crashed', e);
     }
   }
 
@@ -84,6 +84,27 @@ export async function POST(req: NextRequest) {
     } catch (e) {
       console.error('[Payments] bonus accrue failed', e);
     }
+  }
+
+  // Уведомление в бот — только после подтверждения оплаты
+  try {
+    await sendOrderNotification(
+      updated.id,
+      updated.totalAmount,
+      updated.fullName,
+      updated.phone,
+      updated.address || '',
+      cartItems,
+      order.storeId,
+      {
+        entrance: order.entrance,
+        floor: order.floor,
+        doorCode: order.doorCode,
+        apartment: order.apartment,
+      },
+    );
+  } catch (e) {
+    console.error('[Payments] sendOrderNotification failed', e);
   }
 
   return NextResponse.json({ ok: true });

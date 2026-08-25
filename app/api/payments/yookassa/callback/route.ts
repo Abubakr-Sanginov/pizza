@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/back/prisma/prisma-client';
-import { getYooKassaPayment, yookassaConfigured } from '@/back/services/yookassa';
-import { sendOrderToIiko } from '@/back/services/iiko';
-import { accrueBonus } from '@/back/lib/bonus';
+import { yookassaConfigured } from '@/back/services/yookassa';
+import { settleYooKassaCanceled, settleYooKassaSucceeded } from '@/back/lib/yookassa-settle';
 
 export async function GET() {
   return NextResponse.json({ ok: true, service: 'yookassa-callback' });
@@ -38,73 +37,9 @@ export async function POST(req: NextRequest) {
   if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
 
   if (event === 'payment.succeeded') {
-    if (order.paymentStatus !== 'PAID') {
-      const updated = await prisma.order.update({
-        where: { id: order.id },
-        data: {
-          paymentStatus: 'PAID',
-          paymentProvider: 'YOOKASSA',
-          paymentRef: payment.id,
-          paymentConfirmedAt: new Date(),
-          paymentConfirmedBy: 'yookassa-webhook',
-        },
-      });
-
-      try {
-        const cart = await prisma.cart.findFirst({ where: { token: order.token } });
-        if (cart) {
-          await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
-          await prisma.cart.update({ where: { id: cart.id }, data: { totalAmount: 0 } });
-        }
-      } catch (e) {
-        console.error('[YooKassa callback] cart cleanup failed', e);
-      }
-
-      if (!order.iikoOrderId) {
-        let cartItems: any[];
-        try {
-          cartItems =
-            typeof order.items === 'string'
-              ? JSON.parse(order.items)
-              : (order.items as any) ?? [];
-        } catch (parseErr) {
-          console.error('[YooKassa callback] failed to parse order.items', parseErr);
-          await prisma.order.update({
-            where: { id: updated.id },
-            data: {
-              iikoSyncAttempts: { increment: 1 },
-              iikoSyncError: 'Failed to parse order items JSON (yookassa callback)',
-            },
-          });
-          return NextResponse.json({ ok: true });
-        }
-        try {
-          const result = await sendOrderToIiko(updated, cartItems);
-          if (result.status === 'failed') {
-            console.warn(`[YooKassa callback] iiko sync failed for order ${updated.id}: ${result.reason}`);
-          }
-        } catch (e) {
-          console.error('[YooKassa callback] iiko sync crashed', e);
-        }
-      }
-
-      if (updated.userId) {
-        try {
-          await accrueBonus({
-            userId: updated.userId,
-            orderTotal: updated.totalAmount,
-            orderId: updated.id,
-          });
-        } catch (e) {
-          console.error('[YooKassa callback] accrueBonus failed', e);
-        }
-      }
-    }
+    await settleYooKassaSucceeded(order.id, payment.id, 'yookassa-webhook');
   } else if (event === 'payment.canceled') {
-    await prisma.order.update({
-      where: { id: order.id },
-      data: { paymentStatus: 'FAILED' },
-    });
+    await settleYooKassaCanceled(order.id);
   }
 
   return NextResponse.json({ ok: true });

@@ -39,5 +39,5 @@ export async function POST(req: NextRequest) {
     data: { paymentRef: result.id },
   });
 
-  return NextResponse.json({ url: confirmationUrl });
+  return NextResponse.json({ url: confirmationUrl, mock: yookassaMockMode });
 }

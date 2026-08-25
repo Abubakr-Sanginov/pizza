@@ -5,7 +5,7 @@ import GoogleProvider from 'next-auth/providers/google';
 
 import { prisma } from '@/back/prisma/prisma-client';
 import { compare, hashSync } from 'bcrypt';
-import { UserRole } from '@prisma/client';
+import { Prisma, UserRole } from '@prisma/client';
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -33,29 +33,27 @@ export const authOptions: AuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials) {
+        if (!credentials?.email || !credentials.password) {
           return null;
         }
 
-        const values = {
-          email: credentials.email,
-        };
+        const login = credentials.email.trim().toLowerCase();
 
-        const findUser = await prisma.user.findFirst({
-          where: values,
-        });
+        // Форма входа допускает логин "admin" вместо полной почты
+        const where: Prisma.UserWhereInput =
+          login === 'admin'
+            ? { role: UserRole.ADMIN }
+            : { email: { equals: login, mode: 'insensitive' } };
 
-        if (!findUser) {
+        const findUser = await prisma.user.findFirst({ where });
+
+        if (!findUser || !findUser.password) {
           return null;
         }
 
         const isPasswordValid = await compare(credentials.password, findUser.password);
 
-        if (!isPasswordValid) {
-          return null;
-        }
-
-        if (!findUser.verified) {
+        if (!isPasswordValid || !findUser.verified) {
           return null;
         }
 

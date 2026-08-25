@@ -8,6 +8,7 @@ import { AddressAutocomplete } from '@/components/shared/AddressAutocomplete';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
+import * as WebBrowser from 'expo-web-browser';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -128,7 +129,7 @@ export default function CartScreen() {
   const [stores, setStores] = useState<any[]>([]);
   const [location, setLocation] = useState({ lat: 38.5763, lon: 68.7831 });
 
-  type PaymentMethod = 'CASH_ON_DELIVERY' | 'TELEGRAM_STARS' | 'MANUAL_TRANSFER';
+  type PaymentMethod = 'CASH_ON_DELIVERY' | 'TELEGRAM_STARS' | 'MANUAL_TRANSFER' | 'YOOKASSA';
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH_ON_DELIVERY');
   const [promoInput, setPromoInput] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<{ code: string; discount: number } | null>(null);
@@ -222,6 +223,48 @@ export default function CartScreen() {
     setStep(1);
   };
 
+  const waitForYooKassaPayment = async (orderId: number): Promise<boolean> => {
+    const timeoutMs = 5 * 60 * 1000;
+    const startedAt = Date.now();
+    while (Date.now() - startedAt < timeoutMs) {
+      await new Promise((r) => setTimeout(r, 2500));
+      try {
+        const res = await fetch(`${BASE_URL}/api/orders/${orderId}/payment-status`);
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (data.paymentStatus === 'PAID') return true;
+        if (data.paymentStatus === 'FAILED' || data.paymentStatus === 'CANCELED') return false;
+      } catch {
+        // network hiccup — keep polling
+      }
+    }
+    return false;
+  };
+
+  const payWithYooKassa = async (orderId: number): Promise<boolean> => {
+    const initRes = await fetch(`${BASE_URL}/api/payments/yookassa/init`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId }),
+    });
+    if (!initRes.ok) {
+      throw new Error('Не удалось создать ссылку оплаты');
+    }
+    const initData = await initRes.json();
+    if (!initData?.url) {
+      throw new Error('Не удалось создать ссылку оплаты');
+    }
+    if (initData.mock) {
+      Alert.alert(
+        'Тестовый режим',
+        'Сервер работает с заглушкой ЮKassa (нет ключей). Перезапустите dev-сервер после добавления YOOKASSA_STORE_ID и YOOKASSA_API_KEY в .env.',
+      );
+    }
+
+    WebBrowser.openBrowserAsync(initData.url).catch(() => {});
+    return waitForYooKassaPayment(orderId);
+  };
+
   const onSubmitOrder = async () => {
     if (!firstName || !lastName || !phone || !email) {
       Alert.alert(t('cart.fillContacts'));
@@ -277,6 +320,28 @@ export default function CartScreen() {
       const requiresOnlinePayment = created?.requiresOnlinePayment;
 
       if (requiresOnlinePayment && orderId) {
+        if (paymentMethod === 'YOOKASSA') {
+          try {
+            const paid = await payWithYooKassa(orderId);
+            if (paid) {
+              clearCart();
+              setSuccessOrder({
+                id: orderId,
+                total: Math.round(finalTotal),
+                eta: deliveryType === 'PICKUP' ? 20 : 45,
+              });
+            } else {
+              Alert.alert(
+                'Оплата не завершена',
+                'Заказ создан, но оплата не прошла. Корзина сохранена — вы можете повторить оплату.',
+              );
+            }
+          } catch (e: any) {
+            Alert.alert(e?.message || 'Ошибка инициализации оплаты');
+          }
+          return;
+        }
+
         try {
           const initRes = await fetch(`${BASE_URL}/api/payments/telegram/init`, {
             method: 'POST',
@@ -897,77 +962,38 @@ export default function CartScreen() {
                   <DefaultText style={styles.sectionHeader}>{t('cart.payment')}</DefaultText>
                 </DefaultView>
 
-                {[
-                  {
-                    id: 'CASH_ON_DELIVERY' as PaymentMethod,
-                    title: 'Курьеру при получении',
-                    subtitle: 'Наличными или картой',
-                    icon: 'wallet-outline' as const,
-                  },
-                  {
-                    id: 'TELEGRAM_STARS' as PaymentMethod,
-                    title: 'Telegram Stars',
-                    subtitle: 'Звёздами в Telegram (+43% наценка)',
-                    icon: 'star-outline' as const,
-                  },
-                  {
-                    id: 'MANUAL_TRANSFER' as PaymentMethod,
-                    title: 'Перевод на карту',
-                    subtitle: 'Через Telegram-бот',
-                    icon: 'send-outline' as const,
-                  },
-                ].map((opt) => {
-                  const active = paymentMethod === opt.id;
-                  return (
-                    <TouchableOpacity
-                      key={opt.id}
-                      onPress={() => setPaymentMethod(opt.id)}
-                      activeOpacity={0.85}
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 12,
-                        padding: 14,
-                        borderRadius: 14,
-                        marginTop: 8,
-                        backgroundColor: active ? theme.primarySoft : theme.surface,
-                        borderWidth: 1.5,
-                        borderColor: active ? theme.primary : theme.border,
-                      }}
-                    >
-                      <DefaultView
-                        style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 10,
-                          backgroundColor: active ? theme.primary : theme.border,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
+                <DefaultView style={styles.paymentGroup}>
+                  {PAYMENT_OPTIONS.map((opt, idx) => {
+                    const active = paymentMethod === opt.id;
+                    return (
+                      <TouchableOpacity
+                        key={opt.id}
+                        onPress={() => setPaymentMethod(opt.id)}
+                        activeOpacity={0.85}
+                        style={[
+                          styles.paymentOption,
+                          active && styles.paymentOptionActive,
+                          idx > 0 && styles.paymentOptionNext,
+                        ]}
                       >
-                        <Ionicons name={opt.icon} size={20} color={active ? '#fff' : theme.text} />
-                      </DefaultView>
-                      <DefaultView style={{ flex: 1 }}>
-                        <DefaultText style={{ fontWeight: '800', color: theme.text, fontSize: 14 }}>
-                          {opt.title}
-                        </DefaultText>
-                        <DefaultText style={{ fontSize: 12, color: theme.textMuted, marginTop: 2 }}>
-                          {opt.subtitle}
-                        </DefaultText>
-                      </DefaultView>
-                      <DefaultView
-                        style={{
-                          width: 22,
-                          height: 22,
-                          borderRadius: 11,
-                          borderWidth: 2,
-                          borderColor: active ? theme.primary : theme.border,
-                          backgroundColor: active ? theme.primary : 'transparent',
-                        }}
-                      />
-                    </TouchableOpacity>
-                  );
-                })}
+                        <DefaultView
+                          style={[styles.paymentOptionIcon, active && styles.paymentOptionIconActive]}
+                        >
+                          <Ionicons name={opt.icon} size={20} color={active ? '#fff' : theme.text} />
+                        </DefaultView>
+                        <DefaultView style={{ flex: 1 }}>
+                          <DefaultText style={styles.paymentOptionTitle}>{opt.title}</DefaultText>
+                          <DefaultText style={styles.paymentOptionSubtitle}>{opt.subtitle}</DefaultText>
+                        </DefaultView>
+                        <DefaultView
+                          style={[styles.paymentOptionRadio, active && styles.paymentOptionRadioActive]}
+                        >
+                          {active && <DefaultView style={styles.paymentOptionRadioDot} />}
+                        </DefaultView>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </DefaultView>
 
                 {paymentMethod === 'TELEGRAM_STARS' && (
                   <DefaultView
@@ -1040,6 +1066,38 @@ export default function CartScreen() {
     </DefaultView>
   );
 }
+
+const PAYMENT_OPTIONS: Array<{
+  id: 'CASH_ON_DELIVERY' | 'YOOKASSA' | 'TELEGRAM_STARS' | 'MANUAL_TRANSFER';
+  title: string;
+  subtitle: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+}> = [
+  {
+    id: 'CASH_ON_DELIVERY',
+    title: 'Курьеру при получении',
+    subtitle: 'Наличными или картой',
+    icon: 'wallet-outline',
+  },
+  {
+    id: 'YOOKASSA',
+    title: 'Картой онлайн',
+    subtitle: 'ЮKassa — карта, СБП, ЮMoney',
+    icon: 'card-outline',
+  },
+  {
+    id: 'TELEGRAM_STARS',
+    title: 'Telegram Stars',
+    subtitle: 'Звёздами в Telegram (+43% наценка)',
+    icon: 'star-outline',
+  },
+  {
+    id: 'MANUAL_TRANSFER',
+    title: 'Перевод на карту',
+    subtitle: 'Через Telegram-бот',
+    icon: 'send-outline',
+  },
+];
 
 const makeStyles = (t: Theme) => StyleSheet.create({
   container: { flex: 1 },
@@ -1124,6 +1182,66 @@ const makeStyles = (t: Theme) => StyleSheet.create({
   toggleText: { fontSize: 14, fontWeight: '800', color: t.textMuted },
   toggleTextActive: { color: t.primaryContrast },
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 15 },
+  paymentGroup: {
+    borderRadius: 18,
+    backgroundColor: t.surface,
+    borderWidth: 1,
+    borderColor: t.border,
+    overflow: 'hidden',
+  },
+  paymentOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+  },
+  paymentOptionActive: {
+    backgroundColor: t.primarySoft,
+  },
+  paymentOptionNext: {
+    borderTopWidth: 1,
+    borderTopColor: t.border,
+  },
+  paymentOptionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: t.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  paymentOptionIconActive: {
+    backgroundColor: t.primary,
+  },
+  paymentOptionTitle: {
+    fontWeight: '800',
+    color: t.text,
+    fontSize: 14,
+  },
+  paymentOptionSubtitle: {
+    fontSize: 12,
+    color: t.textMuted,
+    marginTop: 2,
+  },
+  paymentOptionRadio: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: t.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  paymentOptionRadioActive: {
+    borderColor: t.primary,
+    backgroundColor: t.primary,
+  },
+  paymentOptionRadioDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#fff',
+  },
   sectionHeader: { fontSize: 18, fontWeight: '900', color: t.text },
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   priceLabel: { fontSize: 14, color: t.textMuted, fontWeight: '700' },

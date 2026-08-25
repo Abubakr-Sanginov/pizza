@@ -227,24 +227,27 @@ export async function createOrder(data: CheckoutFormValues) {
     }
 
     
-    try {
-      await sendOrderNotification(
-        order.id,
-        order.totalAmount,
-        order.fullName,
-        order.phone,
-        order.address || '',
-        userCart.items,
-        order.storeId,
-        {
-          entrance: order.entrance,
-          floor: order.floor,
-          doorCode: order.doorCode,
-          apartment: order.apartment,
-        }
-      );
-    } catch (tgError) {
-      console.log('[CreateOrder] Failed to send Telegram notification', tgError);
+    // Для онлайн-оплат уведомление в бот уходит только после подтверждения оплаты
+    if (!isOnlinePayment) {
+      try {
+        await sendOrderNotification(
+          order.id,
+          order.totalAmount,
+          order.fullName,
+          order.phone,
+          order.address || '',
+          userCart.items,
+          order.storeId,
+          {
+            entrance: order.entrance,
+            floor: order.floor,
+            doorCode: order.doorCode,
+            apartment: order.apartment,
+          }
+        );
+      } catch (tgError) {
+        console.log('[CreateOrder] Failed to send Telegram notification', tgError);
+      }
     }
 
     
