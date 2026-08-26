@@ -7,6 +7,7 @@ import { MotionConfig } from 'framer-motion';
 import NextTopLoader from 'nextjs-toploader';
 import i18n from '@/shared/lib/i18n';
 import { LANG_STORAGE_KEY, SUPPORTED_LANGUAGES } from '@/shared/lib/i18n';
+import { detectDevicePerformance } from '@/shared/lib/device-performance';
 import { NotificationsManager } from './notifications-manager';
 import { ThemeProvider } from './theme-provider';
 import { ReferralCapture } from './referral-capture';
@@ -26,8 +27,18 @@ const I18nBootstrap: React.FC = () => {
 };
 
 export const Providers: React.FC<React.PropsWithChildren> = ({ children }) => {
+  // Слабые устройства: меньше анимаций и без дорогого backdrop-blur (см. globals.css)
+  const [lowEnd, setLowEnd] = React.useState(false);
+
+  React.useEffect(() => {
+    if (detectDevicePerformance() === 'low') {
+      setLowEnd(true);
+      try { document.documentElement.classList.add('perf-low'); } catch {}
+    }
+  }, []);
+
   return (
-    <MotionConfig reducedMotion="user">
+    <MotionConfig reducedMotion={lowEnd ? 'always' : 'user'}>
       <ThemeProvider>
         <I18nBootstrap />
         <SessionProvider>{children}</SessionProvider>
