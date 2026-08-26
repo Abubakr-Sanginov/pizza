@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,7 +9,7 @@ import { BASE_URL } from '@/constants/Api';
 import { useTheme, Theme } from '@/hooks/useTheme';
 import { gradients } from '@/constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SpringPress, AmbientBackdrop } from '@/components/ui';
+import { SpringPress, AmbientBackdrop, BackButton } from '@/components/ui';
 
 export default function CourierScreen() {
   const insets = useSafeAreaInsets();
@@ -74,6 +74,7 @@ export default function CourierScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <AmbientBackdrop />
+      <BackButton />
       <View style={styles.header}>
         <Text style={styles.title}>{t('courier.title')}</Text>
         <Text style={styles.subtitle}>{t('courier.subtitle')}</Text>
@@ -172,7 +173,10 @@ const makeStyles = (t: Theme) => StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
-    padding: 24,
+    paddingTop: 24,
+    paddingBottom: 24,
+    paddingRight: 24,
+    paddingLeft: 68,
     backgroundColor: t.surface,
     borderBottomLeftRadius: 32,
     borderBottomRightRadius: 32,

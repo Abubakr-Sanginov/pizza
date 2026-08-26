@@ -7,3 +7,4 @@ export { AmbientBackdrop } from './AmbientBackdrop';
 export { Shimmer, ShimmerProductCard } from './Shimmer';
 export { TagBadges } from './TagBadges';
 export { Confetti } from './Confetti';
+export { BackButton } from './BackButton';

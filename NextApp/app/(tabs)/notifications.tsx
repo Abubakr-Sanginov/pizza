@@ -6,7 +6,7 @@ import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 import { API_URL } from '@/constants/Api';
 import { useTheme, Theme } from '@/hooks/useTheme';
-import { AmbientBackdrop } from '@/components/ui';
+import { AmbientBackdrop, BackButton } from '@/components/ui';
 
 export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
@@ -71,6 +71,7 @@ export default function NotificationsScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <AmbientBackdrop />
+      <BackButton />
       <View style={styles.fixedHeader}>
         <Text style={styles.headerTitle}>{t('tabs.notifications')}</Text>
       </View>
@@ -105,7 +106,8 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     backgroundColor: t.background,
   },
   fixedHeader: {
-    paddingHorizontal: 22,
+    paddingLeft: 64,
+    paddingRight: 22,
     paddingVertical: 18,
   },
   headerTitle: {

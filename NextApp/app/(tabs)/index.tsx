@@ -57,6 +57,7 @@ export default function MenuScreen() {
 
   const { t, i18n } = useTranslation();
   const cartItems = useCartStore(state => state.items);
+  const cartTotal = useCartStore(state => state.totalAmount);
   const theme = useTheme();
   const styles = useMemo(() => makeStyles(theme), [theme]);
   const router = useRouter();
@@ -65,6 +66,18 @@ export default function MenuScreen() {
     () => cartItems.reduce((sum: number, ci: any) => sum + ci.quantity, 0),
     [cartItems]
   );
+
+  const iconScrollRef = useRef<ScrollView>(null);
+  const iconPositions = useRef<Record<number, { x: number; w: number }>>({});
+
+  // Активная категория всегда видна в ряду иконок (подскролл к ней)
+  useEffect(() => {
+    const pos = iconPositions.current[activeCategory];
+    if (pos && iconScrollRef.current) {
+      const target = Math.max(0, pos.x - width / 2 + pos.w / 2);
+      iconScrollRef.current.scrollTo({ x: target, animated: true });
+    }
+  }, [activeCategory]);
 
   const getCategoryName = useCallback((cat: any) => {
     if (i18n.language === 'en' && cat.nameEn) return cat.nameEn;
@@ -162,18 +175,22 @@ export default function MenuScreen() {
   const sections = useMemo(() => {
     const toRows = (products: any[]): any[][] => {
       const rows: any[][] = [];
-      for (let i = 0; i < products.length; i += 2) rows.push(products.slice(i, i + 2));
+      const list = Array.isArray(products) ? products : [];
+      for (let i = 0; i < list.length; i += 2) {
+        const row = list.slice(i, i + 2);
+        if (row.length > 0) rows.push(row);
+      }
       return rows;
     };
     const filtered = searchQuery.trim()
       ? categories.map(cat => ({
           ...cat,
-          data: toRows(cat.products.filter((p: any) => p.name.toLowerCase().includes(searchQuery.toLowerCase())))
+          data: toRows((cat.products ?? []).filter((p: any) => p.name.toLowerCase().includes(searchQuery.toLowerCase())))
         })).filter(cat => cat.data.length > 0)
       : categories.map(cat => ({
           ...cat,
           data: toRows(cat.products)
-        }));
+        })).filter(cat => cat.data.length > 0);
     return filtered;
   }, [categories, searchQuery]);
 
@@ -276,17 +293,19 @@ export default function MenuScreen() {
             </View>
           </SpringPress>
           <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>Next Pizza</Text>
-            <Text style={styles.headerSubtitle}>{t('header.slogan')}</Text>
-          </View>
-          <SpringPress onPress={() => router.push('/two')} scaleTo={0.9}>
-            <View style={styles.headerCartBtn}>
-              <Ionicons name="cart-outline" size={22} color={theme.text} />
-              {cartQuantity > 0 && (
-                <View style={styles.headerCartBadge}>
-                  <Text style={styles.headerCartBadgeText}>{cartQuantity}</Text>
+            <SpringPress onPress={() => router.push('/delivery')} scaleTo={0.97}>
+              <View style={{ alignItems: 'center' }}>
+                <View style={styles.headerAddressRow}>
+                  <Text style={styles.headerTitle} numberOfLines={1}>Next Pizza</Text>
+                  <Ionicons name="chevron-down" size={16} color={theme.textMuted} />
                 </View>
-              )}
+                <Text style={styles.headerSubtitle} numberOfLines={1}>{t('header.slogan')}</Text>
+              </View>
+            </SpringPress>
+          </View>
+          <SpringPress onPress={() => router.push('/notifications')} scaleTo={0.9}>
+            <View style={styles.headerCartBtn}>
+              <Ionicons name="notifications-outline" size={22} color={theme.text} />
             </View>
           </SpringPress>
         </View>
@@ -306,7 +325,7 @@ export default function MenuScreen() {
 
         {!searchQuery && (
           <View style={styles.iconRow}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.iconRowScroll}>
+            <ScrollView ref={iconScrollRef} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.iconRowScroll}>
               <SpringPress onPress={() => searchRef.current?.focus()} scaleTo={0.92}>
                 <View style={styles.iconTile}>
                   <View style={styles.iconTileIcon}>
@@ -319,21 +338,27 @@ export default function MenuScreen() {
                 const isActive = activeCategory === cat.id;
                 const Icon = CATEGORY_ICONS[cat.name] ?? UtensilsCrossed;
                 return (
-                  <SpringPress
+                  <View
                     key={cat.id}
-                    onPress={() => handleCategoryPress(cat.id, index)}
-                    scaleTo={0.92}>
-                    <View style={[styles.iconTile, isActive && styles.iconTileActive]}>
-                      <View style={[styles.iconTileIcon, isActive && styles.iconTileIconActive]}>
-                        <Icon size={24} color={isActive ? theme.primary : theme.text} strokeWidth={2} />
+                    onLayout={(e) => {
+                      const { x, width: w } = e.nativeEvent.layout;
+                      iconPositions.current[cat.id] = { x, w };
+                    }}>
+                    <SpringPress
+                      onPress={() => handleCategoryPress(cat.id, index)}
+                      scaleTo={0.92}>
+                      <View style={[styles.iconTile, isActive && styles.iconTileActive]}>
+                        <View style={[styles.iconTileIcon, isActive && styles.iconTileIconActive]}>
+                          <Icon size={24} color={isActive ? theme.primary : theme.text} strokeWidth={2} />
+                        </View>
+                        <Text
+                          style={[styles.iconTileLabel, isActive && styles.iconTileLabelActive]}
+                          numberOfLines={1}>
+                          {getCategoryName(cat)}
+                        </Text>
                       </View>
-                      <Text
-                        style={[styles.iconTileLabel, isActive && styles.iconTileLabelActive]}
-                        numberOfLines={1}>
-                        {getCategoryName(cat)}
-                      </Text>
-                    </View>
-                  </SpringPress>
+                    </SpringPress>
+                  </View>
                 );
               })}
             </ScrollView>
@@ -344,7 +369,7 @@ export default function MenuScreen() {
       <SectionList
         ref={sectionListRef}
         sections={sections}
-        keyExtractor={(item) => item[0].id.toString()}
+        keyExtractor={(item, index) => (item?.[0]?.id ?? `row-${index}`).toString()}
         stickySectionHeadersEnabled={false}
         onViewableItemsChanged={({ viewableItems }) => {
           if (viewableItems.length > 0 && !isAutoScrolling.current) {
@@ -428,6 +453,21 @@ export default function MenuScreen() {
         onAddToCart={handleAddToCart}
       />
 
+      {cartQuantity > 0 && (
+        <SpringPress
+          onPress={() => router.push('/two')}
+          scaleTo={0.95}
+          style={[styles.cartPillWrap, { bottom: insets.bottom + 16 }]}>
+          <View style={styles.cartPill}>
+            <View style={styles.cartPillBadge}>
+              <Text style={styles.cartPillBadgeText}>{cartQuantity}</Text>
+            </View>
+            <Ionicons name="cart" size={20} color="#fff" />
+            <Text style={styles.cartPillText}>{Math.round(cartTotal)} TJS</Text>
+          </View>
+        </SpringPress>
+      )}
+
       <Modal visible={storyVisible} transparent={true} animationType="fade">
         <View style={styles.storyModalContainer}>
           {selectedStory && (
@@ -474,9 +514,9 @@ const makeStyles = (t: Theme) => StyleSheet.create({
   headerTop: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     marginBottom: 14,
-    gap: 12,
   },
   headerAvatar: {
     width: 42,
@@ -512,30 +552,61 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerCartBadge: {
+  headerAddressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    maxWidth: '100%',
+  },
+  cartPillWrap: {
     position: 'absolute',
-    top: -4,
-    right: -4,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
+    left: 24,
+    right: 24,
+    alignItems: 'center',
+    zIndex: 200,
+  },
+  cartPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
     backgroundColor: t.primary,
+    borderRadius: 999,
+    paddingVertical: 14,
+    paddingLeft: 16,
+    paddingRight: 26,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  cartPillBadge: {
+    minWidth: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 4,
+    paddingHorizontal: 6,
   },
-  headerCartBadgeText: {
+  cartPillBadgeText: {
     color: '#fff',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '900',
+  },
+  cartPillText: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '900',
+    letterSpacing: -0.2,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: 16,
     marginBottom: 14,
-    height: 48,
-    borderRadius: 14,
+    height: 50,
+    borderRadius: 18,
     backgroundColor: t.surface,
     borderWidth: 1,
     borderColor: t.border,
@@ -567,7 +638,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
   iconTileIcon: {
     width: 56,
     height: 56,
-    borderRadius: 16,
+    borderRadius: 18,
     backgroundColor: t.surface,
     borderWidth: 1,
     borderColor: t.border,
@@ -592,7 +663,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     marginBottom: 6,
   },
   banner: {
-    borderRadius: 24,
+    borderRadius: 28,
     overflow: 'hidden',
     paddingTop: 18,
     paddingBottom: 14,

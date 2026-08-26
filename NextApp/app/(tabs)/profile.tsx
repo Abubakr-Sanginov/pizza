@@ -12,7 +12,7 @@ import { BASE_URL } from '@/constants/Api';
 import { useTheme, Theme } from '@/hooks/useTheme';
 import { gradients } from '@/constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SpringPress, AmbientBackdrop, LiquidGlassCard } from '@/components/ui';
+import { SpringPress, AmbientBackdrop, LiquidGlassCard, BackButton } from '@/components/ui';
 import { LiveOrderStatus } from '@/components/shared/LiveOrderStatus';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { CourierTipModal } from '@/components/shared/CourierTipModal';
@@ -227,6 +227,7 @@ export default function ProfileScreen() {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <AmbientBackdrop />
+      <BackButton />
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />}
@@ -489,6 +490,7 @@ export default function ProfileScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <AmbientBackdrop />
+      <BackButton />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.authScroll}>
           <View style={{ position: 'absolute', top: insets.top + 12, right: 18, zIndex: 10 }}>

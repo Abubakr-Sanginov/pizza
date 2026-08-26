@@ -16,7 +16,7 @@ import { BASE_URL } from '@/constants/Api';
 import { useTheme, Theme } from '@/hooks/useTheme';
 import { gradients } from '@/constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SpringPress, LiquidGlassCard, AmbientBackdrop } from '@/components/ui';
+import { SpringPress, LiquidGlassCard, AmbientBackdrop, BackButton } from '@/components/ui';
 import { OrderSuccessModal } from '@/components/shared/OrderSuccessModal';
 import { CartCrossSell } from '@/components/shared/CartCrossSell';
 
@@ -223,22 +223,53 @@ export default function CartScreen() {
     setStep(1);
   };
 
-  const waitForYooKassaPayment = async (orderId: number): Promise<boolean> => {
+  type YooPollResult = 'paid' | 'failed' | 'timeout' | 'superseded';
+  const yooAttemptRef = useRef(0);
+
+  const waitForYooKassaPayment = async (orderId: number): Promise<YooPollResult> => {
+    const attempt = ++yooAttemptRef.current;
     const timeoutMs = 2 * 60 * 1000;
     const startedAt = Date.now();
     while (Date.now() - startedAt < timeoutMs) {
       await new Promise((r) => setTimeout(r, 2500));
+      if (yooAttemptRef.current !== attempt) return 'superseded';
       try {
         const res = await fetch(`${BASE_URL}/api/orders/${orderId}/payment-status`);
         if (!res.ok) continue;
         const data = await res.json();
-        if (data.paymentStatus === 'PAID') return true;
-        if (data.paymentStatus === 'FAILED' || data.paymentStatus === 'CANCELED') return false;
+        if (data.paymentStatus === 'PAID') return 'paid';
+        if (data.paymentStatus === 'FAILED' || data.paymentStatus === 'CANCELED') {
+          return yooAttemptRef.current !== attempt ? 'superseded' : 'failed';
+        }
       } catch {
         // network hiccup — keep polling
       }
     }
-    return false;
+    return yooAttemptRef.current !== attempt ? 'superseded' : 'timeout';
+  };
+
+  const verifyYooKassaOnce = async (orderId: number) => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/orders/${orderId}/payment-status`);
+      const data = await res.json();
+      if (data?.paymentStatus === 'PAID') {
+        clearCart();
+        setSuccessOrder({
+          id: orderId,
+          total: Math.round(finalTotal),
+          eta: deliveryType === 'PICKUP' ? 20 : 45,
+        });
+      } else if (data?.paymentStatus === 'FAILED' || data?.paymentStatus === 'CANCELED') {
+        Alert.alert('Оплата не прошла', 'Платёж был отменён. Корзина сохранена — вы можете повторить оплату.');
+      } else {
+        Alert.alert(
+          'Оплата не подтверждена',
+          'ЮKassa пока не прислала подтверждение. Заказ сохранён в разделе «Мои заказы» — статус обновится автоматически.',
+        );
+      }
+    } catch {
+      Alert.alert('Не удалось проверить статус оплаты');
+    }
   };
 
   const payWithYooKassa = async (orderId: number): Promise<void> => {
@@ -324,18 +355,29 @@ export default function CartScreen() {
             await payWithYooKassa(orderId);
             // Кнопку разблокируем сразу — оплату ждём в фоне, без спиннера
             setIsSubmitting(false);
-            const paid = await waitForYooKassaPayment(orderId);
-            if (paid) {
+            const result = await waitForYooKassaPayment(orderId);
+            if (result === 'superseded') return;
+            if (result === 'paid') {
               clearCart();
               setSuccessOrder({
                 id: orderId,
                 total: Math.round(finalTotal),
                 eta: deliveryType === 'PICKUP' ? 20 : 45,
               });
+            } else if (result === 'failed') {
+              Alert.alert(
+                'Оплата не прошла',
+                'Платёж был отменён или отклонён. Корзина сохранена — вы можете повторить оплату.',
+              );
             } else {
               Alert.alert(
-                'Оплата не завершена',
-                'Заказ создан, но оплата не прошла. Корзина сохранена — вы можете повторить оплату.',
+                'Оплата не подтверждена',
+                'Мы не дождались подтверждения от ЮKassa за 2 минуты. Если вы завершили оплату — деньги не пропали, заказ сохранён в разделе «Мои заказы».',
+                [
+                  { text: 'Мои заказы', onPress: () => router.push('/(tabs)/profile') },
+                  { text: 'Проверить снова', onPress: () => verifyYooKassaOnce(orderId) },
+                  { text: 'Закрыть', style: 'cancel' },
+                ],
               );
             }
           } catch (e: any) {
@@ -587,6 +629,7 @@ export default function CartScreen() {
   return (
     <DefaultView style={styles.container}>
       <AmbientBackdrop />
+      <BackButton />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView
           style={{ flex: 1 }}
@@ -1105,7 +1148,8 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
-    paddingHorizontal: 4,
+    paddingLeft: 64,
+    paddingRight: 4,
   },
   title: { fontSize: 34, fontWeight: '900', color: t.text, letterSpacing: -1.4 },
   backBtn: { padding: 4 },

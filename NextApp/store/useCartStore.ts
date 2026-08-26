@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Alert } from 'react-native';
 
 import { API_URL } from '@/constants/Api';
 
@@ -100,9 +101,13 @@ export const useCartStore = create<CartState>((set, get) => ({
         totalAmount: data.totalAmount, 
         loading: false 
       });
-    } catch (error) {
-      console.error('Add item error:', error);
+    } catch (error: any) {
+      console.error('Add item error:', error?.response?.status, error?.message);
       set({ error: true, loading: false });
+      Alert.alert(
+        'Не удалось добавить в корзину',
+        error?.response?.data?.message || 'Проверьте подключение и попробуйте ещё раз',
+      );
     }
   },
 
