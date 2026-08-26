@@ -93,7 +93,7 @@ export default function CheckoutPage() {
       const url = await createOrder(data);
 
       toast.success(t('checkout.success'), {
-        icon: 'вњ…',
+        icon: '✅',
       });
 
       if (url) {
@@ -103,7 +103,7 @@ export default function CheckoutPage() {
       console.log(err);
       setSubmitting(false);
       toast.error(t('checkout.error'), {
-        icon: 'вќЊ',
+        icon: '❌',
       });
     }
   };

@@ -147,7 +147,7 @@ export const CheckoutSidebar: React.FC<Props> = ({
             </div>
           }
           value={
-            <span className="text-primary font-bold">в€’{appliedPromo.discount} TJS</span>
+            <span className="text-primary font-bold">−{appliedPromo.discount} TJS</span>
           }
         />
       )}

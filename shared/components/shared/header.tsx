@@ -7,7 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { SearchInput } from "./search-input";
 import { CartButton } from "./cart-button";
-import { Bell, ChefHat, Heart, MapPin, Users } from "lucide-react";
+import { Bell, Heart, MapPin, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { ProfileButton } from "./profile-button";
@@ -116,17 +116,6 @@ export const Header: React.FC<Props> = ({
             />
 
             <ThemeToggle />
-
-            {}
-            <Link href="/pizza-builder" className="hidden md:block">
-              <Button
-                variant="secondary"
-                className="px-4 h-[42px] rounded-2xl gap-2 text-sm font-extrabold"
-              >
-                <ChefHat size={18} className="text-primary" />
-                {t("header.buildPizza")}
-              </Button>
-            </Link>
 
             {}
             <div className="flex items-center gap-0.5">
