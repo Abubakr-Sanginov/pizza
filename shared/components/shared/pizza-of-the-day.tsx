@@ -12,7 +12,7 @@ interface PizzaOfTheDayData {
   name: string;
   imageUrl: string;
   price: number;
-  rating: number;
+  rating: number | null;
   reviewCount: number;
   orderCount: number;
 }
@@ -115,13 +115,20 @@ export const PizzaOfTheDay: React.FC<Props> = ({ pizza, className }) => {
 
           {}
           <div className="flex items-center gap-4 flex-wrap justify-center md:justify-start">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass text-sm">
-              <Star size={14} className="text-yellow-400 fill-yellow-400" />
-              <span className="font-bold">{pizza.rating.toFixed(1)}</span>
-              <span className="text-muted-foreground">
-                ({pizza.reviewCount})
-              </span>
-            </div>
+            {pizza.rating != null ? (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass text-sm">
+                <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                <span className="font-bold">{pizza.rating.toFixed(1)}</span>
+                <span className="text-muted-foreground">
+                  ({pizza.reviewCount})
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass text-sm text-muted-foreground">
+                <Star size={14} />
+                <span>Ещё нет оценок</span>
+              </div>
+            )}
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass text-sm">
               <Flame size={14} className="text-primary" />
               <span className="font-bold">{pizza.orderCount}</span>

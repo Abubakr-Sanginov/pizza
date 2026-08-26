@@ -7,11 +7,12 @@ import { CreateCartItemValues } from '@/back/services/dto/cart.dto';
 export interface CartState {
   loading: boolean;
   error: boolean;
+  initialized: boolean;
   totalAmount: number;
   items: CartStateItem[];
 
   
-  fetchCartItems: () => Promise<void>;
+  fetchCartItems: (opts?: { silent?: boolean }) => Promise<void>;
 
   
   updateItemQuantity: (id: number, quantity: number) => Promise<void>;
@@ -27,18 +28,20 @@ export const useCartStore = create<CartState>((set, get) => ({
   items: [],
   error: false,
   loading: true,
+  initialized: false,
   totalAmount: 0,
 
-  fetchCartItems: async () => {
+  fetchCartItems: async (opts) => {
+    const silent = opts?.silent;
+    if (!silent) set({ loading: true, error: false });
     try {
-      set({ loading: true, error: false });
       const data = await Api.cart.getCart();
-      set(getCartDetails(data));
+      set({ ...getCartDetails(data), initialized: true });
     } catch (error) {
       console.error(error);
-      set({ error: true });
+      set({ error: true, initialized: true });
     } finally {
-      set({ loading: false });
+      if (!silent) set({ loading: false });
     }
   },
 

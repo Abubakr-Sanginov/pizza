@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, Modal, Image, TouchableOpacity, ScrollView, Animated, Dimensions, Platform, TextInput, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, Modal, Image, TouchableOpacity, ScrollView, Animated, Platform, TextInput, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { X, ChevronLeft, ChevronRight, Plus } from 'lucide-react-native';
 import { useCartStore } from '@/store/useCartStore';
 import { useUserStore } from '@/store/useUserStore';
 import { useTranslation } from 'react-i18next';
@@ -9,9 +10,8 @@ import { BASE_URL } from '@/constants/Api';
 import { useTheme, Theme } from '@/hooks/useTheme';
 import { gradients } from '@/constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SpringPress, AmbientBackdrop, TagBadges } from '@/components/ui';
+import { SpringPress, TagBadges } from '@/components/ui';
 import { pushRecentlyViewed } from '@/hooks/useRecentlyViewed';
-import { BlurView } from 'expo-blur';
 
 interface Props {
   product: any;
@@ -92,6 +92,18 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
   const isPizza = product.items[0]?.pizzaType !== null;
   const currentItem = product.items.find((item: any) => item.size === size && item.pizzaType === type) || product.items[0];
 
+  const availableTypes = isPizza
+    ? PIZZA_TYPES.filter(pt => product.items.some((item: any) => item.pizzaType === pt.value))
+    : [];
+  const currentTypeIdx = availableTypes.findIndex(pt => pt.value === type);
+  const currentTypeName = availableTypes[currentTypeIdx >= 0 ? currentTypeIdx : 0]?.name ?? '';
+  const cycleType = (dir: 1 | -1) => {
+    if (availableTypes.length === 0) return;
+    const idx = Math.max(0, currentTypeIdx);
+    const next = (idx + dir + availableTypes.length) % availableTypes.length;
+    setType(availableTypes[next].value);
+  };
+
   const totalPrice = (currentItem?.price || 0) +
     selectedIngredients.reduce((acc, id) => {
       const ingredient = product.ingredients.find((i: any) => i.id === id);
@@ -145,121 +157,113 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={styles.content}>
-          <AmbientBackdrop />
+    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+      <View style={styles.content}>
+        <View style={styles.imageContainer}>
           <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-            <Ionicons name="close" size={28} color={theme.text} />
+            <X size={22} color="#fff" strokeWidth={2.5} />
           </TouchableOpacity>
+          <Animated.Image
+            source={{ uri: product.imageUrl }}
+            style={[styles.image, { transform: [{ scale: scaleAnim }] }]}
+          />
+        </View>
 
-          <View style={styles.tabHeader}>
-            <TouchableOpacity onPress={() => setTab('details')} style={[styles.tabBtn, tab === 'details' && styles.tabBtnActive]}>
-              <Text style={[styles.tabText, tab === 'details' && styles.tabTextActive]}>{t('productModal.details')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setTab('reviews')} style={[styles.tabBtn, tab === 'reviews' && styles.tabBtnActive]}>
-              <Text style={[styles.tabText, tab === 'reviews' && styles.tabTextActive]}>
-                {t('productModal.reviews')} ({product.reviews?.length || 0})
-              </Text>
-            </TouchableOpacity>
-          </View>
+        <View style={styles.tabHeader}>
+          <TouchableOpacity onPress={() => setTab('details')} style={[styles.tabBtn, tab === 'details' && styles.tabBtnActive]}>
+            <Text style={[styles.tabText, tab === 'details' && styles.tabTextActive]}>{t('productModal.details')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setTab('reviews')} style={[styles.tabBtn, tab === 'reviews' && styles.tabBtnActive]}>
+            <Text style={[styles.tabText, tab === 'reviews' && styles.tabTextActive]}>
+              {t('productModal.reviews')} ({product.reviews?.length || 0})
+            </Text>
+          </TouchableOpacity>
+        </View>
 
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-            {tab === 'details' ? (
-              <>
-                <View style={styles.imageContainer}>
-                  <Animated.Image
-                    source={{ uri: product.imageUrl }}
-                    style={[styles.image, { transform: [{ scale: scaleAnim }] }]}
-                  />
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+          {tab === 'details' ? (
+            <>
+              <Text style={styles.name}>{product.name}</Text>
+              <View style={{ alignItems: 'center', marginTop: 6 }}>
+                <TagBadges
+                  tags={product.tags}
+                  lang={i18n.language}
+                  dark={theme.mode === 'dark'}
+                />
+              </View>
+              {product.description ? (
+                <Text style={styles.description}>{product.description}</Text>
+              ) : null}
+
+              {isPizza && (
+                <View style={styles.selectors}>
+                  <View style={styles.selectorRow}>
+                    {availableSizes.map((s) => (
+                      <TouchableOpacity
+                        key={s.value}
+                        style={[
+                          styles.selectorBtn,
+                          size === s.value && styles.selectorBtnActive,
+                          s.disabled && styles.selectorBtnDisabled
+                        ]}
+                        onPress={() => !s.disabled && setSize(s.value)}
+                        disabled={s.disabled}
+                      >
+                        <Text style={[
+                          styles.selectorText,
+                          size === s.value && styles.selectorTextActive,
+                          s.disabled && styles.selectorTextDisabled
+                        ]}>
+                          {s.name}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+
+                  {availableTypes.length > 0 && (
+                    <View style={styles.typeCarousel}>
+                      <TouchableOpacity
+                        onPress={() => cycleType(-1)}
+                        style={styles.typeChevron}
+                        disabled={availableTypes.length < 2}>
+                        <ChevronLeft size={20} color={theme.text} strokeWidth={2.5} />
+                      </TouchableOpacity>
+                      <Text style={styles.typeName} numberOfLines={1}>{currentTypeName}</Text>
+                      <TouchableOpacity
+                        onPress={() => cycleType(1)}
+                        style={styles.typeChevron}
+                        disabled={availableTypes.length < 2}>
+                        <ChevronRight size={20} color={theme.text} strokeWidth={2.5} />
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </View>
+              )}
 
-                <Text style={styles.name}>{product.name}</Text>
-                <View style={{ alignItems: 'center', marginTop: 6 }}>
-                  <TagBadges
-                    tags={product.tags}
-                    lang={i18n.language}
-                    dark={theme.mode === 'dark'}
-                  />
-                </View>
-
-                {isPizza && (
-                  <View style={styles.selectors}>
-                    <View style={styles.selectorRow}>
-                      {availableSizes.map((s) => (
+              {product.ingredients.length > 0 && (
+                <View style={styles.ingredientsSection}>
+                  <Text style={styles.sectionTitle}>{t('productModal.addIngredients')}</Text>
+                  <View style={styles.ingredientsGrid}>
+                    {product.ingredients.map((item: any) => {
+                      const isSelected = selectedIngredients.includes(item.id);
+                      return (
                         <TouchableOpacity
-                          key={s.value}
-                          style={[
-                            styles.selectorBtn,
-                            size === s.value && styles.selectorBtnActive,
-                            s.disabled && styles.selectorBtnDisabled
-                          ]}
-                          onPress={() => !s.disabled && setSize(s.value)}
-                          disabled={s.disabled}
+                          key={item.id}
+                          style={[styles.ingredientCard, isSelected && styles.ingredientActive]}
+                          onPress={() => toggleIngredient(item.id)}
                         >
-                          <Text style={[
-                            styles.selectorText,
-                            size === s.value && styles.selectorTextActive,
-                            s.disabled && styles.selectorTextDisabled
-                          ]}>
-                            {s.name}
-                          </Text>
+                          {isSelected && <Ionicons name="checkmark-circle" size={20} color={theme.primary} style={styles.checkIcon} />}
+                          <Image source={{ uri: item.imageUrl }} style={styles.ingredientImage} />
+                          <Text style={styles.ingredientName}>{item.name}</Text>
+                          <Text style={styles.ingredientPrice}>{item.price} TJS</Text>
                         </TouchableOpacity>
-                      ))}
-                    </View>
-
-                    <View style={styles.selectorRow}>
-                      {PIZZA_TYPES.map((t) => {
-                        const isDisabled = !product.items.some((item: any) => item.pizzaType === t.value);
-                        return (
-                          <TouchableOpacity
-                            key={t.value}
-                            style={[
-                              styles.selectorBtn,
-                              type === t.value && styles.selectorBtnActive,
-                              isDisabled && styles.selectorBtnDisabled
-                            ]}
-                            onPress={() => !isDisabled && setType(t.value)}
-                            disabled={isDisabled}
-                          >
-                            <Text style={[
-                              styles.selectorText,
-                              type === t.value && styles.selectorTextActive,
-                              isDisabled && styles.selectorTextDisabled
-                            ]}>
-                              {t.name}
-                            </Text>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
+                      );
+                    })}
                   </View>
-                )}
-
-                {product.ingredients.length > 0 && (
-                  <View style={styles.ingredientsSection}>
-                    <Text style={styles.sectionTitle}>{t('productModal.addIngredients')}</Text>
-                    <View style={styles.ingredientsGrid}>
-                      {product.ingredients.map((item: any) => {
-                        const isSelected = selectedIngredients.includes(item.id);
-                        return (
-                          <TouchableOpacity
-                            key={item.id}
-                            style={[styles.ingredientCard, isSelected && styles.ingredientActive]}
-                            onPress={() => toggleIngredient(item.id)}
-                          >
-                            {isSelected && <Ionicons name="checkmark-circle" size={20} color={theme.primary} style={styles.checkIcon} />}
-                            <Image source={{ uri: item.imageUrl }} style={styles.ingredientImage} />
-                            <Text style={styles.ingredientName}>{item.name}</Text>
-                            <Text style={styles.ingredientPrice}>{item.price} TJS</Text>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
-                  </View>
-                )}
-              </>
-            ) : (
+                </View>
+              )}
+            </>
+          ) : (
               <View style={styles.reviewsList}>
                 {user ? (
                   <View style={styles.addReviewForm}>
@@ -380,146 +384,112 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
 
           {tab === 'details' && (
             <View style={styles.footer}>
-              <BlurView
-                intensity={95}
-                tint={theme.mode === 'dark' ? 'dark' : 'light'}
-                style={[StyleSheet.absoluteFill, {
-                  backgroundColor: theme.mode === 'dark' ? 'rgba(36,30,26,0.4)' : 'rgba(255,255,255,0.45)',
-                }]}
-              />
-              <LinearGradient
-                pointerEvents="none"
-                colors={[
-                  theme.mode === 'dark' ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.5)',
-                  'transparent',
-                ]}
-                start={{ x: 0.5, y: 0 }}
-                end={{ x: 0.5, y: 0.4 }}
-                style={[StyleSheet.absoluteFill, { borderTopLeftRadius: 40, borderTopRightRadius: 40 }]}
-              />
-              <View style={styles.priceContainer}>
-                {currentItem?.priceOld && (
-                  <Text style={styles.totalPriceOld}>
-                    {(currentItem.priceOld + selectedIngredients.reduce((acc, id) => acc + (product.ingredients.find((i: any) => i.id === id)?.price || 0), 0))} TJS
-                  </Text>
-                )}
-                <Text style={styles.totalPriceText}>{t('productModal.total')}: {totalPrice} TJS</Text>
-              </View>
-              <SpringPress onPress={handleAdd} scaleTo={0.96}>
-                <LinearGradient
-                  colors={(theme.mode === 'dark' ? gradients.dark : gradients.light).primary}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.addBtn}>
-                  <Text style={styles.addBtnText}>{t('productModal.addToCart')}</Text>
-                </LinearGradient>
+              <SpringPress onPress={handleAdd} scaleTo={0.97}>
+                <View style={styles.addBtn}>
+                  <Plus size={24} color="#fff" strokeWidth={2.5} />
+                  <Text style={styles.addBtnText}>{totalPrice} TJS</Text>
+                </View>
               </SpringPress>
             </View>
           )}
         </View>
-      </View>
     </Modal>
   );
 };
 
 const makeStyles = (t: Theme) => StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: t.overlay, justifyContent: 'flex-end' },
   content: {
-    borderTopLeftRadius: 45,
-    borderTopRightRadius: 45,
-    height: '92%',
-    paddingTop: 10,
-    overflow: 'hidden',
+    flex: 1,
+    backgroundColor: t.background,
   },
   closeBtn: {
     position: 'absolute',
-    top: 25,
-    right: 25,
+    top: 18,
+    left: 18,
     zIndex: 10,
-    backgroundColor: t.surface,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: t.shadow,
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
   },
-  tabHeader: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 15, marginBottom: 10 },
-  tabBtn: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 15 },
+  imageContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 320,
+  },
+  image: { width: '86%', height: 290, resizeMode: 'contain' },
+  tabHeader: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 6, marginBottom: 10 },
+  tabBtn: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, backgroundColor: t.surface },
   tabBtnActive: { backgroundColor: t.primarySoft },
-  tabText: { fontSize: 16, fontWeight: '800', color: t.textMuted },
+  tabText: { fontSize: 14, fontWeight: '800', color: t.textMuted },
   tabTextActive: { color: t.primary },
-  scroll: { padding: 20, paddingBottom: 220 },
-  imageContainer: { alignItems: 'center', justifyContent: 'center', height: 280, marginTop: 0 },
-  image: { width: 260, height: 260, resizeMode: 'contain' },
-  name: { fontSize: 28, fontWeight: '900', color: t.text, textAlign: 'center', marginTop: 15 },
-  selectors: { marginTop: 25, gap: 12 },
-  selectorRow: { flexDirection: 'row', backgroundColor: t.surfaceMuted, borderRadius: 20, padding: 4 },
-  selectorBtn: { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: 16 },
-  selectorBtnActive: {
-    backgroundColor: t.surface,
-    shadowColor: t.shadow,
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 2,
-  },
+  scroll: { paddingHorizontal: 20, paddingBottom: 180 },
+  name: { fontSize: 26, fontWeight: '900', color: t.text, textAlign: 'center', marginTop: 4, letterSpacing: -0.4 },
+  description: { fontSize: 13, color: t.textMuted, textAlign: 'center', marginTop: 8, lineHeight: 19, paddingHorizontal: 8 },
+  selectors: { marginTop: 20, gap: 12 },
+  selectorRow: { flexDirection: 'row', backgroundColor: t.surface, borderRadius: 999, borderWidth: 1, borderColor: t.border, padding: 4 },
+  selectorBtn: { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: 999 },
+  selectorBtnActive: { backgroundColor: t.text },
   selectorBtnDisabled: { opacity: 0.25 },
   selectorText: { fontSize: 14, fontWeight: '800', color: t.textMuted },
-  selectorTextActive: { color: t.text },
+  selectorTextActive: { color: t.background },
   selectorTextDisabled: { color: t.textSubtle },
+  typeCarousel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: t.surface,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: t.border,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+  },
+  typeChevron: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  typeName: { fontSize: 15, fontWeight: '800', color: t.text, flex: 1, textAlign: 'center' },
   ingredientsSection: { marginTop: 30 },
   sectionTitle: { fontSize: 20, fontWeight: '900', color: t.text, marginBottom: 15 },
   ingredientsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   ingredientCard: {
-    width: (Dimensions.get('window').width - 60) / 3,
+    width: '30.5%',
     backgroundColor: t.surface,
-    borderRadius: 25,
-    padding: 12,
+    borderRadius: 20,
+    padding: 10,
     alignItems: 'center',
     borderWidth: 2,
     borderColor: 'transparent',
-    shadowColor: t.shadow,
-    shadowOpacity: t.mode === 'dark' ? 0.3 : 0.03,
-    shadowRadius: 10,
-    elevation: 2,
   },
   ingredientActive: { borderColor: t.primary },
-  checkIcon: { position: 'absolute', top: 8, right: 8 },
-  ingredientImage: { width: 60, height: 60, resizeMode: 'contain' },
-  ingredientName: { fontSize: 12, fontWeight: '700', color: t.text, marginTop: 8, textAlign: 'center' },
-  ingredientPrice: { fontSize: 13, fontWeight: '900', color: t.text, marginTop: 2 },
+  checkIcon: { position: 'absolute', top: 6, right: 6 },
+  ingredientImage: { width: 52, height: 52, resizeMode: 'contain' },
+  ingredientName: { fontSize: 11, fontWeight: '700', color: t.text, marginTop: 6, textAlign: 'center' },
+  ingredientPrice: { fontSize: 12, fontWeight: '900', color: t.text, marginTop: 2 },
   footer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 25,
-    paddingBottom: Platform.OS === 'ios' ? 45 : 25,
-    borderTopLeftRadius: 40,
-    borderTopRightRadius: 40,
-    overflow: 'hidden',
-    shadowColor: t.mode === 'dark' ? '#000' : t.primary,
-    shadowOffset: { width: 0, height: -12 },
-    shadowOpacity: t.mode === 'dark' ? 0.45 : 0.1,
-    shadowRadius: 24,
-    elevation: 14,
+    padding: 20,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 20,
+    backgroundColor: t.background,
+    borderTopWidth: 1,
+    borderTopColor: t.border,
   },
-  priceContainer: { marginBottom: 15, alignItems: 'center' },
-  totalPriceOld: { fontSize: 14, color: t.textSubtle, textDecorationLine: 'line-through', marginBottom: 2 },
-  totalPriceText: { fontSize: 20, fontWeight: '900', color: t.text },
   addBtn: {
-    height: 60,
-    borderRadius: 22,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: t.primary,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.45,
-    shadowRadius: 20,
-    elevation: 10,
+    gap: 8,
+    height: 58,
+    borderRadius: 999,
+    backgroundColor: t.primary,
   },
   addBtnText: { color: '#fff', fontSize: 18, fontWeight: '900', letterSpacing: 0.3 },
   reviewsList: { gap: 15 },

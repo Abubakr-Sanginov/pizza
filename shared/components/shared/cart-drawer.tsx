@@ -13,7 +13,7 @@ import {
 } from '@/shared/components/ui/sheet';
 import Link from 'next/link';
 import { Button } from '../ui';
-import { ArrowLeft, ArrowRight, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, ShoppingBag } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { CartDrawerItem } from './cart-drawer-item';
 import { CartCrossSell } from './cart-cross-sell';
@@ -128,9 +128,8 @@ export const CartDrawer: React.FC<React.PropsWithChildren> = ({ children }) => {
                       onClick={() => setRedirecting(true)}
                       loading={redirecting}
                       type="submit"
-                      className="w-full h-14 text-base rounded-2xl btn-gradient border-0 font-extrabold gap-2">
-                      {t('cart.checkout')}
-                      <ArrowRight className="w-5" strokeWidth={2.5} />
+                      className="w-full h-14 text-base rounded-full btn-gradient border-0 font-extrabold uppercase tracking-wide">
+                      Оформить за {totalAmount} TJS
                     </Button>
                   </Link>
                 </div>

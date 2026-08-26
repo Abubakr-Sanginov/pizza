@@ -77,7 +77,7 @@ export const PizzaOfTheDayServer: React.FC<Props> = async ({ className }) => {
       pizza.reviews.length > 0
         ? pizza.reviews.reduce((acc, r) => acc + r.rating, 0) /
           pizza.reviews.length
-        : 4.5;
+        : null;
 
     return (
       <PizzaOfTheDay
@@ -89,7 +89,7 @@ export const PizzaOfTheDayServer: React.FC<Props> = async ({ className }) => {
           price: pizza.items[0].price,
           rating,
           reviewCount: pizza.reviews.length,
-          orderCount: topCount || Math.floor(Math.random() * 30) + 10,
+          orderCount: topCount,
         }}
       />
     );

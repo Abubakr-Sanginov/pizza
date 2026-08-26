@@ -14,9 +14,13 @@ type ReturnProps = {
 
 export const useCart = (): ReturnProps => {
   const cartState = useCartStore((state) => state);
+  const initialized = useCartStore((state) => state.initialized);
 
   React.useEffect(() => {
-    cartState.fetchCartItems();
+    // Первая загрузка — со спиннером, повторные монтирования (открытие шторки и т.п.)
+    // обновляют данные в фоне без блокировки интерфейса.
+    cartState.fetchCartItems({ silent: initialized });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return cartState;

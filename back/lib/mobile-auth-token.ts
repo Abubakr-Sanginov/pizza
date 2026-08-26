@@ -27,7 +27,7 @@ export function verifyMobileAuthToken(token: string): number | null {
   const [payload, signature] = token.split('.');
   if (!payload || !signature) return null;
 
-  const expected = Buffer.from(sign(payload));
+  const expected = Buffer.from(sign(payload), 'base64url');
   const given = Buffer.from(signature, 'base64url');
   if (expected.length !== given.length || !crypto.timingSafeEqual(expected, given)) {
     return null;

@@ -224,7 +224,7 @@ export default function CartScreen() {
   };
 
   const waitForYooKassaPayment = async (orderId: number): Promise<boolean> => {
-    const timeoutMs = 5 * 60 * 1000;
+    const timeoutMs = 2 * 60 * 1000;
     const startedAt = Date.now();
     while (Date.now() - startedAt < timeoutMs) {
       await new Promise((r) => setTimeout(r, 2500));
@@ -241,7 +241,7 @@ export default function CartScreen() {
     return false;
   };
 
-  const payWithYooKassa = async (orderId: number): Promise<boolean> => {
+  const payWithYooKassa = async (orderId: number): Promise<void> => {
     const initRes = await fetch(`${BASE_URL}/api/payments/yookassa/init`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -262,7 +262,6 @@ export default function CartScreen() {
     }
 
     WebBrowser.openBrowserAsync(initData.url).catch(() => {});
-    return waitForYooKassaPayment(orderId);
   };
 
   const onSubmitOrder = async () => {
@@ -322,7 +321,10 @@ export default function CartScreen() {
       if (requiresOnlinePayment && orderId) {
         if (paymentMethod === 'YOOKASSA') {
           try {
-            const paid = await payWithYooKassa(orderId);
+            await payWithYooKassa(orderId);
+            // Кнопку разблокируем сразу — оплату ждём в фоне, без спиннера
+            setIsSubmitting(false);
+            const paid = await waitForYooKassaPayment(orderId);
             if (paid) {
               clearCart();
               setSuccessOrder({
@@ -1031,11 +1033,7 @@ export default function CartScreen() {
                 onPress={step === 1 ? nextStep : onSubmitOrder}
                 disabled={isSubmitting}
                 scaleTo={0.96}>
-                <LinearGradient
-                  colors={(theme.mode === 'dark' ? gradients.dark : gradients.light).primary}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.mainButton}>
+                <DefaultView style={styles.mainButton}>
                   {isSubmitting ? (
                     <ActivityIndicator color="white" />
                   ) : (
@@ -1046,7 +1044,7 @@ export default function CartScreen() {
                       <Ionicons name="arrow-forward" size={20} color="white" />
                     </>
                   )}
-                </LinearGradient>
+                </DefaultView>
               </SpringPress>
             </DefaultView>
           </DefaultView>
@@ -1345,14 +1343,9 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 22,
-    height: 54,
-    borderRadius: 20,
+    height: 56,
+    borderRadius: 28,
     gap: 6,
-    shadowColor: t.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
   },
   mainButtonText: { color: t.primaryContrast, fontSize: 15, fontWeight: '900' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },

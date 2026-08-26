@@ -38,7 +38,7 @@ export const RecentlyViewed: React.FC = () => {
   return (
     <section className="mb-10">
       <SectionHeader title="Вы недавно смотрели" className="mb-5" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[20px] md:gap-[40px]">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-[40px]">
         {products.slice(0, 4).map((product) => (
           <ProductCard
             key={product.id}

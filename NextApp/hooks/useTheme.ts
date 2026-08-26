@@ -17,7 +17,7 @@ interface ThemePrefState {
 }
 
 export const useThemePreference = create<ThemePrefState>((set) => ({
-  preference: 'system',
+  preference: 'dark',
   hydrated: false,
   setPreference: (next) => {
     set({ preference: next });
@@ -35,10 +35,10 @@ AsyncStorage.getItem(STORAGE_KEY)
     if (stored === 'light' || stored === 'dark' || stored === 'system') {
       useThemePreference.setState({ preference: stored, hydrated: true });
     } else {
-      useThemePreference.setState({ hydrated: true });
+      useThemePreference.setState({ preference: 'dark', hydrated: true });
     }
   })
-  .catch(() => useThemePreference.setState({ hydrated: true }));
+  .catch(() => useThemePreference.setState({ preference: 'dark', hydrated: true }));
 
 let cachedScheme: 'light' | 'dark' =
   Appearance.getColorScheme() === 'dark' ? 'dark' : 'light';

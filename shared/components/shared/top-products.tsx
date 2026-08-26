@@ -78,7 +78,7 @@ export const TopProducts: React.FC<Props> = async ({ className }) => {
     return (
       <div className={className}>
         <SectionHeader title="Популярное сейчас" className="mb-5" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[50px]">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-[40px]">
           {products.map((product: any) => (
             <ProductCard
               key={product.id}

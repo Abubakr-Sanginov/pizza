@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Plus } from 'lucide-react';
 import { Ingredient, ProductItem } from '@prisma/client';
 
 import { PizzaImage } from './pizza-image';
@@ -78,16 +79,18 @@ export const ChoosePizzaForm: React.FC<Props> = ({
     <div className={cn(className, 'flex flex-col lg:flex-row flex-1')}>
       <PizzaImage imageUrl={imageUrl} size={size} className="lg:static md:flex items-center justify-center flex-1 w-full" />
 
-      <div className="w-full lg:w-[490px] bg-secondary text-secondary-foreground p-7">
-        <Title text={name} size="md" className="font-extrabold mb-1" />
+      <div className="w-full lg:w-[490px] bg-secondary text-secondary-foreground p-5 md:p-7 flex flex-col">
+        <div className="text-center lg:text-left">
+          <Title text={name} size="md" className="font-extrabold mb-1" />
 
-        {tags && tags.length > 0 && <ProductTagBadges tags={tags} size="md" className="mb-2" />}
+          {tags && tags.length > 0 && <ProductTagBadges tags={tags} size="md" className="mb-2 justify-center lg:justify-start" />}
 
-        <p className="text-muted-foreground">{textDetaills}</p>
+          <p className="text-muted-foreground">{textDetaills}</p>
 
-        {(calories || proteins || fats || carbs) && (
-          <NutritionBadge calories={calories} proteins={proteins} fats={fats} carbs={carbs} className="mt-2" />
-        )}
+          {(calories || proteins || fats || carbs) && (
+            <NutritionBadge calories={calories} proteins={proteins} fats={fats} carbs={carbs} className="mt-2" />
+          )}
+        </div>
 
         <div className="flex flex-col gap-4 mt-5">
           <GroupVariants
@@ -103,8 +106,8 @@ export const ChoosePizzaForm: React.FC<Props> = ({
           />
         </div>
 
-        <div className="bg-muted p-5 rounded-md h-[420px] overflow-auto scrollbar mt-5">
-          <div className="grid grid-cols-3 gap-3">
+        <div className="bg-muted p-3 md:p-5 rounded-3xl h-[280px] lg:h-[420px] overflow-auto scrollbar mt-5">
+          <div className="grid grid-cols-3 gap-2 md:gap-3">
             {ingredients.map((ingredient) => (
               <IngredientItem
                 key={ingredient.id}
@@ -118,12 +121,15 @@ export const ChoosePizzaForm: React.FC<Props> = ({
           </div>
         </div>
 
-        <Button
-          loading={loading}
-          onClick={handleClickAdd}
-          className="h-[55px] px-10 text-base rounded-[18px] w-full mt-10">
-          {t('productModal.addToCart')} {totalPrice} TJS
-        </Button>
+        <div className="sticky bottom-0 -mx-5 md:-mx-7 mt-6 -mb-5 md:-mb-7 px-5 md:px-7 pt-4 pb-5 bg-gradient-to-t from-secondary via-secondary/95 to-transparent">
+          <Button
+            loading={loading}
+            onClick={handleClickAdd}
+            className="btn-gradient h-[55px] px-10 text-base rounded-full w-full font-extrabold gap-2 border-0">
+            <Plus size={20} strokeWidth={3} />
+            {totalPrice} TJS
+          </Button>
+        </div>
       </div>
     </div>
   );

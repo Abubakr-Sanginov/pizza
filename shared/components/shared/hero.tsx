@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Flame, Star, Timer } from "lucide-react";
 
 interface HeroPizza {
@@ -27,9 +27,6 @@ const fadeUp = {
 };
 
 export const Hero: React.FC<Props> = ({ pizza }) => {
-  const reduced = useReducedMotion();
-  const spin = pizza && !reduced;
-
   return (
     <section className="grid lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_460px] items-center gap-10 lg:gap-14">
       {/* Текстовая стопка */}
@@ -104,7 +101,7 @@ export const Hero: React.FC<Props> = ({ pizza }) => {
       {/* Устье печи: арка с пиццей */}
       {pizza && (
         <motion.div
-          initial={reduced ? false : { opacity: 0, scale: 0.92 }}
+          initial={{ opacity: 0, scale: 0.92 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="relative hidden lg:block justify-self-end"
@@ -118,9 +115,7 @@ export const Hero: React.FC<Props> = ({ pizza }) => {
             <img
               src={pizza.imageUrl}
               alt={pizza.name}
-              className={`w-[78%] h-auto object-contain mb-[8%] drop-shadow-2xl ${
-                spin ? "slow-rotate" : ""
-              }`}
+              className="w-[78%] h-auto object-contain mb-[8%] drop-shadow-2xl"
             />
             {pizza.price != null && (
               <div className="absolute top-8 right-6 px-4 py-2.5 rounded-2xl glass-strong shadow-soft-lg rotate-3">
