@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Flame, Star, Timer } from "lucide-react";
+import { BlurImage } from "./blur-image";
 
 interface HeroPizza {
   id: number;
@@ -112,10 +113,11 @@ export const Hero: React.FC<Props> = ({ pizza }) => {
             className="absolute inset-x-6 top-16 bottom-0 rounded-t-full bg-[radial-gradient(ellipse_at_bottom,_hsl(22_100%_50%_/_0.28),_hsl(5_70%_51%_/_0.10)_55%,_transparent_75%)]"
           />
           <div className="relative w-[340px] xl:w-[420px] aspect-[4/5] rounded-t-full glass-strong shadow-soft-lg overflow-hidden flex items-end justify-center">
-            <img
+            <BlurImage
               src={pizza.imageUrl}
               alt={pizza.name}
-              className="w-[78%] h-auto object-contain mb-[8%] drop-shadow-2xl"
+              className="w-[78%] aspect-square mb-[8%]"
+              imageClassName="w-full h-full object-contain drop-shadow-2xl"
             />
             {pizza.price != null && (
               <div className="absolute top-8 right-6 px-4 py-2.5 rounded-2xl glass-strong shadow-soft-lg rotate-3">

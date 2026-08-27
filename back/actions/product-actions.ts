@@ -15,6 +15,7 @@ interface ProductItemInput {
 interface ProductInput {
   name: string;
   imageUrl: string;
+  gifUrl?: string | null;
   categoryId: number;
   ingredientIds: number[];
   items: ProductItemInput[];
@@ -31,6 +32,7 @@ export async function createProduct(data: ProductInput) {
       data: {
         name: data.name,
         imageUrl: data.imageUrl,
+        gifUrl: data.gifUrl || null,
         tags: data.tags ?? [],
         calories: data.calories ?? null,
         proteins: data.proteins ?? null,
@@ -87,6 +89,7 @@ export async function updateProduct(id: number, data: ProductInput) {
       data: {
         name: data.name,
         imageUrl: data.imageUrl,
+        gifUrl: data.gifUrl || null,
         tags: data.tags ?? [],
         calories: data.calories ?? null,
         proteins: data.proteins ?? null,

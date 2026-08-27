@@ -55,7 +55,7 @@ export const CheckoutSidebar: React.FC<Props> = ({
       .post('/api/promo/validate', {
         code: appliedPromo.code,
         subtotal: totalAmount,
-        items: items.map((i) => ({ productId: i.productId, lineTotal: i.price * i.quantity })),
+        items: items.map((i) => ({ productId: i.productId, lineTotal: i.price })),
       })
       .then(({ data }) => {
         if (cancelled) return;
@@ -81,7 +81,7 @@ export const CheckoutSidebar: React.FC<Props> = ({
       const { data } = await axios.post('/api/promo/validate', {
         code: promoInput.trim(),
         subtotal: totalAmount,
-        items: items.map((i) => ({ productId: i.productId, lineTotal: i.price * i.quantity })),
+        items: items.map((i) => ({ productId: i.productId, lineTotal: i.price })),
       });
       setAppliedPromo({ code: data.code, discount: data.appliedDiscount });
       form?.setValue?.('promoCode', data.code);

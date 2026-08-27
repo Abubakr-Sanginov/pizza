@@ -63,4 +63,6 @@ export { CheckoutScheduleForm } from "./checkout/checkout-schedule-form";
 export { LanguageToggle } from './language-toggle';
 export { AiTranslateButton } from './admin/ai-translate-button';
 export { Hero } from './hero';
+export { HeroBanner } from './hero-banner';
+export { BlurImage } from './blur-image';
 export { SectionHeader } from './section-header';

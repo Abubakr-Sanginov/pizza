@@ -149,7 +149,7 @@ export async function createOrder(data: CheckoutFormValues) {
         promoCode: promoCodeApplied,
         status: OrderStatus.PENDING,
         scheduledAt: data.scheduledAt
-          ? (() => { const [h, m] = data.scheduledAt!.split(':').map(Number); const d = new Date(); d.setHours(h, m, 0, 0); return d; })()
+          ? (() => { const [h, m] = data.scheduledAt!.split(':').map(Number); const d = new Date(); d.setHours(h, m, 0, 0); if (d <= new Date()) { d.setDate(d.getDate() + 1); } return d; })()
           : null,
         paymentMethod: (data.paymentMethod ?? 'CASH_ON_DELIVERY') as any,
         paymentStatus: 'PENDING',

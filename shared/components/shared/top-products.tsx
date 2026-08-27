@@ -85,6 +85,7 @@ export const TopProducts: React.FC<Props> = async ({ className }) => {
               id={product.id}
               name={product.name}
               imageUrl={product.imageUrl}
+              gifUrl={product.gifUrl}
               price={product.items[0]?.price || 0}
               ingredients={product.ingredients}
               reviews={product.reviews}

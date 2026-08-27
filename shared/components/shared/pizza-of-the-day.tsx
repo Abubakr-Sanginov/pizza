@@ -6,6 +6,7 @@ import { Flame, Star, Trophy, Clock } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "../ui";
+import { BlurImage } from "./blur-image";
 
 interface PizzaOfTheDayData {
   id: number;
@@ -90,12 +91,11 @@ export const PizzaOfTheDay: React.FC<Props> = ({ pizza, className }) => {
         {}
         <div className="relative flex-shrink-0 mt-6 md:mt-0">
           <div className="absolute inset-0 rounded-full bg-primary/20 blur-3xl scale-75" />
-          <motion.img
+          <BlurImage
             src={pizza.imageUrl}
             alt={pizza.name}
-            className="relative w-[180px] h-[180px] md:w-[220px] md:h-[220px] object-contain drop-shadow-2xl"
-            animate={{ rotate: [0, 3, -3, 0] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            className="relative w-[180px] h-[180px] md:w-[220px] md:h-[220px]"
+            imageClassName="w-full h-full object-contain drop-shadow-2xl"
           />
           {}
           <motion.div

@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { ShoppingCart } from 'lucide-react';
 import { Button } from '../ui';
 import { cn } from '@/shared/lib/utils';
+import { BlurImage } from './blur-image';
 
 interface ComboItem {
   product: { id: number; name: string; imageUrl: string };
@@ -41,7 +42,7 @@ export const ComboCard: React.FC<Props> = ({ combo, className }) => {
           -{combo.discount}%
         </div>
       )}
-      <img src={combo.imageUrl} alt={combo.name} className="w-full h-44 object-cover" />
+      <BlurImage src={combo.imageUrl} alt={combo.name} className="w-full h-44" imageClassName="w-full h-full object-cover" />
       <div className="p-4 flex flex-col flex-1">
         <h3 className="font-extrabold text-base mb-1 leading-tight">{combo.name}</h3>
         {combo.description && <p className="text-muted-foreground text-sm mb-3 line-clamp-2">{combo.description}</p>}

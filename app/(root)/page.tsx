@@ -11,6 +11,7 @@ import {
   PizzaOfTheDayServer,
   CombosSection,
   Hero,
+  HeroBanner,
 } from "@/shared/components/shared";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
@@ -34,6 +35,8 @@ export default async function Home({
   return (
     <>
       {}
+      <HeroBanner className="mt-0" />
+
       <Container className="mt-8 md:mt-14">
         <Hero
           pizza={

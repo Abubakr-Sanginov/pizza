@@ -17,6 +17,7 @@ import { ALL_PRODUCT_TAGS, PRODUCT_TAGS } from '@/shared/constants';
 const productSchema = z.object({
   name: z.string().min(2, 'Минимум 2 символа'),
   imageUrl: z.string().min(1, 'Загрузите изображение'),
+  gifUrl: z.string().optional().nullable(),
   categoryId: z.string(),
   ingredients: z.array(z.number()),
   tags: z.array(z.string()).default([]),
@@ -51,6 +52,7 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
     defaultValues: {
       name: initialData?.name || '',
       imageUrl: initialData?.imageUrl || '',
+      gifUrl: (initialData as any)?.gifUrl || '',
       categoryId: String(initialData?.categoryId || categories[0]?.id || ''),
       ingredients: initialData?.ingredients.map((i) => i.id) || [],
       tags: ((initialData as any)?.tags as string[] | undefined) ?? [],
@@ -78,6 +80,7 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
       const productData = {
         name: values.name,
         imageUrl: values.imageUrl,
+        gifUrl: values.gifUrl || null,
         categoryId: Number(values.categoryId),
         ingredientIds: values.ingredients,
         tags: values.tags,
@@ -136,6 +139,23 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
                     <label className="block text-xs font-medium text-muted-foreground mb-1">Или укажите прямую ссылку:</label>
                     <Input {...form.register('imageUrl')} placeholder="https://..." />
                   </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-3">GIF (опционально)</label>
+                <div className="flex flex-col gap-3">
+                  <UploadButton
+                    value={form.watch('gifUrl') || ''}
+                    onChange={(url) => form.setValue('gifUrl', url)}
+                  />
+                  <div className="pt-2">
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Или укажите прямую ссылку на GIF:</label>
+                    <Input {...form.register('gifUrl')} placeholder="https://...gif" />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    GIF показывается при наведении на карточку товара вместо статичного изображения
+                  </p>
                 </div>
               </div>
 

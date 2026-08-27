@@ -6,9 +6,11 @@ import { Title } from './title';
 import { Button } from '../ui';
 import { useTranslation } from 'react-i18next';
 import { ProductTagBadges } from './product-tag-badges';
+import { BlurImage } from './blur-image';
 
 interface Props {
   imageUrl: string;
+  gifUrl?: string | null;
   name: string;
   price: number;
   loading?: boolean;
@@ -21,6 +23,7 @@ interface Props {
 export const ChooseProductForm: React.FC<Props> = ({
   name,
   imageUrl,
+  gifUrl,
   price,
   onSubmit,
   className,
@@ -32,10 +35,12 @@ export const ChooseProductForm: React.FC<Props> = ({
   return (
     <div className={cn(className, 'flex flex-col lg:flex-row flex-1')}>
       <div className="flex items-center justify-center flex-1 relative w-full p-10">
-        <img
+        <BlurImage
           src={imageUrl}
+          gifSrc={gifUrl}
           alt={name}
-          className="relative transition-all z-10 duration-300 w-[200px] h-[200px] md:w-[350px] md:h-[350px]"
+          className="w-[200px] h-[200px] md:w-[350px] md:h-[350px] rounded-2xl"
+          imageClassName="w-full h-full object-contain"
         />
       </div>
 

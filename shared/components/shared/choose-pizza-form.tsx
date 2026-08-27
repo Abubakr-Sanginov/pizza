@@ -20,6 +20,7 @@ import { NutritionBadge } from './nutrition-badge';
 
 interface Props {
   imageUrl: string;
+  gifUrl?: string | null;
   name: string;
   ingredients: Ingredient[];
   items: ProductItem[];
@@ -38,6 +39,7 @@ export const ChoosePizzaForm: React.FC<Props> = ({
   name,
   items,
   imageUrl,
+  gifUrl,
   ingredients,
   loading,
   onSubmit,
@@ -77,7 +79,7 @@ export const ChoosePizzaForm: React.FC<Props> = ({
 
   return (
     <div className={cn(className, 'flex flex-col lg:flex-row flex-1')}>
-      <PizzaImage imageUrl={imageUrl} size={size} className="lg:static md:flex items-center justify-center flex-1 w-full" />
+      <PizzaImage imageUrl={imageUrl} gifUrl={gifUrl} size={size} className="lg:static md:flex items-center justify-center flex-1 w-full" />
 
       <div className="w-full lg:w-[490px] bg-secondary text-secondary-foreground p-5 md:p-7 flex flex-col">
         <div className="text-center lg:text-left">

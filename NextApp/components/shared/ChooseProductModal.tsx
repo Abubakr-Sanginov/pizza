@@ -2,6 +2,8 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, Modal, Image, TouchableOpacity, ScrollView, Animated, Platform, TextInput, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { X, ChevronLeft, ChevronRight, Plus } from 'lucide-react-native';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useCartStore } from '@/store/useCartStore';
 import { useUserStore } from '@/store/useUserStore';
 import { useTranslation } from 'react-i18next';
@@ -9,8 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { BASE_URL } from '@/constants/Api';
 import { useTheme, Theme } from '@/hooks/useTheme';
 import { gradients } from '@/constants/Colors';
-import { LinearGradient } from 'expo-linear-gradient';
-import { SpringPress, TagBadges } from '@/components/ui';
+import { SpringPress, TagBadges, BlurImage } from '@/components/ui';
 import { pushRecentlyViewed } from '@/hooks/useRecentlyViewed';
 
 interface Props {
@@ -160,13 +161,36 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={styles.content}>
         <View style={styles.imageContainer}>
+          <BlurView
+            intensity={100}
+            tint={theme.mode === 'dark' ? 'dark' : 'light'}
+            style={StyleSheet.absoluteFill}
+          />
+          <LinearGradient
+            colors={theme.mode === 'dark'
+              ? ['rgba(255,150,50,0.15)', 'rgba(30,20,15,0.6)']
+              : ['rgba(255,200,120,0.3)', 'rgba(255,247,240,0.8)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <LinearGradient
+            colors={['rgba(255,255,255,0.3)', 'transparent']}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 0.5 }}
+            style={StyleSheet.absoluteFill}
+          />
           <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
             <X size={22} color="#fff" strokeWidth={2.5} />
           </TouchableOpacity>
-          <Animated.Image
-            source={{ uri: product.imageUrl }}
-            style={[styles.image, { transform: [{ scale: scaleAnim }] }]}
-          />
+          <Animated.View style={[styles.image, { transform: [{ scale: scaleAnim }] }]}>
+            <BlurImage
+              uri={product.imageUrl}
+              gifUri={product.gifUrl}
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="contain"
+            />
+          </Animated.View>
         </View>
 
         <View style={styles.tabHeader}>

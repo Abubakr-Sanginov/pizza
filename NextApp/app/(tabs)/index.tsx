@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, RefreshControl, TextInput, Modal, Dimensions, Animated, SectionList, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import { Pizza, Croissant, Sandwich, CakeSlice, CupSoda, Martini, Soup, Salad, UtensilsCrossed, Search, type LucideIcon } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -10,7 +11,7 @@ import { ChooseProductModal } from '@/components/shared/ChooseProductModal';
 import { useTranslation } from 'react-i18next';
 import { BASE_URL } from '@/constants/Api';
 import { useTheme, Theme } from '@/hooks/useTheme';
-import { SpringPress, ShimmerProductCard, Shimmer } from '@/components/ui';
+import { SpringPress, ShimmerProductCard, Shimmer, BlurImage } from '@/components/ui';
 const { width, height } = Dimensions.get('window');
 
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
@@ -220,7 +221,31 @@ export default function MenuScreen() {
       <SpringPress onPress={() => handleProductPress(item)} scaleTo={0.97} style={styles.cardWrap}>
         <View style={styles.card}>
           <View style={styles.cardImageWrap}>
-            <Image source={{ uri: item.imageUrl }} style={styles.cardImage} />
+            <BlurView
+              intensity={100}
+              tint={theme.mode === 'dark' ? 'dark' : 'light'}
+              style={StyleSheet.absoluteFill}
+            />
+            <LinearGradient
+              colors={theme.mode === 'dark'
+                ? ['rgba(255,150,50,0.18)', 'rgba(30,20,15,0.7)']
+                : ['rgba(255,200,120,0.35)', 'rgba(255,247,240,0.85)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <LinearGradient
+              colors={['rgba(255,255,255,0.35)', 'transparent']}
+              start={{ x: 0.5, y: 0 }}
+              end={{ x: 0.5, y: 0.5 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <BlurImage
+              uri={item.imageUrl}
+              gifUri={item.gifUrl}
+              style={styles.cardImage}
+              resizeMode="contain"
+            />
             {hasDiscount && (
               <View style={styles.discountBadge}>
                 <Text style={styles.discountBadgeText}>-{discountPercent}%</Text>
@@ -389,8 +414,9 @@ export default function MenuScreen() {
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.banner}>
-                  <Image
-                    source={{ uri: bannerProduct.imageUrl }}
+                  <BlurImage
+                    uri={bannerProduct.imageUrl}
+                    gifUri={bannerProduct.gifUrl}
                     style={styles.bannerImage}
                     resizeMode="contain"
                   />
@@ -740,15 +766,19 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     marginBottom: 16,
   },
   card: {
-    borderRadius: 24,
-    backgroundColor: t.surface,
+    borderRadius: 28,
+    backgroundColor: 'transparent',
     overflow: 'hidden',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   cardImageWrap: {
-    height: 150,
+    height: 160,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+    borderRadius: 28,
+    overflow: 'hidden',
   },
   cardImage: {
     width: 132,

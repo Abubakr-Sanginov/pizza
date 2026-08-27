@@ -107,6 +107,7 @@ model Product {
   nameEn   String?
   nameTg   String?
   imageUrl String
+  gifUrl   String?
 
   // Dietary / allergen tags: VEGAN, VEGETARIAN, SPICY, GLUTEN_FREE, LACTOSE_FREE, NEW, HIT
   tags String[] @default([])

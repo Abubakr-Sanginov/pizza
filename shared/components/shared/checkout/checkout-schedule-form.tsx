@@ -15,6 +15,7 @@ function generateTimeSlots() {
   start.setMinutes(roundedMinutes, 0, 0);
   const end = new Date(now);
   end.setHours(23, 30, 0, 0);
+  if (start > end) return slots;
   let cur = new Date(start);
   while (cur <= end) {
     const h = String(cur.getHours()).padStart(2, '0');

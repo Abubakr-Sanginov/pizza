@@ -48,6 +48,7 @@ export default async function FavoritesPage() {
               id={product.id}
               name={product.name}
               imageUrl={product.imageUrl}
+              gifUrl={(product as any).gifUrl}
               price={product.items[0]?.price || 0}
               priceOld={product.items[0]?.priceOld}
               ingredients={product.ingredients}

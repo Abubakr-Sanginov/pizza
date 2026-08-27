@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { useCartStore, useFavoritesStore } from '@/shared/store';
 import { cn } from '@/shared/lib/utils';
 import { ProductTagBadges } from './product-tag-badges';
+import { BlurImage } from './blur-image';
 
 interface Props {
   id: number;
@@ -21,6 +22,7 @@ interface Props {
   price: number;
   priceOld?: number | null;
   imageUrl: string;
+  gifUrl?: string | null;
   ingredients: Ingredient[];
   reviews?: ReviewWithUser[];
   tags?: string[];
@@ -33,6 +35,7 @@ export const ProductCard: React.FC<Props> = ({
   price,
   priceOld,
   imageUrl,
+  gifUrl,
   ingredients,
   reviews = [],
   tags = [],
@@ -83,10 +86,12 @@ export const ProductCard: React.FC<Props> = ({
           {/* Мягкое свечение за пиццей */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_hsl(22_100%_50%_/_0.08),_transparent_70%)]" />
 
-          <img
-            className="w-[140px] h-[140px] md:w-[230px] md:h-[230px] object-contain transition-transform duration-500 ease-out group-hover:scale-110"
+          <BlurImage
             src={imageUrl}
+            gifSrc={gifUrl || undefined}
             alt={name}
+            className="w-[140px] h-[140px] md:w-[230px] md:h-[230px]"
+            imageClassName="w-full h-full object-contain transition-transform duration-500 ease-out group-hover:scale-110"
           />
 
           {/* Скидка */}

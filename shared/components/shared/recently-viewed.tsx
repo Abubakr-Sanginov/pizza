@@ -45,6 +45,7 @@ export const RecentlyViewed: React.FC = () => {
             id={product.id}
             name={product.name}
             imageUrl={product.imageUrl}
+            gifUrl={product.gifUrl}
             price={product.items[0]?.price || 0}
             priceOld={product.items[0]?.priceOld}
             ingredients={product.ingredients}
