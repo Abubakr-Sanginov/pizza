@@ -214,6 +214,23 @@ html.perf-low .btn-gradient {
   transform: translateY(-3px);
 }
 
+/* Liquid glass card */
+.glass-card {
+  background: hsl(var(--secondary) / 0.65);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid hsl(var(--border) / 0.5);
+}
+.dark .glass-card {
+  background: hsl(var(--secondary) / 0.45);
+  border-color: hsl(0 0% 100% / 0.08);
+}
+html.perf-low .glass-card {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: hsl(var(--secondary) / 0.95);
+}
+
 .scrollbar::-webkit-scrollbar {
   width: 4px;
 }

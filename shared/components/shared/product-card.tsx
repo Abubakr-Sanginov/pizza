@@ -82,7 +82,9 @@ export const ProductCard: React.FC<Props> = ({
       transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}>
       <Link href={`/product/${id}`} className="block lift">
         {/* Фото */}
-        <div className="relative h-[170px] md:h-[280px] rounded-3xl bg-secondary text-secondary-foreground overflow-hidden shadow-soft group-hover:shadow-soft-lg transition-shadow flex items-center justify-center">
+        <div className="relative h-[170px] md:h-[280px] rounded-3xl overflow-hidden shadow-soft group-hover:shadow-soft-lg transition-shadow flex items-center justify-center glass-card">
+          {/* Стеклянный блик сверху */}
+          <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/25 via-white/5 to-transparent dark:from-white/10 dark:via-white/0 pointer-events-none" />
           {/* Мягкое свечение за пиццей */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_hsl(22_100%_50%_/_0.08),_transparent_70%)]" />
 
