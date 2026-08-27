@@ -9,6 +9,17 @@ interface Props {
 }
 
 export const HeroBanner: React.FC<Props> = ({ className }) => {
+  const [bannerUrl, setBannerUrl] = React.useState<string | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    fetch('/api/settings/hero-banner')
+      .then((r) => r.json())
+      .then((data) => setBannerUrl(data.heroBannerUrl ?? null))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -19,10 +30,8 @@ export const HeroBanner: React.FC<Props> = ({ className }) => {
         'aspect-[3/1] md:aspect-[4/1] lg:aspect-[5/1]',
         className,
       )}>
-      {/* Base gradient */}
+      {/* Animated gradient background (fallback) */}
       <div className="absolute inset-0 bg-gradient-to-br from-orange-600/25 via-amber-500/10 to-red-700/20" />
-
-      {/* Animated glow orbs */}
       <motion.div
         className="absolute w-[300px] h-[300px] rounded-full bg-primary/15 blur-[80px]"
         style={{ left: '60%', top: '10%' }}
@@ -35,21 +44,15 @@ export const HeroBanner: React.FC<Props> = ({ className }) => {
         animate={{ scale: [1.2, 1, 1.2], opacity: [0.3, 0.6, 0.3] }}
         transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
       />
-      <motion.div
-        className="absolute w-[200px] h-[200px] rounded-full bg-orange-400/10 blur-[60px]"
-        style={{ left: '40%', top: '60%' }}
-        animate={{ scale: [1, 1.4, 1], opacity: [0.2, 0.5, 0.2] }}
-        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
-      />
 
-      {/* Grain noise overlay */}
-      <div
-        className="absolute inset-0 opacity-[0.03] mix-blend-overlay z-10"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-          backgroundSize: '128px 128px',
-        }}
-      />
+      {/* Banner image/GIF from admin */}
+      {bannerUrl && !loading && (
+        <img
+          src={bannerUrl}
+          alt="Hero banner"
+          className="absolute inset-0 w-full h-full object-cover z-10"
+        />
+      )}
 
       {/* Bottom fade */}
       <div className="absolute inset-0 z-20 bg-gradient-to-t from-background/90 via-background/30 to-transparent" />

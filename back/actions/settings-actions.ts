@@ -54,3 +54,24 @@ export async function updateSettings(vatPrice: number, deliveryPrice: number) {
     throw error;
   }
 }
+
+export async function updateHeroBanner(heroBannerUrl: string | null) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || session.user.role !== 'ADMIN') {
+      throw new Error('Access denied');
+    }
+
+    const settings = await prisma.setting.upsert({
+      where: { id: 1 },
+      update: { heroBannerUrl },
+      create: { id: 1, heroBannerUrl, vatPrice: 15, deliveryPrice: 250 },
+    });
+
+    return settings;
+  } catch (error) {
+    console.error('Error updating hero banner:', error);
+    throw error;
+  }
+}

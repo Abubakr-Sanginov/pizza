@@ -405,6 +405,7 @@ model Setting {
 
   vatPrice      Int @default(15)
   deliveryPrice Int @default(250)
+  heroBannerUrl String?
 
   updatedAt DateTime @updatedAt
 }

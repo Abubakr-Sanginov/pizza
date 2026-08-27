@@ -3,7 +3,7 @@
 import React from 'react';
 import { Title, Container } from '@/shared/components/shared';
 import { Button, Input } from '@/shared/components/ui';
-import { getSettings, updateSettings } from '@/back/actions/settings-actions';
+import { getSettings, updateSettings, updateHeroBanner } from '@/back/actions/settings-actions';
 import toast from 'react-hot-toast';
 
 export default function SettingsPage() {
@@ -11,6 +11,8 @@ export default function SettingsPage() {
   const [submitting, setSubmitting] = React.useState(false);
   const [vatPrice, setVatPrice] = React.useState(15);
   const [deliveryPrice, setDeliveryPrice] = React.useState(250);
+  const [heroBannerUrl, setHeroBannerUrl] = React.useState<string | null>(null);
+  const [uploadingBanner, setUploadingBanner] = React.useState(false);
 
   React.useEffect(() => {
     async function fetchData() {
@@ -18,6 +20,7 @@ export default function SettingsPage() {
         const data = await getSettings();
         setVatPrice(data.vatPrice);
         setDeliveryPrice(data.deliveryPrice);
+        setHeroBannerUrl(data.heroBannerUrl ?? null);
       } catch (error) {
         console.error(error);
         toast.error('Не удалось загрузить настройки');
@@ -38,6 +41,45 @@ export default function SettingsPage() {
       toast.error('Не удалось сохранить настройки');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const onBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingBanner(true);
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      if (!res.ok) throw new Error('Upload failed');
+
+      const { url } = await res.json();
+      await updateHeroBanner(url);
+      setHeroBannerUrl(url);
+      toast.success('Баннер обновлён');
+    } catch (error) {
+      console.error(error);
+      toast.error('Не удалось загрузить баннер');
+    } finally {
+      setUploadingBanner(false);
+      e.target.value = '';
+    }
+  };
+
+  const onBannerRemove = async () => {
+    try {
+      setUploadingBanner(true);
+      await updateHeroBanner(null);
+      setHeroBannerUrl(null);
+      toast.success('Баннер удалён');
+    } catch (error) {
+      console.error(error);
+      toast.error('Не удалось удалить баннер');
+    } finally {
+      setUploadingBanner(false);
     }
   };
 
@@ -79,6 +121,39 @@ export default function SettingsPage() {
         >
           Сохранить настройки
         </Button>
+      </div>
+
+      <div className="max-w-[500px] flex flex-col gap-4 bg-card text-card-foreground p-10 rounded-2xl shadow-sm border border-border mt-8">
+        <label className="font-bold text-lg">Герой-баннер</label>
+        <p className="text-sm text-muted-foreground">GIF или картинка на главной странице</p>
+
+        {heroBannerUrl && (
+          <div className="relative rounded-xl overflow-hidden border border-border">
+            <img
+              src={heroBannerUrl}
+              alt="Hero banner preview"
+              className="w-full h-auto object-cover max-h-[200px]"
+            />
+            <button
+              onClick={onBannerRemove}
+              disabled={uploadingBanner}
+              className="absolute top-2 right-2 bg-red-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold hover:bg-red-600 transition-colors disabled:opacity-50"
+            >
+              Удалить
+            </button>
+          </div>
+        )}
+
+        <label className="flex items-center justify-center gap-2 h-12 rounded-xl border-2 border-dashed border-border hover:border-primary cursor-pointer transition-colors text-sm font-bold text-muted-foreground hover:text-primary">
+          {uploadingBanner ? 'Загрузка...' : heroBannerUrl ? 'Заменить баннер' : 'Загрузить баннер (GIF / JPG / PNG)'}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={onBannerUpload}
+            disabled={uploadingBanner}
+            className="hidden"
+          />
+        </label>
       </div>
     </Container>
   );
