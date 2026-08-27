@@ -9,8 +9,6 @@ interface Props {
 }
 
 export const HeroBanner: React.FC<Props> = ({ className }) => {
-  const [imgSrc, setImgSrc] = React.useState('/uploads/5ab0859f-ce1a-4180-8a65-a6082944442d.png');
-
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -21,47 +19,40 @@ export const HeroBanner: React.FC<Props> = ({ className }) => {
         'aspect-[3/1] md:aspect-[4/1] lg:aspect-[5/1]',
         className,
       )}>
-      {/* Animated gradient background */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-600/30 via-amber-500/15 to-red-600/20" />
-        <motion.div
-          className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,_hsl(22_100%_55%_/_0.15),_transparent_60%)]"
-          animate={{ scale: [1, 1.15, 1], opacity: [0.6, 1, 0.6] }}
-          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          className="absolute inset-0 bg-[radial-gradient(circle_at_70%_40%,_hsl(350_100%_50%_/_0.1),_transparent_50%)]"
-          animate={{ scale: [1.1, 1, 1.1], opacity: [0.4, 0.8, 0.4] }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-        />
-      </div>
+      {/* Base gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-orange-600/25 via-amber-500/10 to-red-700/20" />
 
-      {/* Product image */}
-      <motion.img
-        src={imgSrc}
-        alt="Свежая пицца"
-        className="absolute right-[-2%] md:right-[5%] top-1/2 -translate-y-1/2 z-10
-                   w-[55%] md:w-[45%] lg:w-[40%] h-auto object-contain drop-shadow-2xl"
-        initial={{ x: 60, opacity: 0, rotate: -8 }}
-        animate={{ x: 0, opacity: 1, rotate: 0 }}
-        transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
-        onError={() => setImgSrc('/uploads/2cbc274b-c8f1-4ad7-8e96-038f62b5984b.png')}
-      />
-
-      {/* Overlay gradient */}
-      <div className="absolute inset-0 z-20 bg-gradient-to-r from-background/90 via-background/40 to-transparent" />
-
-      {/* Decorative circles */}
+      {/* Animated glow orbs */}
       <motion.div
-        className="absolute -left-10 -top-10 w-40 h-40 rounded-full bg-primary/5 blur-2xl"
-        animate={{ x: [0, 15, 0], y: [0, 10, 0] }}
-        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+        className="absolute w-[300px] h-[300px] rounded-full bg-primary/15 blur-[80px]"
+        style={{ left: '60%', top: '10%' }}
+        animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.7, 0.4] }}
+        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
       />
       <motion.div
-        className="absolute -right-10 -bottom-10 w-56 h-56 rounded-full bg-red-500/5 blur-3xl"
-        animate={{ x: [0, -20, 0], y: [0, -15, 0] }}
-        transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+        className="absolute w-[250px] h-[250px] rounded-full bg-red-500/10 blur-[100px]"
+        style={{ left: '75%', top: '40%' }}
+        animate={{ scale: [1.2, 1, 1.2], opacity: [0.3, 0.6, 0.3] }}
+        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
       />
+      <motion.div
+        className="absolute w-[200px] h-[200px] rounded-full bg-orange-400/10 blur-[60px]"
+        style={{ left: '40%', top: '60%' }}
+        animate={{ scale: [1, 1.4, 1], opacity: [0.2, 0.5, 0.2] }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
+      />
+
+      {/* Grain noise overlay */}
+      <div
+        className="absolute inset-0 opacity-[0.03] mix-blend-overlay z-10"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+          backgroundSize: '128px 128px',
+        }}
+      />
+
+      {/* Bottom fade */}
+      <div className="absolute inset-0 z-20 bg-gradient-to-t from-background/90 via-background/30 to-transparent" />
 
       {/* Badge */}
       <motion.div
