@@ -67,8 +67,8 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ url });
-  } catch (error) {
-    console.error('Error [UPLOAD_API]', error);
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Error [UPLOAD_API]', error?.message || error);
+    return NextResponse.json({ error: 'Upload failed', detail: error?.message || String(error) }, { status: 500 });
   }
 }

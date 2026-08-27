@@ -30,6 +30,7 @@ interface PutObjectInput {
 }
 
 export async function putObject({ buffer, key, contentType }: PutObjectInput): Promise<string> {
+  console.log('[STORAGE] Provider:', BLOB_TOKEN ? 'Vercel Blob' : isS3Configured ? 'S3' : 'Local');
   if (BLOB_TOKEN) {
     return uploadToBlob({ buffer, key, contentType });
   }
@@ -41,11 +42,12 @@ export async function putObject({ buffer, key, contentType }: PutObjectInput): P
 
 async function uploadToBlob({ buffer, key, contentType }: PutObjectInput): Promise<string> {
   const { put } = await import('@vercel/blob');
+  console.log('[STORAGE] Uploading to Vercel Blob:', key, 'size:', buffer.length, 'hasToken:', !!BLOB_TOKEN);
   const blob = await put(key, buffer, {
     access: 'public',
     contentType,
-    token: BLOB_TOKEN,
   });
+  console.log('[STORAGE] Vercel Blob URL:', blob.url);
   return blob.url;
 }
 
