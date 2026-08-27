@@ -12,7 +12,7 @@ const ALLOWED_MIME = new Set([
   'image/gif',
   'image/avif',
 ]);
-const MAX_BYTES = 5 * 1024 * 1024;
+const MAX_BYTES = 20 * 1024 * 1024;
 
 function extFromMime(mime: string): string | null {
   switch (mime) {
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unsupported file type' }, { status: 400 });
     }
     if (file.size > MAX_BYTES) {
-      return NextResponse.json({ error: 'File too large (max 5 MB)' }, { status: 400 });
+      return NextResponse.json({ error: 'File too large (max 20 MB)' }, { status: 400 });
     }
 
     const ext = extFromMime(file.type);
@@ -60,7 +60,6 @@ export async function POST(req: NextRequest) {
     const fileName = `${crypto.randomUUID()}${ext}`;
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    // Uploads to S3-compatible storage if configured, else local public/uploads.
     const url = await putObject({
       buffer,
       key: `uploads/${fileName}`,
