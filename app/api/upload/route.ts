@@ -68,7 +68,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url });
   } catch (error: any) {
-    console.error('Error [UPLOAD_API]', error?.message || error);
-    return NextResponse.json({ error: 'Upload failed', detail: error?.message || String(error) }, { status: 500 });
+    console.error('Error [UPLOAD_API]', error);
+    const detail = error?.message || error?.toString() || 'Unknown error';
+    return NextResponse.json({ error: 'Upload failed', detail }, { status: 500 });
   }
 }

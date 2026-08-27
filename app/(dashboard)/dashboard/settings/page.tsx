@@ -54,7 +54,10 @@ export default function SettingsPage() {
       formData.append('file', file);
 
       const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      if (!res.ok) throw new Error('Upload failed');
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.detail || body.error || 'Upload failed');
+      }
 
       const { url } = await res.json();
       await updateHeroBanner(url);
@@ -62,7 +65,7 @@ export default function SettingsPage() {
       toast.success('Баннер обновлён');
     } catch (error) {
       console.error(error);
-      toast.error('Не удалось загрузить баннер');
+      toast.error(error?.message || 'Не удалось загрузить баннер');
     } finally {
       setUploadingBanner(false);
       e.target.value = '';
