@@ -1,9 +1,7 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, Modal, Image, TouchableOpacity, ScrollView, Animated, Platform, TextInput, ActivityIndicator, Alert } from 'react-native';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { View, Text, StyleSheet, Modal, Image, TouchableOpacity, Animated, Platform, TextInput, ActivityIndicator, Alert, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { X, ChevronLeft, ChevronRight, Plus } from 'lucide-react-native';
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useCartStore } from '@/store/useCartStore';
 import { useUserStore } from '@/store/useUserStore';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +11,9 @@ import { useTheme, Theme } from '@/hooks/useTheme';
 import { gradients } from '@/constants/Colors';
 import { SpringPress, TagBadges, BlurImage } from '@/components/ui';
 import { pushRecentlyViewed } from '@/hooks/useRecentlyViewed';
+
+const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
+const IMAGE_HEIGHT = SCREEN_H * 0.42;
 
 interface Props {
   product: any;
@@ -26,6 +27,7 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
   const { t, i18n } = useTranslation();
   const theme = useTheme();
   const styles = useMemo(() => makeStyles(theme), [theme]);
+  const scrollY = useRef(new Animated.Value(0)).current;
 
   const SIZE_LABELS: Record<number, string> = {
     20: t('productModal.sizeSmall'),
@@ -53,6 +55,7 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
       setSize(firstAvailableItem.size);
       setType(firstAvailableItem.pizzaType || 1);
       setTab('details');
+      scrollY.setValue(0);
       if (product.id) pushRecentlyViewed(product.id);
     }
   }, [product, visible]);
@@ -131,16 +134,9 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
     try {
       const res = await fetch(`${BASE_URL}/api/reviews`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          productId: product.id,
-          rating,
-          comment,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: product.id, rating, comment }),
       });
-
       if (res.ok) {
         Alert.alert(t('reviews.thanks'));
         setRating(0);
@@ -150,74 +146,86 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
         Alert.alert(error.message || t('reviews.error'));
       }
     } catch (error) {
-      console.error(error);
       Alert.alert(t('courier.networkError'));
     } finally {
       setSubmitting(false);
     }
   };
 
+  const imageTranslateY = scrollY.interpolate({
+    inputRange: [-200, 0, IMAGE_HEIGHT],
+    outputRange: [-60, 0, -IMAGE_HEIGHT * 0.4],
+    extrapolate: 'clamp',
+  });
+
+  const imageScale = scrollY.interpolate({
+    inputRange: [-200, 0],
+    outputRange: [1.3, 1],
+    extrapolateRight: 'clamp',
+  });
+
+  const headerOpacity = scrollY.interpolate({
+    inputRange: [IMAGE_HEIGHT * 0.4, IMAGE_HEIGHT * 0.7],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
+
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={styles.content}>
-        <View style={styles.imageContainer}>
-          <BlurView
-            intensity={100}
-            tint={theme.mode === 'dark' ? 'dark' : 'light'}
-            style={StyleSheet.absoluteFill}
-          />
-          <LinearGradient
-            colors={theme.mode === 'dark'
-              ? ['rgba(255,150,50,0.15)', 'rgba(30,20,15,0.6)']
-              : ['rgba(255,200,120,0.3)', 'rgba(255,247,240,0.8)']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-          <LinearGradient
-            colors={['rgba(255,255,255,0.3)', 'transparent']}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 0.5 }}
-            style={StyleSheet.absoluteFill}
-          />
-          <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-            <X size={22} color="#fff" strokeWidth={2.5} />
-          </TouchableOpacity>
-          <Animated.View style={[styles.image, { transform: [{ scale: scaleAnim }] }]}>
-            <BlurImage
-              uri={product.imageUrl}
-              gifUri={product.gifUrl}
-              style={{ width: '100%', height: '100%' }}
-              resizeMode="contain"
-            />
+        <Animated.View style={[styles.headerBar, { opacity: headerOpacity }]}>
+          <View style={styles.headerBarInner}>
+            <TouchableOpacity onPress={onClose} style={styles.headerCloseBtn}>
+              <X size={20} color={theme.text} strokeWidth={2.5} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle} numberOfLines={1}>{product.name}</Text>
+            <View style={{ width: 40 }} />
+          </View>
+        </Animated.View>
+
+        <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+          <X size={22} color="#fff" strokeWidth={2.5} />
+        </TouchableOpacity>
+
+        <Animated.ScrollView
+          showsVerticalScrollIndicator={false}
+          scrollEventThrottle={16}
+          onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <Animated.View style={[
+            styles.imageContainer,
+            { transform: [{ translateY: imageTranslateY }, { scale: imageScale }] }
+          ]}>
+            <Animated.View style={[styles.imageBg, { backgroundColor: theme.primarySoft }]} />
+            <Animated.View style={[styles.imageInner, { transform: [{ scale: scaleAnim }] }]}>
+              <BlurImage
+                uri={product.imageUrl}
+                gifUri={product.gifUrl}
+                style={{ width: '100%', height: '100%' }}
+                resizeMode="contain"
+              />
+            </Animated.View>
           </Animated.View>
-        </View>
 
-        <View style={styles.tabHeader}>
-          <TouchableOpacity onPress={() => setTab('details')} style={[styles.tabBtn, tab === 'details' && styles.tabBtnActive]}>
-            <Text style={[styles.tabText, tab === 'details' && styles.tabTextActive]}>{t('productModal.details')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setTab('reviews')} style={[styles.tabBtn, tab === 'reviews' && styles.tabBtnActive]}>
-            <Text style={[styles.tabText, tab === 'reviews' && styles.tabTextActive]}>
-              {t('productModal.reviews')} ({product.reviews?.length || 0})
-            </Text>
-          </TouchableOpacity>
-        </View>
+          <View style={styles.tabHeader}>
+            <TouchableOpacity onPress={() => setTab('details')} style={[styles.tabBtn, tab === 'details' && styles.tabBtnActive]}>
+              <Text style={[styles.tabText, tab === 'details' && styles.tabTextActive]}>{t('productModal.details')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setTab('reviews')} style={[styles.tabBtn, tab === 'reviews' && styles.tabBtnActive]}>
+              <Text style={[styles.tabText, tab === 'reviews' && styles.tabTextActive]}>
+                {t('productModal.reviews')} ({product.reviews?.length || 0})
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
           {tab === 'details' ? (
             <>
               <Text style={styles.name}>{product.name}</Text>
               <View style={{ alignItems: 'center', marginTop: 6 }}>
-                <TagBadges
-                  tags={product.tags}
-                  lang={i18n.language}
-                  dark={theme.mode === 'dark'}
-                />
+                <TagBadges tags={product.tags} lang={i18n.language} dark={theme.mode === 'dark'} />
               </View>
-              {product.description ? (
-                <Text style={styles.description}>{product.description}</Text>
-              ) : null}
+              {product.description ? <Text style={styles.description}>{product.description}</Text> : null}
 
               {isPizza && (
                 <View style={styles.selectors}>
@@ -225,38 +233,23 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
                     {availableSizes.map((s) => (
                       <TouchableOpacity
                         key={s.value}
-                        style={[
-                          styles.selectorBtn,
-                          size === s.value && styles.selectorBtnActive,
-                          s.disabled && styles.selectorBtnDisabled
-                        ]}
+                        style={[styles.selectorBtn, size === s.value && styles.selectorBtnActive, s.disabled && styles.selectorBtnDisabled]}
                         onPress={() => !s.disabled && setSize(s.value)}
                         disabled={s.disabled}
                       >
-                        <Text style={[
-                          styles.selectorText,
-                          size === s.value && styles.selectorTextActive,
-                          s.disabled && styles.selectorTextDisabled
-                        ]}>
+                        <Text style={[styles.selectorText, size === s.value && styles.selectorTextActive, s.disabled && styles.selectorTextDisabled]}>
                           {s.name}
                         </Text>
                       </TouchableOpacity>
                     ))}
                   </View>
-
                   {availableTypes.length > 0 && (
                     <View style={styles.typeCarousel}>
-                      <TouchableOpacity
-                        onPress={() => cycleType(-1)}
-                        style={styles.typeChevron}
-                        disabled={availableTypes.length < 2}>
+                      <TouchableOpacity onPress={() => cycleType(-1)} style={styles.typeChevron} disabled={availableTypes.length < 2}>
                         <ChevronLeft size={20} color={theme.text} strokeWidth={2.5} />
                       </TouchableOpacity>
                       <Text style={styles.typeName} numberOfLines={1}>{currentTypeName}</Text>
-                      <TouchableOpacity
-                        onPress={() => cycleType(1)}
-                        style={styles.typeChevron}
-                        disabled={availableTypes.length < 2}>
+                      <TouchableOpacity onPress={() => cycleType(1)} style={styles.typeChevron} disabled={availableTypes.length < 2}>
                         <ChevronRight size={20} color={theme.text} strokeWidth={2.5} />
                       </TouchableOpacity>
                     </View>
@@ -288,135 +281,104 @@ export const ChooseProductModal: React.FC<Props> = ({ product, visible, onClose,
               )}
             </>
           ) : (
-              <View style={styles.reviewsList}>
-                {user ? (
-                  <View style={styles.addReviewForm}>
-                    <Text style={styles.addReviewTitle}>{t('reviews.leaveReview')}</Text>
-                    <View style={styles.starRowBig}>
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <TouchableOpacity key={s} onPress={() => setRating(s)}>
-                          <Ionicons
-                            name={s <= rating ? "star" : "star-outline"}
-                            size={32}
-                            color={s <= rating ? "#ff7000" : "#9BA1A6"}
-                          />
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                    <TextInput
-                      style={styles.reviewInput}
-                      placeholder={t('reviews.yourComment')}
-                      placeholderTextColor={theme.textSubtle}
-                      multiline
-                      value={comment}
-                      onChangeText={setComment}
-                    />
-                    <SpringPress onPress={submitReview} disabled={!rating || submitting} scaleTo={0.96}>
-                      {!rating || submitting ? (
-                        <View style={[styles.submitReviewBtn, styles.submitReviewBtnDisabled]}>
-                          {submitting ? (
-                            <ActivityIndicator color="white" size="small" />
-                          ) : (
-                            <Text style={styles.submitReviewText}>{t('reviews.sendReview')}</Text>
-                          )}
-                        </View>
+            <View style={styles.reviewsList}>
+              {user ? (
+                <View style={styles.addReviewForm}>
+                  <Text style={styles.addReviewTitle}>{t('reviews.leaveReview')}</Text>
+                  <View style={styles.starRowBig}>
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <TouchableOpacity key={s} onPress={() => setRating(s)}>
+                        <Ionicons name={s <= rating ? "star" : "star-outline"} size={32} color={s <= rating ? "#ff7000" : "#9BA1A6"} />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  <TextInput
+                    style={styles.reviewInput}
+                    placeholder={t('reviews.yourComment')}
+                    placeholderTextColor={theme.textSubtle}
+                    multiline
+                    value={comment}
+                    onChangeText={setComment}
+                  />
+                  <SpringPress onPress={submitReview} disabled={!rating || submitting} scaleTo={0.96}>
+                    <View style={[styles.submitReviewBtn, (!rating || submitting) && styles.submitReviewBtnDisabled]}>
+                      {submitting ? (
+                        <ActivityIndicator color="white" size="small" />
                       ) : (
-                        <LinearGradient
-                          colors={(theme.mode === 'dark' ? gradients.dark : gradients.light).primary}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 1 }}
-                          style={styles.submitReviewBtn}>
-                          <Text style={styles.submitReviewText}>{t('reviews.sendReview')}</Text>
-                        </LinearGradient>
-                      )}
-                    </SpringPress>
-                  </View>
-                ) : (
-                  <View style={styles.loginToReview}>
-                    <Text style={styles.loginToReviewText}>{t('reviews.loginToReview')}</Text>
-                  </View>
-                )}
-
-                {product.reviews && product.reviews.length > 0 ? (
-                  product.reviews.map((review: any) => (
-                    <View key={review.id} style={styles.reviewCard}>
-                      <View style={styles.reviewHeader}>
-                        <View style={styles.userAvatar}>
-                          <Text style={styles.avatarText}>{review.user?.fullName?.[0] || 'U'}</Text>
-                        </View>
-                        <View style={styles.reviewMeta}>
-                          <Text style={styles.userName}>{review.user?.fullName || t('reviews.user')}</Text>
-                          <View style={styles.starRow}>
-                            {[...Array(5)].map((_, i) => (
-                              <Ionicons
-                                key={i}
-                                name={i < review.rating ? "star" : "star-outline"}
-                                size={14}
-                                color={i < review.rating ? "#ff7000" : "#9BA1A6"}
-                              />
-                            ))}
-                          </View>
-                        </View>
-                        <Text style={styles.reviewDate}>{new Date(review.createdAt).toLocaleDateString()}</Text>
-                      </View>
-                      <Text style={styles.reviewText}>{review.comment}</Text>
-
-                      {user && (Number(user.id) === review.userId || user.role === 'ADMIN') && (
-                        <TouchableOpacity
-                          style={styles.deleteReviewBtn}
-                          onPress={() => {
-                            Alert.alert(
-                              t('reviews.deleteTitle'),
-                              t('reviews.deleteConfirm'),
-                              [
-                                { text: t('reviews.cancel'), style: 'cancel' },
-                                {
-                                  text: t('reviews.delete'),
-                                  style: 'destructive',
-                                  onPress: async () => {
-                                    try {
-                                      const res = await fetch(`${BASE_URL}/api/reviews/${review.id}`, { method: 'DELETE' });
-                                      if (res.ok) {
-                                        Alert.alert(t('courier.success'), t('reviews.delete'));
-                                      } else {
-                                        Alert.alert(t('courier.error'), t('reviews.deleteConfirm'));
-                                      }
-                                    } catch (e) {
-                                      Alert.alert(t('courier.error'), t('courier.networkError'));
-                                    }
-                                  }
-                                }
-                              ]
-                            );
-                          }}
-                        >
-                          <Ionicons name="trash-outline" size={16} color={theme.danger} />
-                          <Text style={styles.deleteReviewText}>{t('reviews.delete')}</Text>
-                        </TouchableOpacity>
+                        <Text style={styles.submitReviewText}>{t('reviews.sendReview')}</Text>
                       )}
                     </View>
-                  ))
-                ) : (
-                  <View style={styles.emptyReviews}>
-                    <Ionicons name="chatbox-outline" size={60} color={theme.textSubtle} />
-                    <Text style={styles.emptyReviewsText}>{t('reviews.empty')}</Text>
-                  </View>
-                )}
-              </View>
-            )}
-          </ScrollView>
-
-          {tab === 'details' && (
-            <View style={styles.footer}>
-              <SpringPress onPress={handleAdd} scaleTo={0.97}>
-                <View style={styles.addBtn}>
-                  <Plus size={24} color="#fff" strokeWidth={2.5} />
-                  <Text style={styles.addBtnText}>{totalPrice} TJS</Text>
+                  </SpringPress>
                 </View>
-              </SpringPress>
+              ) : (
+                <View style={styles.loginToReview}>
+                  <Text style={styles.loginToReviewText}>{t('reviews.loginToReview')}</Text>
+                </View>
+              )}
+              {product.reviews && product.reviews.length > 0 ? (
+                product.reviews.map((review: any) => (
+                  <View key={review.id} style={styles.reviewCard}>
+                    <View style={styles.reviewHeader}>
+                      <View style={styles.userAvatar}>
+                        <Text style={styles.avatarText}>{review.user?.fullName?.[0] || 'U'}</Text>
+                      </View>
+                      <View style={styles.reviewMeta}>
+                        <Text style={styles.userName}>{review.user?.fullName || t('reviews.user')}</Text>
+                        <View style={styles.starRow}>
+                          {[...Array(5)].map((_, i) => (
+                            <Ionicons key={i} name={i < review.rating ? "star" : "star-outline"} size={14} color={i < review.rating ? "#ff7000" : "#9BA1A6"} />
+                          ))}
+                        </View>
+                      </View>
+                      <Text style={styles.reviewDate}>{new Date(review.createdAt).toLocaleDateString()}</Text>
+                    </View>
+                    <Text style={styles.reviewText}>{review.comment}</Text>
+                    {user && (Number(user.id) === review.userId || user.role === 'ADMIN') && (
+                      <TouchableOpacity
+                        style={styles.deleteReviewBtn}
+                        onPress={() => {
+                          Alert.alert(t('reviews.deleteTitle'), t('reviews.deleteConfirm'), [
+                            { text: t('reviews.cancel'), style: 'cancel' },
+                            {
+                              text: t('reviews.delete'), style: 'destructive',
+                              onPress: async () => {
+                                try {
+                                  const res = await fetch(`${BASE_URL}/api/reviews/${review.id}`, { method: 'DELETE' });
+                                  if (res.ok) Alert.alert(t('courier.success'), t('reviews.delete'));
+                                  else Alert.alert(t('courier.error'), t('reviews.deleteConfirm'));
+                                } catch (e) { Alert.alert(t('courier.error'), t('courier.networkError')); }
+                              }
+                            }
+                          ]);
+                        }}
+                      >
+                        <Ionicons name="trash-outline" size={16} color={theme.danger} />
+                        <Text style={styles.deleteReviewText}>{t('reviews.delete')}</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ))
+              ) : (
+                <View style={styles.emptyReviews}>
+                  <Ionicons name="chatbox-outline" size={60} color={theme.textSubtle} />
+                  <Text style={styles.emptyReviewsText}>{t('reviews.empty')}</Text>
+                </View>
+              )}
             </View>
           )}
-        </View>
+        </Animated.ScrollView>
+
+        {tab === 'details' && (
+          <View style={styles.footer}>
+            <SpringPress onPress={handleAdd} scaleTo={0.97}>
+              <View style={styles.addBtn}>
+                <Plus size={24} color="#fff" strokeWidth={2.5} />
+                <Text style={styles.addBtnText}>{totalPrice} TJS</Text>
+              </View>
+            </SpringPress>
+          </View>
+        )}
+      </View>
     </Modal>
   );
 };
@@ -426,11 +388,45 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     flex: 1,
     backgroundColor: t.background,
   },
+  headerBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 20,
+    backgroundColor: t.surface,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: t.border,
+    paddingTop: Platform.OS === 'ios' ? 50 : 30,
+    paddingBottom: 12,
+    paddingHorizontal: 16,
+  },
+  headerBarInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerCloseBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: t.surfaceMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    flex: 1,
+    fontSize: 17,
+    fontWeight: '700',
+    color: t.text,
+    textAlign: 'center',
+    marginHorizontal: 8,
+  },
   closeBtn: {
     position: 'absolute',
-    top: 18,
-    left: 18,
-    zIndex: 10,
+    top: Platform.OS === 'ios' ? 54 : 34,
+    left: 16,
+    zIndex: 30,
     backgroundColor: 'rgba(0,0,0,0.35)',
     width: 42,
     height: 42,
@@ -439,20 +435,33 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     justifyContent: 'center',
   },
   imageContainer: {
+    width: SCREEN_W,
+    height: IMAGE_HEIGHT,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 320,
+    marginTop: -10,
   },
-  image: { width: '86%', height: 290, resizeMode: 'contain' },
-  tabHeader: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 6, marginBottom: 10 },
+  imageBg: {
+    position: 'absolute',
+    width: SCREEN_W,
+    height: IMAGE_HEIGHT + 40,
+    borderRadius: 40,
+    top: -20,
+    opacity: 0.5,
+  },
+  imageInner: {
+    width: '75%',
+    height: IMAGE_HEIGHT - 40,
+  },
+  tabHeader: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: -10, marginBottom: 10 },
   tabBtn: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, backgroundColor: t.surface },
   tabBtnActive: { backgroundColor: t.primarySoft },
   tabText: { fontSize: 14, fontWeight: '800', color: t.textMuted },
   tabTextActive: { color: t.primary },
-  scroll: { paddingHorizontal: 20, paddingBottom: 180 },
-  name: { fontSize: 26, fontWeight: '900', color: t.text, textAlign: 'center', marginTop: 4, letterSpacing: -0.4 },
-  description: { fontSize: 13, color: t.textMuted, textAlign: 'center', marginTop: 8, lineHeight: 19, paddingHorizontal: 8 },
-  selectors: { marginTop: 20, gap: 12 },
+  scrollContent: { paddingBottom: 180 },
+  name: { fontSize: 26, fontWeight: '900', color: t.text, textAlign: 'center', marginTop: 4, letterSpacing: -0.4, paddingHorizontal: 20 },
+  description: { fontSize: 13, color: t.textMuted, textAlign: 'center', marginTop: 8, lineHeight: 19, paddingHorizontal: 28 },
+  selectors: { marginTop: 20, gap: 12, paddingHorizontal: 20 },
   selectorRow: { flexDirection: 'row', backgroundColor: t.surface, borderRadius: 999, borderWidth: 1, borderColor: t.border, padding: 4 },
   selectorBtn: { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: 999 },
   selectorBtnActive: { backgroundColor: t.text },
@@ -471,14 +480,9 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 8,
   },
-  typeChevron: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  typeChevron: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   typeName: { fontSize: 15, fontWeight: '800', color: t.text, flex: 1, textAlign: 'center' },
-  ingredientsSection: { marginTop: 30 },
+  ingredientsSection: { marginTop: 30, paddingHorizontal: 20 },
   sectionTitle: { fontSize: 20, fontWeight: '900', color: t.text, marginBottom: 15 },
   ingredientsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   ingredientCard: {
@@ -516,7 +520,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     backgroundColor: t.primary,
   },
   addBtnText: { color: '#fff', fontSize: 18, fontWeight: '900', letterSpacing: 0.3 },
-  reviewsList: { gap: 15 },
+  reviewsList: { gap: 15, paddingHorizontal: 20 },
   reviewCard: {
     backgroundColor: t.surface,
     borderRadius: 25,
@@ -528,14 +532,8 @@ const makeStyles = (t: Theme) => StyleSheet.create({
   },
   reviewHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   userAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: t.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: t.primary,
+    width: 40, height: 40, borderRadius: 20, backgroundColor: t.primarySoft,
+    alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: t.primary,
   },
   avatarText: { color: t.primary, fontWeight: '900', fontSize: 16 },
   reviewMeta: { flex: 1, marginLeft: 10 },
@@ -548,10 +546,6 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     borderRadius: 25,
     padding: 20,
     marginBottom: 20,
-    shadowColor: t.shadow,
-    shadowOpacity: t.mode === 'dark' ? 0.3 : 0.05,
-    shadowRadius: 10,
-    elevation: 2,
   },
   addReviewTitle: { fontSize: 18, fontWeight: '900', color: t.text, marginBottom: 10 },
   starRowBig: { flexDirection: 'row', gap: 8, marginBottom: 15 },
@@ -586,15 +580,9 @@ const makeStyles = (t: Theme) => StyleSheet.create({
   },
   loginToReviewText: { color: t.primary, fontWeight: '700' },
   deleteReviewBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 10,
-    alignSelf: 'flex-start',
+    flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 10, alignSelf: 'flex-start',
     backgroundColor: t.mode === 'dark' ? 'rgba(248,113,113,0.15)' : '#fff1f0',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
+    paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8,
   },
   deleteReviewText: { color: t.danger, fontSize: 12, fontWeight: '700' },
   emptyReviews: { alignItems: 'center', justifyContent: 'center', paddingVertical: 50, gap: 15 },
