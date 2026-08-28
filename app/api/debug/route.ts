@@ -18,12 +18,14 @@ export async function GET() {
       try {
         await put('test-public.txt', testBuf, {
           access: 'public',
-          addRandomSuffix: false,
+          addRandomSuffix: true,
         });
         blobStoreAccess = 'public';
       } catch (e: any) {
         if (e?.message?.includes('private store')) {
           blobStoreAccess = 'private';
+        } else if (e?.message?.includes('already exists')) {
+          blobStoreAccess = 'public (file already exists from prior test)';
         } else {
           blobTestError = e?.message || String(e);
         }
