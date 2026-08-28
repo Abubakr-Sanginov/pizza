@@ -43,10 +43,10 @@ export async function putObject({ buffer, key, contentType }: PutObjectInput): P
 async function uploadToBlob({ buffer, key, contentType }: PutObjectInput): Promise<string> {
   const { put } = await import('@vercel/blob');
   const blob = await put(key, buffer, {
-    access: 'public',
+    access: 'private',
     contentType,
   });
-  return blob.url;
+  return blob.pathname;
 }
 
 async function uploadToS3({ buffer, key, contentType }: PutObjectInput): Promise<string> {
