@@ -305,6 +305,25 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
 
+          <View style={styles.loyaltyCard}>
+            <Text style={styles.loyaltyKicker}>Pizza Flow Club</Text>
+            <Text style={styles.loyaltyTitle}>Быстрый доступ к заказам, избранному и статусам в одном месте</Text>
+            <View style={styles.loyaltyStats}>
+              <View style={styles.loyaltyStatBox}>
+                <Text style={styles.loyaltyStatValue}>{orders.length}</Text>
+                <Text style={styles.loyaltyStatLabel}>Заказов</Text>
+              </View>
+              <View style={styles.loyaltyStatBox}>
+                <Text style={styles.loyaltyStatValue}>{user.role}</Text>
+                <Text style={styles.loyaltyStatLabel}>Роль</Text>
+              </View>
+              <View style={styles.loyaltyStatBox}>
+                <Text style={styles.loyaltyStatValue}>24/7</Text>
+                <Text style={styles.loyaltyStatLabel}>Статусы</Text>
+              </View>
+            </View>
+          </View>
+
           <View style={{ marginTop: 20, gap: 10 }}>
             <TouchableOpacity
               onPress={() => router.push('/favorites')}
@@ -497,12 +516,16 @@ export default function ProfileScreen() {
             <ThemeToggle variant="icon" />
           </View>
           <View style={styles.authHeader}>
-            <Image source={{ uri: 'https://cdn.dodostatic.net/site-static/dist/assets/522384a867822955.svg' }} style={styles.logo} />
+            <View style={styles.brandBadge}>
+              <Text style={styles.brandBadgeLetter}>P</Text>
+            </View>
             <Text style={styles.authTitle}>
               {step === 'verify' ? t('auth.verify') : isLogin ? t('auth.login') : t('auth.register')}
             </Text>
             <Text style={styles.authSubtitle}>
-              {step === 'verify' ? `${t('auth.verifySubtitle')} ${email}` : t('auth.authSubtitle')}
+              {step === 'verify'
+                ? `${t('auth.verifySubtitle')} ${email}`
+                : 'Войди, чтобы сохранить адреса, следить за статусом заказа и повторять любимые позиции быстрее.'}
             </Text>
           </View>
 
@@ -722,6 +745,50 @@ const makeStyles = (t: Theme) => StyleSheet.create({
   },
   saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '900', letterSpacing: 0.3 },
   ordersSection: { marginTop: 30 },
+  loyaltyCard: {
+    marginTop: 16,
+    backgroundColor: t.surface,
+    borderRadius: 28,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: t.border,
+  },
+  loyaltyKicker: {
+    color: t.primary,
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  loyaltyTitle: {
+    color: t.text,
+    fontSize: 22,
+    fontWeight: '900',
+    lineHeight: 28,
+    marginTop: 10,
+  },
+  loyaltyStats: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 18,
+  },
+  loyaltyStatBox: {
+    flex: 1,
+    backgroundColor: t.backgroundSecondary,
+    borderRadius: 18,
+    padding: 14,
+  },
+  loyaltyStatValue: {
+    color: t.text,
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  loyaltyStatLabel: {
+    color: t.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 4,
+  },
   sectionTitle: { fontSize: 22, fontWeight: '900', color: t.text, marginBottom: 20 },
   orderCard: {
     backgroundColor: t.surface,
@@ -782,7 +849,26 @@ const makeStyles = (t: Theme) => StyleSheet.create({
   },
   authScroll: { padding: 30, paddingTop: 60, paddingBottom: 200 },
   authHeader: { alignItems: 'center', marginBottom: 30 },
-  logo: { width: 60, height: 60, marginBottom: 20 },
+  brandBadge: {
+    width: 74,
+    height: 74,
+    borderRadius: 24,
+    marginBottom: 20,
+    backgroundColor: t.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: t.primary,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.35,
+    shadowRadius: 18,
+    elevation: 6,
+  },
+  brandBadgeLetter: {
+    color: t.primaryContrast,
+    fontSize: 34,
+    fontWeight: '900',
+    letterSpacing: -1,
+  },
   authTitle: { fontSize: 30, fontWeight: '900', color: t.text, textAlign: 'center', letterSpacing: -0.8 },
   authSubtitle: { fontSize: 14, color: t.textMuted, textAlign: 'center', marginTop: 8, lineHeight: 20 },
   form: { gap: 15 },

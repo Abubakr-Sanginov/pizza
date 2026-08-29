@@ -166,6 +166,8 @@ export default function CartScreen() {
   const [locating, setLocating] = useState(false);
   const webViewRef = useRef<WebView>(null);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+  const totalItemsCount = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items]);
+  const estimatedEta = deliveryType === 'PICKUP' ? 18 : 38;
 
   // TAXES AND DELIVERY (Matched with Web)
   const VAT_PERCENT = 15;
@@ -648,6 +650,28 @@ export default function CartScreen() {
                 </TouchableOpacity>
               </DefaultView>
 
+              <DefaultView style={styles.summaryHero}>
+                <DefaultView style={styles.summaryHeroTop}>
+                  <DefaultText style={styles.summaryHeroKicker}>Fast checkout</DefaultText>
+                  <DefaultText style={styles.summaryHeroTitle}>
+                    {totalItemsCount} поз. • ~{estimatedEta} мин
+                  </DefaultText>
+                  <DefaultText style={styles.summaryHeroText}>
+                    Корзина стала короче и понятнее: сначала состав заказа, потом один явный переход к оформлению.
+                  </DefaultText>
+                </DefaultView>
+                <DefaultView style={styles.summaryMetricsRow}>
+                  <DefaultView style={styles.summaryMetricCard}>
+                    <DefaultText style={styles.summaryMetricValue}>{totalAmount} TJS</DefaultText>
+                    <DefaultText style={styles.summaryMetricLabel}>Сумма блюд</DefaultText>
+                  </DefaultView>
+                  <DefaultView style={styles.summaryMetricCard}>
+                    <DefaultText style={styles.summaryMetricValue}>{deliveryType === 'PICKUP' ? 'Pickup' : 'Delivery'}</DefaultText>
+                    <DefaultText style={styles.summaryMetricLabel}>Текущий режим</DefaultText>
+                  </DefaultView>
+                </DefaultView>
+              </DefaultView>
+
               <DefaultView style={styles.itemsList}>
                 {items.map((item) => (
                   <DefaultView key={item.id} style={styles.cartItemCard}>
@@ -705,6 +729,16 @@ export default function CartScreen() {
                 </TouchableOpacity>
                 <DefaultText style={styles.title}>{t('cart.checkout')}</DefaultText>
                 <DefaultView style={{ width: 30 }} />
+              </DefaultView>
+
+              <DefaultView style={styles.checkoutHero}>
+                <DefaultText style={styles.checkoutHeroBadge}>Almost done</DefaultText>
+                <DefaultText style={styles.checkoutHeroTitle}>
+                  {deliveryType === 'PICKUP' ? 'Заберёшь сам' : 'Привезём к двери'} • ~{estimatedEta} мин
+                </DefaultText>
+                <DefaultText style={styles.checkoutHeroText}>
+                  Оставь контакты, подтверди способ получения и оплати без длинного списка второстепенных действий.
+                </DefaultText>
               </DefaultView>
 
               <DefaultView style={styles.section}>
@@ -1153,6 +1187,58 @@ const makeStyles = (t: Theme) => StyleSheet.create({
   },
   title: { fontSize: 34, fontWeight: '900', color: t.text, letterSpacing: -1.4 },
   backBtn: { padding: 4 },
+  summaryHero: {
+    backgroundColor: t.surface,
+    borderRadius: 30,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: t.border,
+  },
+  summaryHeroTop: {
+    marginBottom: 16,
+  },
+  summaryHeroKicker: {
+    color: t.primary,
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginBottom: 8,
+  },
+  summaryHeroTitle: {
+    color: t.text,
+    fontSize: 26,
+    fontWeight: '900',
+    letterSpacing: -0.8,
+  },
+  summaryHeroText: {
+    color: t.textMuted,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 8,
+  },
+  summaryMetricsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  summaryMetricCard: {
+    flex: 1,
+    backgroundColor: t.backgroundSecondary,
+    borderRadius: 18,
+    padding: 14,
+  },
+  summaryMetricValue: {
+    color: t.text,
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  summaryMetricLabel: {
+    color: t.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 4,
+  },
   itemsList: { gap: 12 },
   cartItemCard: {
     flexDirection: 'row',
@@ -1197,6 +1283,34 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     elevation: 2,
     borderWidth: t.mode === 'dark' ? StyleSheet.hairlineWidth : 0,
     borderColor: t.border,
+  },
+  checkoutHero: {
+    backgroundColor: t.surface,
+    borderRadius: 28,
+    padding: 18,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: t.border,
+  },
+  checkoutHeroBadge: {
+    color: t.primary,
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  checkoutHeroTitle: {
+    color: t.text,
+    fontSize: 22,
+    fontWeight: '900',
+    marginTop: 10,
+    lineHeight: 27,
+  },
+  checkoutHeroText: {
+    color: t.textMuted,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 8,
   },
   deliveryToggle: {
     flexDirection: 'row',
@@ -1381,6 +1495,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
   totalBlock: { flex: 1 },
   totalLabel: { fontSize: 13, color: t.textMuted, fontWeight: '700' },
   totalAmount: { fontSize: 24, fontWeight: '900', color: t.text },
+  totalHint: { fontSize: 12, color: t.textMuted, fontWeight: '700', marginTop: 4 },
   mainButton: {
     backgroundColor: t.primary,
     flexDirection: 'row',

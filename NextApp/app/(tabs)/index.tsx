@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, RefreshControl, TextInput, Modal, Dimensions, Animated, SectionList, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, RefreshControl, TextInput, Modal, Dimensions, Animated, Easing, SectionList, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
-import { Pizza, Croissant, Sandwich, CakeSlice, CupSoda, Martini, Soup, Salad, UtensilsCrossed, Search, type LucideIcon } from 'lucide-react-native';
+import { Pizza, Croissant, Sandwich, CakeSlice, CupSoda, Martini, Soup, Salad, UtensilsCrossed, Search, Sparkles, Clock3, MapPin, Flame, type LucideIcon } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,8 +11,39 @@ import { ChooseProductModal } from '@/components/shared/ChooseProductModal';
 import { useTranslation } from 'react-i18next';
 import { BASE_URL } from '@/constants/Api';
 import { useTheme, Theme } from '@/hooks/useTheme';
-import { SpringPress, ShimmerProductCard, Shimmer, BlurImage } from '@/components/ui';
+import { SpringPress, ShimmerProductCard, Shimmer, BlurImage, LiquidGlassCard, AmbientBackdrop } from '@/components/ui';
 const { width, height } = Dimensions.get('window');
+
+const AnimatedSectionList = Animated.createAnimatedComponent(SectionList);
+
+// Каскадное появление блока: плавное всплывание с лёгким «отскоком»
+function Entrance({ delay = 0, y = 20, style, children }: { delay?: number; y?: number; style?: any; children: React.ReactNode }) {
+  const v = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(v, {
+      toValue: 1,
+      duration: 480,
+      delay,
+      easing: Easing.out(Easing.back(1.1)),
+      useNativeDriver: true,
+    }).start();
+  }, [v, delay]);
+  return (
+    <Animated.View
+      style={[
+        style,
+        {
+          opacity: v,
+          transform: [
+            { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [y, 0] }) },
+            { scale: v.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) },
+          ],
+        },
+      ]}>
+      {children}
+    </Animated.View>
+  );
+}
 
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
   'Пиццы': Pizza,
@@ -35,6 +66,39 @@ const categoryMapping: Record<string, string> = {
   'Напитки': 'menu.drinks',
 };
 
+const uiText = {
+  ru: {
+    brand: 'Pizza Flow',
+    slogan: 'Заказ в пару тапов',
+    heroBadge: 'Быстрая кухня',
+    choose: 'Выбрать',
+    eta: '15–25 мин',
+    pickup: 'Самовывоз',
+    freshToday: 'Сегодня в меню',
+    inMenu: 'В меню',
+  },
+  en: {
+    brand: 'Pizza Flow',
+    slogan: 'Order in a few taps',
+    heroBadge: 'Fast kitchen',
+    choose: 'Choose',
+    eta: '15–25 min',
+    pickup: 'Pickup',
+    freshToday: 'Fresh today',
+    inMenu: 'On menu',
+  },
+  tg: {
+    brand: 'Pizza Flow',
+    slogan: 'Фармоиш дар чанд ламс',
+    heroBadge: 'Ошхонаи зуд',
+    choose: 'Интихоб',
+    eta: '15–25 дақ',
+    pickup: 'Худбурд',
+    freshToday: 'Имрӯз',
+    inMenu: 'Дар меню',
+  },
+} as const;
+
 export default function MenuScreen() {
   const insets = useSafeAreaInsets();
   const [categories, setCategories] = useState<any[]>([]);
@@ -43,6 +107,7 @@ export default function MenuScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [activeCategory, setActiveCategory] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+  const [heroBannerUrl, setHeroBannerUrl] = useState<string | null>(null);
 
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -62,11 +127,74 @@ export default function MenuScreen() {
   const theme = useTheme();
   const styles = useMemo(() => makeStyles(theme), [theme]);
   const router = useRouter();
+  const lang = i18n.language === 'en' || i18n.language.startsWith('en-')
+    ? 'en'
+    : i18n.language === 'tg' || i18n.language.startsWith('tg-')
+      ? 'tg'
+      : 'ru';
+  const copy = uiText[lang];
 
   const cartQuantity = useMemo(
     () => cartItems.reduce((sum: number, ci: any) => sum + ci.quantity, 0),
     [cartItems]
   );
+
+  const totalProducts = useMemo(
+    () => categories.reduce((sum, category) => sum + (category.products?.length ?? 0), 0),
+    [categories],
+  );
+
+  const etaText = useMemo(() => {
+    if (!cartQuantity) return copy.eta;
+    const min = 14 + Math.min(cartQuantity * 2, 8);
+    const max = min + 8;
+    const suffix = lang === 'en' ? 'min' : lang === 'tg' ? 'дақ' : 'мин';
+    return `${min}–${max} ${suffix}`;
+  }, [cartQuantity, copy.eta, lang]);
+
+  // Анимации: вращение градиентного кольца hero, параллакс hero при скролле,
+  // пружина появления пилюли корзины и масштаб поиска при фокусе
+  const glowSpin = useRef(new Animated.Value(0)).current;
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const cartPop = useRef(new Animated.Value(0)).current;
+  const searchScale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.timing(glowSpin, { toValue: 1, duration: 9000, easing: Easing.linear, useNativeDriver: true })
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [glowSpin]);
+
+  const prevQty = useRef(0);
+  useEffect(() => {
+    if (cartQuantity > prevQty.current) {
+      cartPop.setValue(0.7);
+      Animated.spring(cartPop, { toValue: 1, useNativeDriver: true, friction: 4, tension: 170 }).start();
+    } else if (cartQuantity === 0 && prevQty.current > 0) {
+      Animated.timing(cartPop, { toValue: 0, duration: 180, useNativeDriver: true }).start();
+    }
+    prevQty.current = cartQuantity;
+  }, [cartQuantity, cartPop]);
+
+  const glowRotate = glowSpin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+  const heroParallaxStyle = {
+    opacity: scrollY.interpolate({ inputRange: [0, 280], outputRange: [1, 0], extrapolate: 'clamp' }),
+    transform: [
+      { translateY: scrollY.interpolate({ inputRange: [0, 280], outputRange: [0, 80], extrapolate: 'clamp' }) },
+    ],
+  };
+  const onListScroll = useMemo(
+    () => Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true }),
+    [scrollY]
+  );
+  const onSearchFocus = useCallback(() => {
+    Animated.spring(searchScale, { toValue: 1.015, useNativeDriver: true, friction: 6, tension: 160 }).start();
+  }, [searchScale]);
+  const onSearchBlur = useCallback(() => {
+    Animated.spring(searchScale, { toValue: 1, useNativeDriver: true, friction: 6, tension: 160 }).start();
+  }, [searchScale]);
 
   const iconScrollRef = useRef<ScrollView>(null);
   const iconPositions = useRef<Record<number, { x: number; w: number }>>({});
@@ -89,12 +217,17 @@ export default function MenuScreen() {
 
   const fetchData = async () => {
     try {
-      const [productsRes, storiesRes] = await Promise.all([
+      const [productsRes, storiesRes, heroRes] = await Promise.all([
         fetch(`${BASE_URL}/api/products`),
-        fetch(`${BASE_URL}/api/stories`)
+        fetch(`${BASE_URL}/api/stories`),
+        fetch(`${BASE_URL}/api/settings/hero-banner`).catch(() => null),
       ]);
       const productsData = await productsRes.json();
       const storiesData = await storiesRes.json();
+      if (heroRes?.ok) {
+        const heroData = await heroRes.json().catch(() => null);
+        setHeroBannerUrl(heroData?.heroBannerUrl ?? null);
+      }
 
       setCategories(productsData);
       setStories(storiesData);
@@ -260,6 +393,9 @@ export default function MenuScreen() {
           </View>
         </View>
         <Text style={styles.cardName} numberOfLines={2}>{item.name}</Text>
+        <Text style={styles.cardMeta} numberOfLines={1}>
+          {hasDiscount ? `${copy.freshToday} • −${discountPercent}%` : `${copy.pickup} • ${etaText}`}
+        </Text>
         {inCart ? (
           <Pressable onPress={goToCart} style={styles.cardPillActive}>
             <Ionicons name="cart" size={14} color="#fff" />
@@ -272,6 +408,8 @@ export default function MenuScreen() {
             <Text style={styles.cardPillText} numberOfLines={1}>
               {t('menu.from')} {item.items[0]?.price} TJS
             </Text>
+            <View style={styles.cardPillDivider} />
+            <Text style={styles.cardPillAction} numberOfLines={1}>{copy.choose}</Text>
           </View>
         )}
       </SpringPress>
@@ -310,8 +448,9 @@ export default function MenuScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <AmbientBackdrop />
       <View style={styles.fixedHeader}>
-        <View style={styles.headerTop}>
+        <Entrance delay={0} y={-14} style={styles.headerTop}>
           <SpringPress onPress={() => router.push('/profile')} scaleTo={0.9}>
             <View style={styles.headerAvatar}>
               <Ionicons name="person" size={20} color="#fff" />
@@ -321,10 +460,10 @@ export default function MenuScreen() {
             <SpringPress onPress={() => router.push('/delivery')} scaleTo={0.97}>
               <View style={{ alignItems: 'center' }}>
                 <View style={styles.headerAddressRow}>
-                  <Text style={styles.headerTitle} numberOfLines={1}>Next Pizza</Text>
+                  <Text style={styles.headerTitle} numberOfLines={1}>{copy.brand}</Text>
                   <Ionicons name="chevron-down" size={16} color={theme.textMuted} />
                 </View>
-                <Text style={styles.headerSubtitle} numberOfLines={1}>{t('header.slogan')}</Text>
+                <Text style={styles.headerSubtitle} numberOfLines={1}>{copy.slogan}</Text>
               </View>
             </SpringPress>
           </View>
@@ -333,32 +472,40 @@ export default function MenuScreen() {
               <Ionicons name="notifications-outline" size={22} color={theme.text} />
             </View>
           </SpringPress>
-        </View>
+        </Entrance>
 
-        <View style={styles.searchContainer}>
-          <Ionicons name="search-outline" size={20} color={theme.textSubtle} style={styles.searchIcon} />
-          <TextInput
-            ref={searchRef}
-            style={styles.searchInput}
-            placeholder={t('header.searchPlaceholder')}
-            placeholderTextColor={theme.textSubtle}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            clearButtonMode="while-editing"
-          />
-        </View>
+        <Animated.View style={[{ transform: [{ scale: searchScale }] }, styles.searchWrap]}>
+          <LiquidGlassCard rounded={18} intensity={theme.mode === 'dark' ? 70 : 85} shadow="sm">
+            <View style={styles.searchContainer}>
+              <Ionicons name="search-outline" size={20} color={theme.textSubtle} style={styles.searchIcon} />
+              <TextInput
+                ref={searchRef}
+                style={styles.searchInput}
+                placeholder={t('header.searchPlaceholder')}
+                placeholderTextColor={theme.textSubtle}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                onFocus={onSearchFocus}
+                onBlur={onSearchBlur}
+                clearButtonMode="while-editing"
+              />
+            </View>
+          </LiquidGlassCard>
+        </Animated.View>
 
         {!searchQuery && (
           <View style={styles.iconRow}>
             <ScrollView ref={iconScrollRef} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.iconRowScroll}>
-              <SpringPress onPress={() => searchRef.current?.focus()} scaleTo={0.92}>
-                <View style={styles.iconTile}>
-                  <View style={styles.iconTileIcon}>
-                    <Search size={24} color={theme.text} strokeWidth={2} />
+              <Entrance delay={80}>
+                <SpringPress onPress={() => searchRef.current?.focus()} scaleTo={0.92}>
+                  <View style={styles.iconTile}>
+                    <View style={styles.iconTileIcon}>
+                      <Search size={24} color={theme.text} strokeWidth={2} />
+                    </View>
+                    <Text style={styles.iconTileLabel}>{t('header.searchPlaceholder')}</Text>
                   </View>
-                  <Text style={styles.iconTileLabel}>{t('header.searchPlaceholder')}</Text>
-                </View>
-              </SpringPress>
+                </SpringPress>
+              </Entrance>
               {categories.map((cat, index) => {
                 const isActive = activeCategory === cat.id;
                 const Icon = CATEGORY_ICONS[cat.name] ?? UtensilsCrossed;
@@ -369,9 +516,10 @@ export default function MenuScreen() {
                       const { x, width: w } = e.nativeEvent.layout;
                       iconPositions.current[cat.id] = { x, w };
                     }}>
-                    <SpringPress
-                      onPress={() => handleCategoryPress(cat.id, index)}
-                      scaleTo={0.92}>
+                    <Entrance delay={120 + index * 40}>
+                      <SpringPress
+                        onPress={() => handleCategoryPress(cat.id, index)}
+                        scaleTo={0.92}>
                       <View style={[styles.iconTile, isActive && styles.iconTileActive]}>
                         <View style={[styles.iconTileIcon, isActive && styles.iconTileIconActive]}>
                           <Icon size={24} color={isActive ? theme.primary : theme.text} strokeWidth={2} />
@@ -382,7 +530,8 @@ export default function MenuScreen() {
                           {getCategoryName(cat)}
                         </Text>
                       </View>
-                    </SpringPress>
+                      </SpringPress>
+                    </Entrance>
                   </View>
                 );
               })}
@@ -391,11 +540,13 @@ export default function MenuScreen() {
         )}
       </View>
 
-      <SectionList
+      <AnimatedSectionList
         ref={sectionListRef}
         sections={sections}
         keyExtractor={(item, index) => (item?.[0]?.id ?? `row-${index}`).toString()}
         stickySectionHeadersEnabled={false}
+        onScroll={onListScroll}
+        scrollEventThrottle={16}
         onViewableItemsChanged={({ viewableItems }) => {
           if (viewableItems.length > 0 && !isAutoScrolling.current) {
             const firstVisibleSection = viewableItems[0].section;
@@ -407,29 +558,102 @@ export default function MenuScreen() {
         viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
         ListHeaderComponent={
           <>
-            {bannerProduct && !searchQuery && (
-              <SpringPress onPress={() => handleProductPress(bannerProduct)} scaleTo={0.98} style={styles.bannerWrap}>
-                <LinearGradient
-                  colors={['#FA7431', '#E85A1B']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.banner}>
-                  <BlurImage
-                    uri={bannerProduct.imageUrl}
-                    gifUri={bannerProduct.gifUrl}
-                    style={styles.bannerImage}
-                    resizeMode="contain"
-                  />
-                  <View style={styles.bannerFooter}>
-                    <Text style={styles.bannerTitle} numberOfLines={1}>{bannerProduct.name}</Text>
-                    <View style={styles.bannerPill}>
-                      <Text style={styles.bannerPillText}>
-                        {t('menu.from')} {bannerProduct.items?.[0]?.price} TJS
-                      </Text>
+            {!searchQuery && (
+              <Animated.View style={[styles.heroWrap, heroParallaxStyle]}>
+                <Entrance delay={60}>
+                  <LiquidGlassCard rounded={30} intensity={theme.mode === 'dark' ? 75 : 90} shadow="lg">
+                    <View style={styles.heroCard}>
+                      <LinearGradient
+                        colors={theme.mode === 'dark'
+                          ? ['rgba(255,150,50,0.12)', 'rgba(255,84,0,0.04)']
+                          : ['rgba(255,200,120,0.25)', 'rgba(255,138,61,0.08)']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        pointerEvents="none"
+                        style={StyleSheet.absoluteFill}
+                      />
+                      <View style={styles.heroRow}>
+                        <View style={styles.heroCol}>
+                          <View style={styles.heroBadge}>
+                            <Sparkles size={14} color={theme.primary} strokeWidth={2.4} />
+                            <Text style={styles.heroBadgeText}>{copy.heroBadge}</Text>
+                          </View>
+                        </View>
+                        {heroBannerUrl && (
+                          <View style={styles.heroGifWrap}>
+                            <Animated.View style={[styles.heroGifRing, { transform: [{ rotate: glowRotate }] }]}>
+                              <LinearGradient
+                                colors={[theme.primary, '#ff5400', 'rgba(255,84,0,0.05)']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={StyleSheet.absoluteFill}
+                              />
+                            </Animated.View>
+                            <View style={styles.heroGifFrame}>
+                              <BlurImage uri={heroBannerUrl} style={styles.heroGif} resizeMode="cover" />
+                            </View>
+                            <View style={styles.heroGifChip} pointerEvents="none">
+                              <Flame size={11} color="#ff5400" strokeWidth={2.6} />
+                              <Text style={styles.heroGifChipText}>{etaText}</Text>
+                            </View>
+                          </View>
+                        )}
+                      </View>
+                      <View style={styles.heroStatsRow}>
+                        <View style={styles.heroStat}>
+                          <Clock3 size={16} color={theme.primary} strokeWidth={2.2} />
+                          <Text style={styles.heroStatValue}>{etaText}</Text>
+                          <Text style={styles.heroStatLabel}>{copy.pickup}</Text>
+                        </View>
+                        <View style={styles.heroStat}>
+                          <MapPin size={16} color={theme.primary} strokeWidth={2.2} />
+                          <Text style={styles.heroStatValue}>{copy.freshToday}</Text>
+                          <Text style={styles.heroStatLabel}>{copy.choose}</Text>
+                        </View>
+                        <View style={styles.heroStat}>
+                          <Pizza size={16} color={theme.primary} strokeWidth={2.2} />
+                          <Text style={styles.heroStatValue}>{totalProducts}</Text>
+                          <Text style={styles.heroStatLabel}>{copy.inMenu}</Text>
+                        </View>
+                      </View>
                     </View>
-                  </View>
-                </LinearGradient>
-              </SpringPress>
+                  </LiquidGlassCard>
+                </Entrance>
+              </Animated.View>
+            )}
+            {bannerProduct && !searchQuery && (
+              <Entrance delay={160} style={styles.bannerWrap}>
+                <SpringPress onPress={() => handleProductPress(bannerProduct)} scaleTo={0.98}>
+                  <LinearGradient
+                    colors={theme.mode === 'dark' ? ['#7ccf59', '#4d8f37'] : ['#8dde65', '#6abc49']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.banner}>
+                    <BlurImage
+                      uri={bannerProduct.imageUrl}
+                      gifUri={bannerProduct.gifUrl}
+                      style={styles.bannerImage}
+                      resizeMode="contain"
+                    />
+                    <View style={styles.bannerFooter}>
+                      <Text style={styles.bannerTitle} numberOfLines={1}>{bannerProduct.name}</Text>
+                      <View style={styles.bannerPill}>
+                        <BlurView
+                          intensity={80}
+                          tint={theme.mode === 'dark' ? 'dark' : 'light'}
+                          style={StyleSheet.absoluteFill}
+                        />
+                        <View
+                          style={[StyleSheet.absoluteFill, { backgroundColor: theme.mode === 'dark' ? 'rgba(36,30,26,0.25)' : 'rgba(255,255,255,0.35)' }]}
+                        />
+                        <Text style={styles.bannerPillText}>
+                          {t('menu.from')} {bannerProduct.items?.[0]?.price} TJS
+                        </Text>
+                      </View>
+                    </View>
+                  </LinearGradient>
+                </SpringPress>
+              </Entrance>
             )}
             {stories.length > 0 && (
               <ScrollView
@@ -437,25 +661,26 @@ export default function MenuScreen() {
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.storiesContainer}
               >
-                {stories.map((story) => {
+                {stories.map((story, idx) => {
                   if (!story.previewImageUrl || !story.previewImageUrl.trim()) return null;
                   const previewUri = story.previewImageUrl.startsWith('http')
                     ? story.previewImageUrl
                     : `${BASE_URL}${story.previewImageUrl}`;
                   return (
-                    <TouchableOpacity
-                      key={story.id}
-                      style={styles.storyThumbWrapper}
-                      onPress={() => openStory(story)}
-                    >
-                      <View style={styles.storyBorder}>
-                        <Image
-                          source={{ uri: previewUri }}
-                          style={styles.storyThumb}
-                          onError={(e) => console.log('Story image error:', previewUri, e.nativeEvent.error)}
-                        />
-                      </View>
-                    </TouchableOpacity>
+                    <Entrance key={story.id} delay={220 + idx * 60}>
+                      <TouchableOpacity
+                        style={styles.storyThumbWrapper}
+                        onPress={() => openStory(story)}
+                      >
+                        <View style={styles.storyBorder}>
+                          <Image
+                            source={{ uri: previewUri }}
+                            style={styles.storyThumb}
+                            onError={(e) => console.log('Story image error:', previewUri, e.nativeEvent.error)}
+                          />
+                        </View>
+                      </TouchableOpacity>
+                    </Entrance>
                   );
                 })}
               </ScrollView>
@@ -480,18 +705,22 @@ export default function MenuScreen() {
       />
 
       {cartQuantity > 0 && (
-        <SpringPress
-          onPress={() => router.push('/two')}
-          scaleTo={0.95}
-          style={[styles.cartPillWrap, { bottom: insets.bottom + 16 }]}>
-          <View style={styles.cartPill}>
-            <View style={styles.cartPillBadge}>
-              <Text style={styles.cartPillBadgeText}>{cartQuantity}</Text>
-            </View>
-            <Ionicons name="cart" size={20} color="#fff" />
-            <Text style={styles.cartPillText}>{Math.round(cartTotal)} TJS</Text>
-          </View>
-        </SpringPress>
+        <Animated.View
+          style={[styles.cartPillWrap, { bottom: insets.bottom + 16 }, { transform: [{ scale: cartPop }] }]}>
+          <SpringPress onPress={() => router.push('/two')} scaleTo={0.95}>
+            <LinearGradient
+              colors={['#ff8a3d', '#ff5400']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.cartPill}>
+              <View style={styles.cartPillBadge}>
+                <Text style={styles.cartPillBadgeText}>{cartQuantity}</Text>
+              </View>
+              <Ionicons name="cart" size={20} color="#fff" />
+              <Text style={styles.cartPillText}>{Math.round(cartTotal)} TJS</Text>
+            </LinearGradient>
+          </SpringPress>
+        </Animated.View>
       )}
 
       <Modal visible={storyVisible} transparent={true} animationType="fade">
@@ -535,7 +764,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
   fixedHeader: {
     zIndex: 100,
     paddingTop: 10,
-    paddingBottom: 6,
+    paddingBottom: 8,
   },
   headerTop: {
     flexDirection: 'row',
@@ -626,16 +855,15 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     fontWeight: '900',
     letterSpacing: -0.2,
   },
+  searchWrap: {
+    marginHorizontal: 16,
+    marginBottom: 14,
+  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 16,
-    marginBottom: 14,
     height: 50,
     borderRadius: 18,
-    backgroundColor: t.surface,
-    borderWidth: 1,
-    borderColor: t.border,
     paddingHorizontal: 14,
   },
   searchIcon: {
@@ -687,6 +915,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
   bannerWrap: {
     paddingHorizontal: 16,
     marginBottom: 6,
+    marginTop: 4,
   },
   banner: {
     borderRadius: 28,
@@ -714,15 +943,130 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     letterSpacing: -0.3,
   },
   bannerPill: {
-    backgroundColor: '#fff',
     borderRadius: 999,
+    overflow: 'hidden',
     paddingHorizontal: 14,
     paddingVertical: 9,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.55)',
+    backgroundColor: 'rgba(255,255,255,0.18)',
   },
   bannerPillText: {
-    color: '#111111',
+    color: '#ffffff',
     fontSize: 13,
     fontWeight: '900',
+    letterSpacing: 0.1,
+    textShadowColor: 'rgba(0,0,0,0.25)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  heroWrap: {
+    paddingHorizontal: 16,
+    marginBottom: 10,
+  },
+  heroCard: {
+    borderRadius: 26,
+    padding: 18,
+    overflow: 'hidden',
+  },
+  heroRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  heroCol: {
+    flex: 1,
+  },
+  heroGifWrap: {
+    width: 132,
+    height: 132,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroGifRing: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    borderRadius: 30,
+    overflow: 'hidden',
+  },
+  heroGifFrame: {
+    width: 118,
+    height: 118,
+    borderRadius: 26,
+    overflow: 'hidden',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.6)',
+    backgroundColor: t.surfaceMuted,
+  },
+  heroGif: {
+    width: '100%',
+    height: '100%',
+  },
+  heroGifChip: {
+    position: 'absolute',
+    bottom: -6,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: t.mode === 'dark' ? 'rgba(40,33,28,0.94)' : 'rgba(255,255,255,0.96)',
+    borderWidth: 1,
+    borderColor: t.mode === 'dark' ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.85)',
+    shadowColor: '#000',
+    shadowOpacity: 0.14,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
+  },
+  heroGifChipText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: t.text,
+    letterSpacing: 0.2,
+  },
+  heroBadge: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: t.mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.72)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    marginBottom: 14,
+  },
+  heroBadgeText: {
+    color: t.text,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  heroStatsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 18,
+  },
+  heroStat: {
+    flex: 1,
+    backgroundColor: t.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.72)',
+    borderRadius: 18,
+    padding: 12,
+    gap: 6,
+  },
+  heroStatValue: {
+    color: t.text,
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  heroStatLabel: {
+    color: t.textMuted,
+    fontSize: 11,
+    fontWeight: '700',
   },
   storiesContainer: {
     paddingHorizontal: 16,
@@ -794,6 +1138,13 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     letterSpacing: -0.2,
     minHeight: 40,
   },
+  cardMeta: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: t.textMuted,
+    marginTop: 4,
+    paddingHorizontal: 2,
+  },
   cardPill: {
     marginTop: 8,
     height: 40,
@@ -802,11 +1153,25 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 8,
+    flexDirection: 'row',
+    gap: 8,
   },
   cardPillText: {
     fontSize: 13,
     fontWeight: '800',
     color: t.text,
+  },
+  cardPillDivider: {
+    width: 1,
+    height: 14,
+    backgroundColor: t.border,
+  },
+  cardPillAction: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: t.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
   },
   cardPillActive: {
     marginTop: 8,

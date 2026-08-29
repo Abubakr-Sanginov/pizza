@@ -1,6 +1,9 @@
 import { prisma } from '@/back/prisma/prisma-client';
 import { NextResponse } from 'next/server';
 
+// Без этого Vercel кэширует GET-ответ на этапе билда и настройки не обновляются
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     let settings = await prisma.setting.findFirst({
