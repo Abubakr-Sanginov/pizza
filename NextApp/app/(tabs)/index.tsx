@@ -413,12 +413,25 @@ export default function MenuScreen() {
     );
   };
 
-  const renderRow = ({ item }: { item: any[] }) => (
-    <View style={styles.row}>
+  const renderRow = ({ item, index: sectionIndex }: { item: any[]; index: number }) => (
+    <Animated.View style={[styles.row, {
+      opacity: scrollY.interpolate({
+        inputRange: [0, 150 + sectionIndex * 120, 250 + sectionIndex * 120],
+        outputRange: [0, 0.4, 1],
+        extrapolate: 'clamp',
+      }),
+      transform: [{
+        translateY: scrollY.interpolate({
+          inputRange: [0, 200 + sectionIndex * 100],
+          outputRange: [50 + sectionIndex * 15, 0],
+          extrapolate: 'clamp',
+        }),
+      }],
+    }]}>
       {item.map((p) => (
         <React.Fragment key={p.id}>{renderProduct({ item: p })}</React.Fragment>
       ))}
-    </View>
+    </Animated.View>
   );
 
   if (loading) {
@@ -555,6 +568,26 @@ export default function MenuScreen() {
         viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
         ListHeaderComponent={
           <>
+            {heroBannerUrl && !searchQuery && (
+              <Animated.View style={[{
+                height: height * 0.55,
+                marginHorizontal: -16,
+                transform: [
+                  { translateY: scrollY.interpolate({ inputRange: [0, 400], outputRange: [0, 80], extrapolate: 'clamp' }) },
+                  { scale: scrollY.interpolate({ inputRange: [0, 400], outputRange: [1, 0.85], extrapolate: 'clamp' }) },
+                ],
+                opacity: scrollY.interpolate({ inputRange: [200, 400], outputRange: [1, 0], extrapolate: 'clamp' }),
+              }]}>
+                <BlurImage uri={heroBannerUrl} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                <LinearGradient
+                  colors={['transparent', theme.mode === 'dark' ? 'rgba(20,16,12,0.95)' : 'rgba(245,245,240,0.95)']}
+                  start={{ x: 0.5, y: 0.6 }}
+                  end={{ x: 0.5, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                />
+              </Animated.View>
+            )}
+            {heroBannerUrl && !searchQuery && <View style={{ height: 30 }} />}
             {stories.length > 0 && (
               <ScrollView
                 horizontal
@@ -587,9 +620,10 @@ export default function MenuScreen() {
             )}
           </>
         }
-        renderSectionHeader={({ section }) => (
-          <Text style={styles.sectionTitle}>{getCategoryName(section)}</Text>
-        )}
+        renderSectionHeader={({ section }: any) => {
+          if (categories.length > 0 && section.id === categories[0].id) return <View style={{ height: 20 }} />;
+          return <Text style={styles.sectionTitle}>{getCategoryName(section)}</Text>;
+        }}
         renderItem={renderRow}
         contentContainerStyle={styles.menuList}
         refreshControl={
@@ -1175,4 +1209,5 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     bottom: 0,
     width: width * 0.7,
   },
+
 });

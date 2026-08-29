@@ -145,7 +145,10 @@ export default function CartScreen() {
         body: JSON.stringify({
           code: promoInput.trim(),
           subtotal: totalAmount,
-          items: items.map((i: any) => ({ productId: i.productId, lineTotal: i.price * i.quantity })),
+          items: items.map((i: any) => ({
+            productId: i.productItem?.product?.id ?? i.productItem?.productId,
+            lineTotal: (i.productItem?.price ?? i.price ?? 0) * i.quantity,
+          })),
         }),
       });
       if (!res.ok) {
