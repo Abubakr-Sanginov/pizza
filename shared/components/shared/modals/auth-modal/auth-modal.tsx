@@ -6,6 +6,7 @@ import { signIn } from 'next-auth/react';
 import React from 'react';
 import { LoginForm } from './forms/login-form';
 import { RegisterForm } from './forms/register-form';
+import { TelegramLoginButton } from './telegram-login-button';
 
 interface Props {
   open: boolean;
@@ -68,8 +69,9 @@ export const AuthModal: React.FC<Props> = ({ open, onClose }) => {
                 />
                 Google
               </Button>
-
             </div>
+
+            <TelegramLoginButton />
 
             <Button variant="outline" onClick={onSwitchType} type="button" className="h-12">
               {type !== 'login' ? 'Войти' : 'Регистрация'}
