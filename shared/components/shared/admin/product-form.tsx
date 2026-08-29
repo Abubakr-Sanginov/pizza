@@ -300,10 +300,22 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
             </div>
           </div>
 
-          <div className="flex justify-end pt-5">
-            <Button size="lg" loading={form.formState.isSubmitting} type="submit" className="px-10">
-              {initialData ? 'Сохранить изменения' : 'Создать продукт'}
-            </Button>
+          <div className="border-t pt-5 space-y-3">
+            <div className="p-3 rounded-lg bg-muted text-xs font-mono space-y-1">
+              <div className="font-bold text-sm mb-2">DEBUG</div>
+              <div>gifUrl value: <span className="text-primary">{form.watch('gifUrl') || '(пусто)'}</span></div>
+              <div>imageUrl value: <span className="text-primary">{form.watch('imageUrl') || '(пусто)'}</span></div>
+              <div>isSubmitting: <span className="text-primary">{String(form.formState.isSubmitting)}</span></div>
+              <div>isDirty: <span className="text-primary">{String(form.formState.isDirty)}</span></div>
+              {Object.keys(form.formState.errors).length > 0 && (
+                <div className="text-destructive">errors: {JSON.stringify(form.formState.errors)}</div>
+              )}
+            </div>
+            <div className="flex justify-end">
+              <Button size="lg" loading={form.formState.isSubmitting} type="submit" className="px-10">
+                {initialData ? 'Сохранить изменения' : 'Создать продукт'}
+              </Button>
+            </div>
           </div>
         </form>
       </FormProvider>
