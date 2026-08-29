@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { prisma } from '@/back/prisma/prisma-client';
 import { hashSync } from 'bcrypt';
 
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
+const BOT_TOKEN = process.env.PAYMENTS_BOT_TOKEN || '';
 
 function verifyTelegramAuth(data: Record<string, string>): boolean {
   const { hash, ...rest } = data;
