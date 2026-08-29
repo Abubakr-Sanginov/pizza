@@ -555,48 +555,6 @@ export default function MenuScreen() {
         viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
         ListHeaderComponent={
           <>
-            {!searchQuery && (
-              <Animated.View style={[styles.heroWrap, heroParallaxStyle]}>
-                <Entrance delay={60}>
-                  <LiquidGlassCard rounded={30} intensity={theme.mode === 'dark' ? 75 : 90} shadow="lg">
-                    <View style={styles.heroCard}>
-                      <LinearGradient
-                        colors={theme.mode === 'dark'
-                          ? ['rgba(255,150,50,0.12)', 'rgba(255,84,0,0.04)']
-                          : ['rgba(255,200,120,0.25)', 'rgba(255,138,61,0.08)']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        pointerEvents="none"
-                        style={StyleSheet.absoluteFill}
-                      />
-                      <View style={styles.heroRow}>
-                        <View style={styles.heroCol}>
-                        </View>
-                        {heroBannerUrl && (
-                          <View style={styles.heroGifWrap}>
-                            <Animated.View style={[styles.heroGifRing, { transform: [{ rotate: glowRotate }] }]}>
-                              <LinearGradient
-                                colors={[theme.primary, '#ff5400', 'rgba(255,84,0,0.05)']}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                                style={StyleSheet.absoluteFill}
-                              />
-                            </Animated.View>
-                            <View style={styles.heroGifFrame}>
-                              <BlurImage uri={heroBannerUrl} style={styles.heroGif} resizeMode="cover" />
-                            </View>
-                            <View style={styles.heroGifChip} pointerEvents="none">
-                              <Flame size={11} color="#ff5400" strokeWidth={2.6} />
-                              <Text style={styles.heroGifChipText}>{etaText}</Text>
-                            </View>
-                          </View>
-                        )}
-                      </View>
-                    </View>
-                  </LiquidGlassCard>
-                </Entrance>
-              </Animated.View>
-            )}
             {stories.length > 0 && (
               <ScrollView
                 horizontal
