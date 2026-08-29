@@ -12,9 +12,10 @@ export async function POST(req: NextRequest) {
       data: { token },
     });
 
-    const botUrl = `https://t.me/${BOT_USERNAME}?start=auth_${token}`;
+    const tgUrl = `tg://resolve?domain=${BOT_USERNAME}&start=auth_${token}`;
+    const webUrl = `https://t.me/${BOT_USERNAME}?start=auth_${token}`;
 
-    return NextResponse.json({ token, botUrl });
+    return NextResponse.json({ token, botUrl: tgUrl, webUrl });
   } catch (error) {
     console.error('Error [TELEGRAM_AUTH_START]', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });

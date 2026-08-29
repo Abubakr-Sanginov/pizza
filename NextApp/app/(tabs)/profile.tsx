@@ -213,7 +213,7 @@ export default function ProfileScreen() {
         throw new Error('Failed to start Telegram auth');
       }
 
-      await Linking.openURL(data.botUrl);
+      await WebBrowser.openBrowserAsync(data.webUrl || data.botUrl);
 
       const pollRes = await pollTelegramAuth(data.token);
       if (pollRes) {

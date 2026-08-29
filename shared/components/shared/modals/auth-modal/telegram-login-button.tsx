@@ -28,7 +28,7 @@ export const TelegramLoginButton: React.FC<Props> = ({ className }) => {
         return;
       }
 
-      window.open(data.botUrl, '_blank');
+      window.open(data.webUrl || data.botUrl, '_blank');
 
       const deadline = Date.now() + 120_000;
       while (Date.now() < deadline) {
