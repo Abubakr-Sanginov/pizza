@@ -200,6 +200,51 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleTelegramLogin = async () => {
+    setLoading(true);
+    try {
+      const redirectUri = Linking.createURL('profile');
+      const authUrl = `${BASE_URL}/auth/telegram?redirect=${encodeURIComponent(redirectUri)}`;
+
+      const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
+
+      if (result.type === 'success' && result.url) {
+        const { queryParams } = Linking.parse(result.url);
+        const email = queryParams?.email as string;
+        const password = queryParams?.password as string;
+
+        if (!email || !password) {
+          throw new Error('no credentials');
+        }
+
+        const res = await fetch(`${BASE_URL}/api/auth/mobile/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || t('profile.socialError'));
+        }
+
+        setUser({
+          id: String(data.id),
+          email: data.email,
+          fullName: data.fullName,
+          role: data.role,
+        });
+        Alert.alert(`${t('profile.welcomeBack')}, ${data.fullName}!`);
+      }
+    } catch (e) {
+      console.error('Telegram login error:', e);
+      Alert.alert(t('profile.socialError'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleVerify = async () => {
     setLoading(true);
     try {
@@ -597,6 +642,14 @@ export default function ProfileScreen() {
                   <Text style={[styles.socialBtnText, { color: 'white' }]}>GitHub</Text>
                 </TouchableOpacity>
               </View>
+
+              <TouchableOpacity
+                style={[styles.socialBtn, { borderColor: '#2AABEE', backgroundColor: '#2AABEE', marginTop: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }]}
+                onPress={handleTelegramLogin}
+              >
+                <Ionicons name="paper-plane" size={20} color="white" style={{ marginRight: 8 }} />
+                <Text style={[styles.socialBtnText, { color: 'white' }]}>Telegram</Text>
+              </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.switchBtn}
