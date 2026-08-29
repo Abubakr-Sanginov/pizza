@@ -77,6 +77,8 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
 
   const onSubmit = async (values: ProductFormValues) => {
     try {
+      console.log('[PRODUCT_FORM onSubmit] gifUrl=', values.gifUrl);
+
       const productData = {
         name: values.name,
         imageUrl: values.imageUrl,
@@ -107,6 +109,7 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
 
       router.push('/dashboard/products');
     } catch (error) {
+      console.error('[PRODUCT_FORM] save error:', error);
       toast.error('Ошибка при сохранении');
     }
   };
@@ -116,7 +119,10 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
       <Title text={initialData ? 'Редактирование' : 'Новый продукт'} size="md" className="font-bold mb-10" />
 
       <FormProvider {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
+          console.error('[PRODUCT_FORM] validation errors:', JSON.stringify(errors));
+          toast.error('Заполните все обязательные поля');
+        })} className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             <div className="space-y-5">
               <div>
