@@ -546,3 +546,11 @@ model Notification {
   imageUrl  String?
   createdAt DateTime @default(now())
 }
+
+model TelegramAuthSession {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  confirmed Boolean  @default(false)
+  telegramId String?
+  createdAt DateTime @default(now())
+}

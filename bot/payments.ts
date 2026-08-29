@@ -44,9 +44,27 @@ async function notifyConfirm(orderId: number, opts: {
 
 bot.start(async (ctx) => {
   const payload = (ctx.message as any)?.text?.split(' ')[1];
+  const telegramId = String(ctx.from?.id);
   console.log('[PaymentsBot] /start from', ctx.from?.id, 'payload:', payload);
+
   if (!payload) {
     return ctx.reply('Откройте оплату с сайта Next Pizza.');
+  }
+
+  if (payload.startsWith('auth_')) {
+    const authToken = payload.replace('auth_', '');
+    const session = await prisma.telegramAuthSession.findUnique({ where: { token: authToken } });
+    if (!session) {
+      return ctx.reply('Ссылка недействительна или устарела.');
+    }
+    if (session.confirmed) {
+      return ctx.reply('Вы уже подтвердили вход.');
+    }
+    return ctx.reply('🔐 Подтвердите вход в приложение Next Pizza:', {
+      reply_markup: {
+        inline_keyboard: [[{ text: '✅ Подтвердить вход', callback_data: `tg_auth_${authToken}` }]],
+      },
+    });
   }
 
   const parsed = verifyOrder(payload);
@@ -199,6 +217,40 @@ bot.on('message', async (ctx, next) => {
 });
 
 const pendingProof = new Map<number, { orderId: number }>();
+
+bot.action(/^tg_auth_(.+)$/, async (ctx) => {
+  const token = ctx.match[1];
+  const telegramId = String(ctx.from?.id);
+
+  try {
+    const session = await prisma.telegramAuthSession.findUnique({ where: { token } });
+    if (!session) {
+      await ctx.answerCbQuery('Ссылка устарела');
+      return;
+    }
+    if (session.confirmed) {
+      await ctx.answerCbQuery('Уже подтверждено');
+      return;
+    }
+
+    const secret = process.env.TELEGRAM_AUTH_SECRET || 'telegram-auth-secret';
+    const res = await fetch(`${siteUrl}/api/auth/telegram/confirm`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-internal-secret': secret },
+      body: JSON.stringify({ token, telegramId }),
+    });
+
+    if (res.ok) {
+      await ctx.answerCbQuery('✅ Вход подтверждён!');
+      await ctx.editMessageText('✅ Вход подтверждён! Вернитесь в приложение.');
+    } else {
+      await ctx.answerCbQuery('Ошибка подтверждения');
+    }
+  } catch (error) {
+    console.error('[PaymentsBot] auth confirm error:', error);
+    await ctx.answerCbQuery('Ошибка');
+  }
+});
 
 bot.action(/^pay_stars_(\d+)$/, async (ctx) => {
   const orderId = Number(ctx.match[1]);

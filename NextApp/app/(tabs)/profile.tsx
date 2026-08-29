@@ -203,39 +203,27 @@ export default function ProfileScreen() {
   const handleTelegramLogin = async () => {
     setLoading(true);
     try {
-      const redirectUri = Linking.createURL('profile');
-      const authUrl = `${BASE_URL}/auth/telegram?redirect=${encodeURIComponent(redirectUri)}`;
+      const res = await fetch(`${BASE_URL}/api/auth/telegram/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
 
-      const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
+      if (!res.ok || !data.botUrl) {
+        throw new Error('Failed to start Telegram auth');
+      }
 
-      if (result.type === 'success' && result.url) {
-        const { queryParams } = Linking.parse(result.url);
-        const email = queryParams?.email as string;
-        const password = queryParams?.password as string;
+      await Linking.openURL(data.botUrl);
 
-        if (!email || !password) {
-          throw new Error('no credentials');
-        }
-
-        const res = await fetch(`${BASE_URL}/api/auth/mobile/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.error || t('profile.socialError'));
-        }
-
+      const pollRes = await pollTelegramAuth(data.token);
+      if (pollRes) {
         setUser({
-          id: String(data.id),
-          email: data.email,
-          fullName: data.fullName,
-          role: data.role,
+          id: String(pollRes.id),
+          email: pollRes.email,
+          fullName: pollRes.fullName,
+          role: pollRes.role,
         });
-        Alert.alert(`${t('profile.welcomeBack')}, ${data.fullName}!`);
+        Alert.alert(`${t('profile.welcomeBack')}, ${pollRes.fullName}!`);
       }
     } catch (e) {
       console.error('Telegram login error:', e);
@@ -243,6 +231,26 @@ export default function ProfileScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const pollTelegramAuth = async (token: string): Promise<{
+    id: number;
+    email: string;
+    fullName: string;
+    role: string;
+  } | null> => {
+    const deadline = Date.now() + 120_000;
+    while (Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 2000));
+      try {
+        const res = await fetch(`${BASE_URL}/api/auth/telegram/poll?token=${token}`);
+        const data = await res.json();
+        if (data.confirmed && data.id) {
+          return data;
+        }
+      } catch {}
+    }
+    return null;
   };
 
   const handleVerify = async () => {
