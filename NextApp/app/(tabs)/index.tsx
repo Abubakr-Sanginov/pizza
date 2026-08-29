@@ -112,7 +112,7 @@ export default function MenuScreen() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  const sectionListRef = useRef<SectionList>(null);
+  const sectionListRef = useRef<any>(null);
   const searchRef = useRef<TextInput>(null);
   const isAutoScrolling = useRef(false);
 
@@ -393,9 +393,6 @@ export default function MenuScreen() {
           </View>
         </View>
         <Text style={styles.cardName} numberOfLines={2}>{item.name}</Text>
-        <Text style={styles.cardMeta} numberOfLines={1}>
-          {hasDiscount ? `${copy.freshToday} • −${discountPercent}%` : `${copy.pickup} • ${etaText}`}
-        </Text>
         {inCart ? (
           <Pressable onPress={goToCart} style={styles.cardPillActive}>
             <Ionicons name="cart" size={14} color="#fff" />
@@ -574,10 +571,6 @@ export default function MenuScreen() {
                       />
                       <View style={styles.heroRow}>
                         <View style={styles.heroCol}>
-                          <View style={styles.heroBadge}>
-                            <Sparkles size={14} color={theme.primary} strokeWidth={2.4} />
-                            <Text style={styles.heroBadgeText}>{copy.heroBadge}</Text>
-                          </View>
                         </View>
                         {heroBannerUrl && (
                           <View style={styles.heroGifWrap}>
@@ -599,61 +592,10 @@ export default function MenuScreen() {
                           </View>
                         )}
                       </View>
-                      <View style={styles.heroStatsRow}>
-                        <View style={styles.heroStat}>
-                          <Clock3 size={16} color={theme.primary} strokeWidth={2.2} />
-                          <Text style={styles.heroStatValue}>{etaText}</Text>
-                          <Text style={styles.heroStatLabel}>{copy.pickup}</Text>
-                        </View>
-                        <View style={styles.heroStat}>
-                          <MapPin size={16} color={theme.primary} strokeWidth={2.2} />
-                          <Text style={styles.heroStatValue}>{copy.freshToday}</Text>
-                          <Text style={styles.heroStatLabel}>{copy.choose}</Text>
-                        </View>
-                        <View style={styles.heroStat}>
-                          <Pizza size={16} color={theme.primary} strokeWidth={2.2} />
-                          <Text style={styles.heroStatValue}>{totalProducts}</Text>
-                          <Text style={styles.heroStatLabel}>{copy.inMenu}</Text>
-                        </View>
-                      </View>
                     </View>
                   </LiquidGlassCard>
                 </Entrance>
               </Animated.View>
-            )}
-            {bannerProduct && !searchQuery && (
-              <Entrance delay={160} style={styles.bannerWrap}>
-                <SpringPress onPress={() => handleProductPress(bannerProduct)} scaleTo={0.98}>
-                  <LinearGradient
-                    colors={theme.mode === 'dark' ? ['#7ccf59', '#4d8f37'] : ['#8dde65', '#6abc49']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.banner}>
-                    <BlurImage
-                      uri={bannerProduct.imageUrl}
-                      gifUri={bannerProduct.gifUrl}
-                      style={styles.bannerImage}
-                      resizeMode="contain"
-                    />
-                    <View style={styles.bannerFooter}>
-                      <Text style={styles.bannerTitle} numberOfLines={1}>{bannerProduct.name}</Text>
-                      <View style={styles.bannerPill}>
-                        <BlurView
-                          intensity={80}
-                          tint={theme.mode === 'dark' ? 'dark' : 'light'}
-                          style={StyleSheet.absoluteFill}
-                        />
-                        <View
-                          style={[StyleSheet.absoluteFill, { backgroundColor: theme.mode === 'dark' ? 'rgba(36,30,26,0.25)' : 'rgba(255,255,255,0.35)' }]}
-                        />
-                        <Text style={styles.bannerPillText}>
-                          {t('menu.from')} {bannerProduct.items?.[0]?.price} TJS
-                        </Text>
-                      </View>
-                    </View>
-                  </LinearGradient>
-                </SpringPress>
-              </Entrance>
             )}
             {stories.length > 0 && (
               <ScrollView
