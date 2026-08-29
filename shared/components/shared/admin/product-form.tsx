@@ -77,8 +77,6 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
 
   const onSubmit = async (values: ProductFormValues) => {
     try {
-      console.log('[PRODUCT_FORM onSubmit] gifUrl=', values.gifUrl);
-
       const productData = {
         name: values.name,
         imageUrl: values.imageUrl,
@@ -109,7 +107,6 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
 
       router.push('/dashboard/products');
     } catch (error) {
-      console.error('[PRODUCT_FORM] save error:', error);
       toast.error('Ошибка при сохранении');
     }
   };
@@ -119,10 +116,7 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
       <Title text={initialData ? 'Редактирование' : 'Новый продукт'} size="md" className="font-bold mb-10" />
 
       <FormProvider {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
-          console.error('[PRODUCT_FORM] validation errors:', JSON.stringify(errors));
-          toast.error('Заполните все обязательные поля');
-        })} className="space-y-8">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             <div className="space-y-5">
               <div>
@@ -300,22 +294,10 @@ export const ProductForm: React.FC<Props> = ({ initialData, categories, ingredie
             </div>
           </div>
 
-          <div className="border-t pt-5 space-y-3">
-            <div className="p-3 rounded-lg bg-muted text-xs font-mono space-y-1">
-              <div className="font-bold text-sm mb-2">DEBUG</div>
-              <div>gifUrl value: <span className="text-primary">{form.watch('gifUrl') || '(пусто)'}</span></div>
-              <div>imageUrl value: <span className="text-primary">{form.watch('imageUrl') || '(пусто)'}</span></div>
-              <div>isSubmitting: <span className="text-primary">{String(form.formState.isSubmitting)}</span></div>
-              <div>isDirty: <span className="text-primary">{String(form.formState.isDirty)}</span></div>
-              {Object.keys(form.formState.errors).length > 0 && (
-                <div className="text-destructive">errors: {JSON.stringify(form.formState.errors)}</div>
-              )}
-            </div>
-            <div className="flex justify-end">
-              <Button size="lg" loading={form.formState.isSubmitting} type="submit" className="px-10">
-                {initialData ? 'Сохранить изменения' : 'Создать продукт'}
-              </Button>
-            </div>
+          <div className="flex justify-end pt-5">
+            <Button size="lg" loading={form.formState.isSubmitting} type="submit" className="px-10">
+              {initialData ? 'Сохранить изменения' : 'Создать продукт'}
+            </Button>
           </div>
         </form>
       </FormProvider>

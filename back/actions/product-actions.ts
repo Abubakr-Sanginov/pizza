@@ -72,8 +72,6 @@ export async function createProduct(data: ProductInput) {
 
 export async function updateProduct(id: number, data: ProductInput) {
   try {
-    console.log('[UPDATE_PRODUCT]', id, 'gifUrl=', data.gifUrl);
-
     const oldItems = await prisma.productItem.findMany({ where: { productId: id }, select: { id: true } });
     if (oldItems.length > 0) {
       await prisma.cartItem.deleteMany({
