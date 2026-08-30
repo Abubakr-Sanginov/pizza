@@ -32,6 +32,8 @@ export async function GET(req: NextRequest) {
       user = await prisma.user.findFirst({ where: { email } });
     }
 
+    const passwordHash = hashSync(telegramId, 10);
+
     if (user) {
       user = await prisma.user.update({
         where: { id: user.id },
@@ -39,6 +41,7 @@ export async function GET(req: NextRequest) {
           provider: 'telegram',
           providerId: telegramId,
           verified: user.verified || new Date(),
+          password: passwordHash,
         },
       });
     } else {
@@ -47,7 +50,7 @@ export async function GET(req: NextRequest) {
         data: {
           email,
           fullName: `TG User ${telegramId}`,
-          password: hashSync(telegramId, 10),
+          password: passwordHash,
           verified: new Date(),
           provider: 'telegram',
           providerId: telegramId,
@@ -63,6 +66,7 @@ export async function GET(req: NextRequest) {
       email: user.email,
       fullName: user.fullName,
       role: user.role,
+      telegramId,
     });
   } catch (error) {
     console.error('Error [TELEGRAM_AUTH_POLL]', error);

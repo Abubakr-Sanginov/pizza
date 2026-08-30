@@ -39,7 +39,7 @@ export const TelegramLoginButton: React.FC<Props> = ({ className }) => {
           if (pollData.confirmed && pollData.id) {
             await signIn('credentials', {
               email: pollData.email,
-              password: String(pollData.id),
+              password: String(pollData.telegramId),
               callbackUrl: '/',
               redirect: true,
             });
