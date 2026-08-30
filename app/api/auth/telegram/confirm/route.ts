@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     const { token, telegramId, fullName } = await req.json();
 
     if (!token || !telegramId) {
-      return NextResponse.json({ error: 'Missing fields' }, status: 400);
+      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
     }
 
     const session = await prisma.telegramAuthSession.findUnique({
