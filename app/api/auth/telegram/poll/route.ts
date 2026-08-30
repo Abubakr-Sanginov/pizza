@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
     }
 
     const telegramId = session.telegramId;
+    const tgName = session.fullName || `TG User ${telegramId}`;
 
     let user = await prisma.user.findFirst({
       where: { provider: 'telegram', providerId: telegramId },
@@ -42,6 +43,7 @@ export async function GET(req: NextRequest) {
           providerId: telegramId,
           verified: user.verified || new Date(),
           password: passwordHash,
+          fullName: tgName,
         },
       });
     } else {
@@ -49,7 +51,7 @@ export async function GET(req: NextRequest) {
       user = await prisma.user.create({
         data: {
           email,
-          fullName: `TG User ${telegramId}`,
+          fullName: tgName,
           password: passwordHash,
           verified: new Date(),
           provider: 'telegram',

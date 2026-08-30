@@ -10,10 +10,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { token, telegramId } = await req.json();
+    const { token, telegramId, fullName } = await req.json();
 
     if (!token || !telegramId) {
-      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+      return NextResponse.json({ error: 'Missing fields' }, status: 400);
     }
 
     const session = await prisma.telegramAuthSession.findUnique({
@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
       data: {
         confirmed: true,
         telegramId: String(telegramId),
+        fullName: fullName || null,
       },
     });
 

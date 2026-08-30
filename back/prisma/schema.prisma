@@ -552,5 +552,6 @@ model TelegramAuthSession {
   token     String   @unique
   confirmed Boolean  @default(false)
   telegramId String?
+  fullName  String?
   createdAt DateTime @default(now())
 }

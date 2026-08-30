@@ -234,10 +234,11 @@ bot.action(/^tg_auth_(.+)$/, async (ctx) => {
     }
 
     const secret = process.env.TELEGRAM_AUTH_SECRET || 'telegram-auth-secret';
+    const fullName = [ctx.from?.first_name, ctx.from?.last_name].filter(Boolean).join(' ') || null;
     const res = await fetch(`${siteUrl}/api/auth/telegram/confirm`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-internal-secret': secret },
-      body: JSON.stringify({ token, telegramId }),
+      body: JSON.stringify({ token, telegramId, fullName }),
     });
 
     if (res.ok) {
