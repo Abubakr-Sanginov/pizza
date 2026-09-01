@@ -356,32 +356,6 @@ export default function ProfileScreen() {
               <Ionicons name="log-out-outline" size={20} color={theme.danger} />
               <Text style={styles.logoutText}>{t('profile.logout')}</Text>
             </TouchableOpacity>
-
-            {user?.role === 'ADMIN' && (
-              <TouchableOpacity
-                style={[styles.logoutBtn, { marginTop: 10, borderColor: theme.border }]}
-                onPress={async () => {
-                  Alert.alert('Очистить GIF', 'Удалить все GIF-ссылки у товаров?', [
-                    { text: 'Отмена', style: 'cancel' },
-                    {
-                      text: 'Очистить',
-                      style: 'destructive',
-                      onPress: async () => {
-                        try {
-                          const res = await fetch(`${BASE_URL}/api/admin/clear-gifs`, { method: 'POST' });
-                          const data = await res.json();
-                          Alert.alert('Готово', `Очищено: ${data.cleared} товаров`);
-                        } catch {
-                          Alert.alert('Ошибка');
-                        }
-                      },
-                    },
-                  ]);
-                }}>
-                <Ionicons name="trash-outline" size={20} color={theme.danger} />
-                <Text style={styles.logoutText}>Очистить GIF</Text>
-              </TouchableOpacity>
-            )}
           </View>
 
           <View style={styles.loyaltyCard}>

@@ -3,9 +3,9 @@ export const revalidate = 0;
 import { prisma } from '@/back/prisma/prisma-client';
 import { Title } from '@/shared/components/shared';
 import { Button } from '@/shared/components/ui';
-import { Plus, Edit } from 'lucide-react';
+import { Plus, Edit, Trash2 } from 'lucide-react';
 import { DeleteButton } from '@/shared/components/shared/admin/delete-button';
-import { deleteProduct } from '@/back/actions/product-actions';
+import { deleteProduct, clearAllGifUrls } from '@/back/actions/product-actions';
 import Link from 'next/link';
 import { getAdminT } from '@/shared/lib/admin-i18n';
 
@@ -23,16 +23,31 @@ export default async function DashboardProducts() {
     }),
   ]);
 
+  const withGif = products.filter(p => p.gifUrl).length;
+
   return (
     <div>
       <div className="flex items-center justify-between mb-10">
         <Title text={t('admin.products.title')} size="lg" className="font-bold" />
-        <Link href="/dashboard/products/new">
-          <Button className="flex items-center gap-2">
-            <Plus size={20} />
-            {t('admin.products.add')}
-          </Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          {withGif > 0 && (
+            <form action={async () => {
+              'use server';
+              await clearAllGifUrls();
+            }}>
+              <Button type="submit" variant="destructive" className="flex items-center gap-2">
+                <Trash2 size={18} />
+                Очистить GIF ({withGif})
+              </Button>
+            </form>
+          )}
+          <Link href="/dashboard/products/new">
+            <Button className="flex items-center gap-2">
+              <Plus size={20} />
+              {t('admin.products.add')}
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="bg-card text-card-foreground rounded-2xl border border-border shadow-sm overflow-hidden">
