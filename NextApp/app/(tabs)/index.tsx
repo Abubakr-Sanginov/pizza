@@ -1,20 +1,50 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, RefreshControl, TextInput, Modal, Dimensions, Animated, Easing, SectionList, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Svg, { Circle as SvgCircle } from 'react-native-svg';
 import { BlurView } from 'expo-blur';
-import { Pizza, Croissant, Sandwich, CakeSlice, CupSoda, Martini, Soup, Salad, UtensilsCrossed, Search, Sparkles, Clock3, MapPin, Flame, type LucideIcon } from 'lucide-react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useCartStore } from '@/store/useCartStore';
+import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ChooseProductModal } from '@/components/shared/ChooseProductModal';
 import { useTranslation } from 'react-i18next';
 import { BASE_URL } from '@/constants/Api';
 import { useTheme, Theme } from '@/hooks/useTheme';
-import { SpringPress, ShimmerProductCard, Shimmer, BlurImage, LiquidGlassCard, AmbientBackdrop } from '@/components/ui';
+import { SpringPress, ShimmerProductCard, Shimmer, BlurImage, LiquidGlassCard } from '@/components/ui';
 const { width, height } = Dimensions.get('window');
 
 const AnimatedSectionList = Animated.createAnimatedComponent(SectionList);
+
+// Высота большого баннера-гифки (почти весь экран) и порог, на котором категории «поднимаются» в шапку
+const BANNER_H = Math.round(height * 0.75);
+const CATS_STICK_START = BANNER_H - 70;
+const CATS_STICK_END = BANNER_H + 16;
+
+// Пульсирующее сердце для пустого меню — «вернись, вернусь <3»
+function PulsingHeart({ color }: { color: string }) {
+  const beat = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(beat, { toValue: 1, duration: 420, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(beat, { toValue: 0, duration: 620, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [beat]);
+  return (
+    <Animated.View
+      style={{
+        transform: [
+          { scale: beat.interpolate({ inputRange: [0, 1], outputRange: [1, 1.18] }) },
+        ],
+      }}>
+      <Ionicons name="heart" size={26} color={color} />
+    </Animated.View>
+  );
+}
 
 // Каскадное появление блока: плавное всплывание с лёгким «отскоком»
 function Entrance({ delay = 0, y = 20, style, children }: { delay?: number; y?: number; style?: any; children: React.ReactNode }) {
@@ -44,19 +74,6 @@ function Entrance({ delay = 0, y = 20, style, children }: { delay?: number; y?: 
     </Animated.View>
   );
 }
-
-const CATEGORY_ICONS: Record<string, LucideIcon> = {
-  'Пиццы': Pizza,
-  'Пицца': Pizza,
-  'Комбо': UtensilsCrossed,
-  'Закуски': Sandwich,
-  'Завтрак': Croissant,
-  'Десерты': CakeSlice,
-  'Напитки': CupSoda,
-  'Коктейли': Martini,
-  'Соусы': Soup,
-  'Салаты': Salad,
-};
 
 const categoryMapping: Record<string, string> = {
   'Пиццы': 'menu.pizzas',
@@ -107,8 +124,6 @@ export default function MenuScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [activeCategory, setActiveCategory] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-  const [heroBannerUrl, setHeroBannerUrl] = useState<string | null>(null);
-
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -120,6 +135,18 @@ export default function MenuScreen() {
   const [storyVisible, setStoryVisible] = useState(false);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const storyProgress = useRef(new Animated.Value(0)).current;
+
+  // Категории прилипли к шапке (баннер проскроллен вверх)
+  const [catsStuck, setCatsStuck] = useState(false);
+  const catsStuckRef = useRef(false);
+  // Шапка показалась при скролле (пока баннер на экране — она скрыта)
+  const [headerShown, setHeaderShown] = useState(false);
+  const headerShownRef = useRef(false);
+
+  // Анимация переключения категории (бounce + stagger для карточек)
+  const categoryBounce = useRef(new Animated.Value(1)).current;
+  const categorySwitchKey = useRef(0);
+  const [categoryRenderKey, setCategoryRenderKey] = useState(0);
 
   const { t, i18n } = useTranslation();
   const cartItems = useCartStore(state => state.items);
@@ -138,6 +165,9 @@ export default function MenuScreen() {
     () => cartItems.reduce((sum: number, ci: any) => sum + ci.quantity, 0),
     [cartItems]
   );
+
+  // Прогресс-кольцо на кнопке корзины: заполняется к 10 позициям
+  const cartProgress = Math.min(cartQuantity / 10, 1);
 
   const totalProducts = useMemo(
     () => categories.reduce((sum, category) => sum + (category.products?.length ?? 0), 0),
@@ -158,6 +188,16 @@ export default function MenuScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
   const cartPop = useRef(new Animated.Value(0)).current;
   const searchScale = useRef(new Animated.Value(1)).current;
+
+  // Корзина появляется при скролле (скрыта пока баннер на экране)
+  const cartRevealOpacity = useMemo(
+    () => scrollY.interpolate({ inputRange: [40, 120], outputRange: [0, 1], extrapolate: 'clamp' }),
+    [scrollY],
+  );
+  const cartRevealShift = useMemo(
+    () => scrollY.interpolate({ inputRange: [0, 140], outputRange: [60, 0], extrapolate: 'clamp' }),
+    [scrollY],
+  );
 
   useEffect(() => {
     const loop = Animated.loop(
@@ -186,8 +226,44 @@ export default function MenuScreen() {
     ],
   };
   const onListScroll = useMemo(
-    () => Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true }),
-    [scrollY]
+    () => Animated.event(
+      [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+      {
+        useNativeDriver: true,
+        listener: (e: any) => {
+          const y = e.nativeEvent.contentOffset?.y ?? 0;
+          const stuck = y > CATS_STICK_START;
+          if (stuck !== catsStuckRef.current) {
+            catsStuckRef.current = stuck;
+            setCatsStuck(stuck);
+          }
+          const hdr = y > 6;
+          if (hdr !== headerShownRef.current) {
+            headerShownRef.current = hdr;
+            setHeaderShown(hdr);
+          }
+        },
+      },
+    ),
+    [scrollY],
+  );
+  // Появление липкой плашки категорий, когда баннер уходит вверх
+  const catsReveal = useMemo(
+    () => scrollY.interpolate({
+      inputRange: [CATS_STICK_START, CATS_STICK_END],
+      outputRange: [0, 1],
+      extrapolate: 'clamp',
+    }),
+    [scrollY],
+  );
+  // Шапка появляется одновременно с категориями при скролле
+  const headerRevealOpacity = useMemo(
+    () => scrollY.interpolate({ inputRange: [CATS_STICK_START, CATS_STICK_END], outputRange: [0, 1], extrapolate: 'clamp' }),
+    [scrollY],
+  );
+  const headerRevealShift = useMemo(
+    () => scrollY.interpolate({ inputRange: [CATS_STICK_START, CATS_STICK_END], outputRange: [-50, 0], extrapolate: 'clamp' }),
+    [scrollY],
   );
   const onSearchFocus = useCallback(() => {
     Animated.spring(searchScale, { toValue: 1.015, useNativeDriver: true, friction: 6, tension: 160 }).start();
@@ -217,17 +293,12 @@ export default function MenuScreen() {
 
   const fetchData = async () => {
     try {
-      const [productsRes, storiesRes, heroRes] = await Promise.all([
+      const [productsRes, storiesRes] = await Promise.all([
         fetch(`${BASE_URL}/api/products`),
         fetch(`${BASE_URL}/api/stories`),
-        fetch(`${BASE_URL}/api/settings/hero-banner`).catch(() => null),
       ]);
       const productsData = await productsRes.json();
       const storiesData = await storiesRes.json();
-      if (heroRes?.ok) {
-        const heroData = await heroRes.json().catch(() => null);
-        setHeroBannerUrl(heroData?.heroBannerUrl ?? null);
-      }
 
       setCategories(productsData);
       setStories(storiesData);
@@ -260,6 +331,12 @@ export default function MenuScreen() {
 
   const handleCategoryPress = (categoryId: number, index: number) => {
     setActiveCategory(categoryId);
+    // Bounce-анимация при переключении категории
+    categoryBounce.setValue(0);
+    Animated.spring(categoryBounce, { toValue: 1, useNativeDriver: true, friction: 5, tension: 180 }).start();
+    // Обновляем ключ чтобы карточки анимировались заново
+    categorySwitchKey.current += 1;
+    setCategoryRenderKey(categorySwitchKey.current);
     isAutoScrolling.current = true;
     sectionListRef.current?.scrollToLocation({
       sectionIndex: index,
@@ -307,35 +384,77 @@ export default function MenuScreen() {
   };
 
   const sections = useMemo(() => {
-    const toRows = (products: any[]): any[][] => {
-      const rows: any[][] = [];
-      const list = Array.isArray(products) ? products : [];
-      for (let i = 0; i < list.length; i += 2) {
-        const row = list.slice(i, i + 2);
-        if (row.length > 0) rows.push(row);
-      }
-      return rows;
-    };
     const filtered = searchQuery.trim()
       ? categories.map(cat => ({
           ...cat,
-          data: toRows((cat.products ?? []).filter((p: any) => p.name.toLowerCase().includes(searchQuery.toLowerCase())))
-        })).filter(cat => cat.data.length > 0)
-      : categories.map(cat => ({
-          ...cat,
-          data: toRows(cat.products)
-        })).filter(cat => cat.data.length > 0);
+          data: [[...(cat.products ?? []).filter((p: any) => p.name.toLowerCase().includes(searchQuery.toLowerCase()))]]
+        })).filter(cat => cat.data[0].length > 0)
+      : categories.map(cat => ({ ...cat, data: [cat.products ?? []] })).filter(cat => cat.data[0].length > 0);
     return filtered;
   }, [categories, searchQuery]);
 
   const bannerProduct = useMemo(() => {
     const all = categories.flatMap(c => c.products ?? []);
-    if (all.length === 0) return null;
-    const discounted = all.find(p => p.items?.[0]?.priceOld && p.items[0].priceOld > p.items[0].price);
-    return discounted ?? all[0];
+    const withGif = all.filter(p => p.gifUrl);
+    if (withGif.length === 0) return null;
+    const idx = Math.floor(Math.random() * withGif.length);
+    return withGif[idx];
   }, [categories]);
 
-  const renderProduct = ({ item }: { item: any }) => {
+  const heroSourceUrl = bannerProduct?.gifUrl || null;
+  const hasBanner = !!heroSourceUrl && !searchQuery;
+  // Шапка (профиль/поиск/уведомления) скрыта пока баннер на экране, появляется при скролле
+  const headerAlwaysVisible = !hasBanner;
+
+  // Один и тот же ряд чипсов категорий: в шапке (липкий) и в контенте под баннером
+  const renderCategoryRow = (scrollRef?: any) => (
+    <ScrollView
+      ref={scrollRef}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.textCategoryScroll}>
+      {categories.map((cat: any, index: number) => {
+        const isActive = activeCategory === cat.id;
+        return (
+          <View key={cat.id} onLayout={(e) => {
+            const { x, width: itemWidth } = e.nativeEvent.layout;
+            iconPositions.current[cat.id] = { x, w: itemWidth };
+          }}>
+            <Pressable onPress={() => handleCategoryPress(cat.id, index)} style={styles.textCategoryPressable}>
+              {isActive ? (
+                <Animated.View style={{
+                  transform: [{
+                    scale: categoryBounce.interpolate({
+                      inputRange: [0, 0.5, 1],
+                      outputRange: [1, 1.15, 1],
+                    }),
+                  }],
+                }}>
+                  <Text style={[styles.textCategoryLabel, styles.textCategoryLabelActive]} numberOfLines={1}>
+                    {getCategoryName(cat)}
+                  </Text>
+                  <Animated.View style={[styles.textCategoryIndicator, {
+                    transform: [{
+                      scaleX: categoryBounce.interpolate({
+                        inputRange: [0, 0.4, 1],
+                        outputRange: [0, 1.2, 1],
+                      }),
+                    }],
+                  }]} />
+                </Animated.View>
+              ) : (
+                <Text style={styles.textCategoryLabel} numberOfLines={1}>
+                  {getCategoryName(cat)}
+                </Text>
+              )}
+            </Pressable>
+          </View>
+        );
+      })}
+    </ScrollView>
+  );
+
+  const renderProduct = ({ item, compact = false }: { item: any; compact?: boolean }) => {
     const hasDiscount = item.items[0]?.priceOld && item.items[0].priceOld > item.items[0]?.price;
     const discountPercent = hasDiscount ? Math.round((1 - item.items[0].price / item.items[0].priceOld) * 100) : 0;
 
@@ -351,9 +470,9 @@ export default function MenuScreen() {
     };
 
     return (
-      <SpringPress onPress={() => handleProductPress(item)} scaleTo={0.97} style={styles.cardWrap}>
-        <View style={styles.card}>
-          <View style={styles.cardImageWrap}>
+      <SpringPress onPress={() => handleProductPress(item)} scaleTo={0.97} style={[styles.cardWrap, compact && styles.compactCardWrap]}>
+      <View style={[styles.card, compact && styles.compactCard]}>
+          <View style={[styles.cardImageWrap, compact && styles.compactCardImageWrap]}>
             <BlurView
               intensity={100}
               tint={theme.mode === 'dark' ? 'dark' : 'light'}
@@ -361,14 +480,14 @@ export default function MenuScreen() {
             />
             <LinearGradient
               colors={theme.mode === 'dark'
-                ? ['rgba(255,150,50,0.18)', 'rgba(30,20,15,0.7)']
-                : ['rgba(255,200,120,0.35)', 'rgba(255,247,240,0.85)']}
+                ? ['rgba(63,82,217,0.15)', 'rgba(8,10,15,0.92)']
+                : ['rgba(220,225,255,0.8)', 'rgba(255,255,255,0.95)']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFill}
             />
             <LinearGradient
-              colors={['rgba(255,255,255,0.35)', 'transparent']}
+              colors={['rgba(255,255,255,0.18)', 'transparent']}
               start={{ x: 0.5, y: 0 }}
               end={{ x: 0.5, y: 0.5 }}
               style={StyleSheet.absoluteFill}
@@ -376,7 +495,7 @@ export default function MenuScreen() {
             <BlurImage
               uri={item.imageUrl}
               gifUri={item.gifUrl}
-              style={styles.cardImage}
+              style={[styles.cardImage, compact && styles.compactCardImage]}
               resizeMode="contain"
             />
             {hasDiscount && (
@@ -413,41 +532,64 @@ export default function MenuScreen() {
     );
   };
 
-  const renderRow = ({ item, index: sectionIndex }: { item: any[]; index: number }) => (
-    <Animated.View style={[styles.row, {
-      opacity: scrollY.interpolate({
-        inputRange: [0, 150 + sectionIndex * 120, 250 + sectionIndex * 120],
-        outputRange: [0, 0.4, 1],
-        extrapolate: 'clamp',
-      }),
-      transform: [{
-        translateY: scrollY.interpolate({
-          inputRange: [0, 200 + sectionIndex * 100],
-          outputRange: [50 + sectionIndex * 15, 0],
-          extrapolate: 'clamp',
+  const renderRow = ({ item, index: sectionIndex }: { item: any[]; index: number }) => {
+    return (
+      <Animated.View style={[{
+        opacity: categoryBounce.interpolate({
+          inputRange: [0, 0.3, 1],
+          outputRange: [1, 0.7, 1],
         }),
-      }],
-    }]}>
-      {item.map((p) => (
-        <React.Fragment key={p.id}>{renderProduct({ item: p })}</React.Fragment>
-      ))}
-    </Animated.View>
-  );
+        transform: [{
+          translateY: categoryBounce.interpolate({
+            inputRange: [0, 0.5, 1],
+            outputRange: [8, -2, 0],
+          }),
+        }, {
+          scale: categoryBounce.interpolate({
+            inputRange: [0, 0.3, 1],
+            outputRange: [0.96, 1.01, 1],
+          }),
+        }],
+      }]}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.rowScroll}>
+          {item.map((p, itemIdx) => (
+            <React.Fragment key={p.id}>
+              <Animated.View style={{
+                opacity: categoryBounce.interpolate({
+                  inputRange: [0, 0.3, 1],
+                  outputRange: [0, 0.6, 1],
+                }),
+                transform: [{
+                  translateY: categoryBounce.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [12 + itemIdx * 6, -3, 0],
+                  }),
+                }],
+              }}>
+                {renderProduct({ item: p })}
+              </Animated.View>
+            </React.Fragment>
+          ))}
+        </ScrollView>
+      </Animated.View>
+    );
+  };
 
   if (loading) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        <View style={[styles.fixedHeader, { paddingHorizontal: 16, paddingBottom: 12 }]}>
-          <Shimmer width={140} height={40} rounded={12} style={{ marginBottom: 16 }} />
-          <Shimmer width="100%" height={48} rounded={14} style={{ marginBottom: 14 }} />
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            <Shimmer width={72} height={72} rounded={16} />
-            <Shimmer width={72} height={72} rounded={16} />
-            <Shimmer width={72} height={72} rounded={16} />
-            <Shimmer width={72} height={72} rounded={16} />
+      <View style={styles.container}>
+        {/* Большой баннер почти на весь экран, как в референсе */}
+        <Shimmer width="100%" height={BANNER_H} rounded={0} />
+        <Text style={styles.loadingWatermark} pointerEvents="none">Pizza Flow</Text>
+        <View style={{ paddingHorizontal: 16, marginTop: 18 }}>
+          <View style={{ flexDirection: 'row', gap: 8, marginBottom: 20 }}>
+            {[0, 1, 2, 3].map((i) => (
+              <Shimmer key={i} width={92} height={36} rounded={18} />
+            ))}
           </View>
-        </View>
-        <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
           {[0, 1, 2, 3].map((i) => (
             <ShimmerProductCard key={i} />
           ))}
@@ -457,103 +599,37 @@ export default function MenuScreen() {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <AmbientBackdrop />
-      <View style={styles.fixedHeader}>
-        <Entrance delay={0} y={-14} style={styles.headerTop}>
-          <SpringPress onPress={() => router.push('/profile')} scaleTo={0.9}>
-            <View style={styles.headerAvatar}>
-              <Ionicons name="person" size={20} color="#fff" />
-            </View>
-          </SpringPress>
-          <View style={styles.headerCenter}>
-            <SpringPress onPress={() => router.push('/delivery')} scaleTo={0.97}>
-              <View style={{ alignItems: 'center' }}>
-                <View style={styles.headerAddressRow}>
-                  <Text style={styles.headerTitle} numberOfLines={1}>{copy.brand}</Text>
-                  <Ionicons name="chevron-down" size={16} color={theme.textMuted} />
-                </View>
-                <Text style={styles.headerSubtitle} numberOfLines={1}>{copy.slogan}</Text>
-              </View>
-            </SpringPress>
+    <View style={styles.container}>
+      {totalProducts === 0 ? (
+        <ScrollView
+          contentContainerStyle={styles.emptyState}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />
+          }>
+          <Text style={styles.emptyLogo}>Pizza Flow</Text>
+          <View style={styles.emptyLoaders}>
+            <Shimmer width={115} height={14} rounded={8} style={{ marginBottom: 12 }} />
+            <Shimmer width={270} height={32} rounded={18} style={{ marginBottom: 12 }} />
+            <Shimmer width={58} height={14} rounded={8} />
           </View>
-          <SpringPress onPress={() => router.push('/notifications')} scaleTo={0.9}>
-            <View style={styles.headerCartBtn}>
-              <Ionicons name="notifications-outline" size={22} color={theme.text} />
-            </View>
-          </SpringPress>
-        </Entrance>
-
-        <Animated.View style={[{ transform: [{ scale: searchScale }] }, styles.searchWrap]}>
-          <LiquidGlassCard rounded={18} intensity={theme.mode === 'dark' ? 70 : 85} shadow="sm">
-            <View style={styles.searchContainer}>
-              <Ionicons name="search-outline" size={20} color={theme.textSubtle} style={styles.searchIcon} />
-              <TextInput
-                ref={searchRef}
-                style={styles.searchInput}
-                placeholder={t('header.searchPlaceholder')}
-                placeholderTextColor={theme.textSubtle}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                onFocus={onSearchFocus}
-                onBlur={onSearchBlur}
-                clearButtonMode="while-editing"
-              />
-            </View>
-          </LiquidGlassCard>
-        </Animated.View>
-
-        {!searchQuery && (
-          <View style={styles.iconRow}>
-            <ScrollView ref={iconScrollRef} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.iconRowScroll}>
-              <Entrance delay={80}>
-                <SpringPress onPress={() => searchRef.current?.focus()} scaleTo={0.92}>
-                  <View style={styles.iconTile}>
-                    <View style={styles.iconTileIcon}>
-                      <Search size={24} color={theme.text} strokeWidth={2} />
-                    </View>
-                    <Text style={styles.iconTileLabel}>{t('header.searchPlaceholder')}</Text>
-                  </View>
-                </SpringPress>
-              </Entrance>
-              {categories.map((cat, index) => {
-                const isActive = activeCategory === cat.id;
-                const Icon = CATEGORY_ICONS[cat.name] ?? UtensilsCrossed;
-                return (
-                  <View
-                    key={cat.id}
-                    onLayout={(e) => {
-                      const { x, width: w } = e.nativeEvent.layout;
-                      iconPositions.current[cat.id] = { x, w };
-                    }}>
-                    <Entrance delay={120 + index * 40}>
-                      <SpringPress
-                        onPress={() => handleCategoryPress(cat.id, index)}
-                        scaleTo={0.92}>
-                      <View style={[styles.iconTile, isActive && styles.iconTileActive]}>
-                        <View style={[styles.iconTileIcon, isActive && styles.iconTileIconActive]}>
-                          <Icon size={24} color={isActive ? theme.primary : theme.text} strokeWidth={2} />
-                        </View>
-                        <Text
-                          style={[styles.iconTileLabel, isActive && styles.iconTileLabelActive]}
-                          numberOfLines={1}>
-                          {getCategoryName(cat)}
-                        </Text>
-                      </View>
-                      </SpringPress>
-                    </Entrance>
-                  </View>
-                );
-              })}
-            </ScrollView>
+          <View style={styles.emptyCards}>
+            {[0, 1, 2, 3].map((item) => (
+              <Shimmer key={item} width={(width - 96) / 4} height={180} rounded={22} />
+            ))}
           </View>
-        )}
-      </View>
-
+          <View style={styles.emptyHeartWrap}>
+            <PulsingHeart color={theme.primary} />
+          </View>
+          <Text style={styles.emptyTitle}>
+            {lang === 'en' ? 'Back very soon <3' : lang === 'tg' ? 'Ба зудӣ бармегардем <3' : 'Вернёмся очень скоро <3'}
+          </Text>
+          <Text style={styles.emptySubtitle}>{lang === 'en' ? 'We are already updating the menu. Pull down to refresh' : lang === 'tg' ? 'Мо аллакай менюро навсозӣ мекунем. Барои навсозӣ поён кашед' : 'Мы уже готовим обновление меню. Потяните вниз, чтобы обновить'}</Text>
+        </ScrollView>
+      ) : (
       <AnimatedSectionList
         ref={sectionListRef}
         sections={sections}
-        keyExtractor={(item, index) => (item?.[0]?.id ?? `row-${index}`).toString()}
+        keyExtractor={((item: any, index: number) => (item?.[0]?.id ?? `row-${index}`).toString()) as any}
         stickySectionHeadersEnabled={false}
         onScroll={onListScroll}
         scrollEventThrottle={16}
@@ -568,26 +644,84 @@ export default function MenuScreen() {
         viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
         ListHeaderComponent={
           <>
-            {heroBannerUrl && !searchQuery && (
-              <Animated.View style={[{
-                height: height * 0.55,
-                marginHorizontal: -16,
-                transform: [
-                  { translateY: scrollY.interpolate({ inputRange: [0, 400], outputRange: [0, 80], extrapolate: 'clamp' }) },
-                  { scale: scrollY.interpolate({ inputRange: [0, 400], outputRange: [1, 0.85], extrapolate: 'clamp' }) },
-                ],
-                opacity: scrollY.interpolate({ inputRange: [200, 400], outputRange: [1, 0], extrapolate: 'clamp' }),
-              }]}>
-                <BlurImage uri={heroBannerUrl} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-                <LinearGradient
-                  colors={['transparent', theme.mode === 'dark' ? 'rgba(20,16,12,0.95)' : 'rgba(245,245,240,0.95)']}
-                  start={{ x: 0.5, y: 0.6 }}
-                  end={{ x: 0.5, y: 1 }}
-                  style={StyleSheet.absoluteFill}
-                />
-              </Animated.View>
+            {bannerProduct && heroSourceUrl && !searchQuery ? (
+              <SpringPress onPress={() => handleProductPress(bannerProduct)} scaleTo={0.98}>
+                <View style={{ height: BANNER_H, marginHorizontal: -16, position: 'relative' }}>
+                  <Animated.View style={[styles.heroBanner, {
+                    height: BANNER_H,
+                    marginHorizontal: -16,
+                    transform: [
+                      { translateY: scrollY.interpolate({ inputRange: [0, 400], outputRange: [0, 80], extrapolate: 'clamp' }) },
+                      { scale: scrollY.interpolate({ inputRange: [0, 400], outputRange: [1, 0.85], extrapolate: 'clamp' }) },
+                    ],
+                    opacity: scrollY.interpolate({ inputRange: [200, 400], outputRange: [1, 0], extrapolate: 'clamp' }),
+                  }]}>
+                    <BlurImage uri={heroSourceUrl} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                    <LinearGradient
+                      colors={['rgba(0,0,0,0.15)', 'transparent', 'transparent', 'rgba(0,0,0,0.7)']}
+                      start={{ x: 0.5, y: 0 }}
+                      end={{ x: 0.5, y: 1 }}
+                      style={StyleSheet.absoluteFill}
+                    />
+                  </Animated.View>
+                  {/* Шапка-оверлей поверх гифки */}
+                  <Animated.View style={[styles.gifHeaderOverlay, { paddingTop: insets.top + 8 }, {
+                    opacity: scrollY.interpolate({ inputRange: [0, 120], outputRange: [1, 0], extrapolate: 'clamp' }),
+                    transform: [{ translateY: scrollY.interpolate({ inputRange: [0, 120], outputRange: [0, -60], extrapolate: 'clamp' }) }],
+                  }]}>
+                    <Entrance delay={0} y={-14} style={styles.headerTop}>
+                      <SpringPress onPress={() => router.push('/profile')} scaleTo={0.9}>
+                        <View style={styles.headerAvatar}>
+                          <Ionicons name="person" size={20} color="#fff" />
+                        </View>
+                      </SpringPress>
+                      <View style={styles.headerCenter}>
+                        <SpringPress onPress={() => router.push('/delivery')} scaleTo={0.97}>
+                          <View style={{ alignItems: 'center' }}>
+                            <View style={styles.headerAddressRow}>
+                              <Text style={styles.headerTitle} numberOfLines={1}>JLT, Cluster T</Text>
+                              <Ionicons name="chevron-down" size={16} color="rgba(255,255,255,0.7)" />
+                            </View>
+                            <Text style={styles.headerSubtitleLight} numberOfLines={1}>до 23:30</Text>
+                          </View>
+                        </SpringPress>
+                      </View>
+                      <SpringPress onPress={() => router.push('/notifications')} scaleTo={0.9}>
+                        <View style={styles.headerCartBtnLight}>
+                          <Ionicons name="notifications-outline" size={22} color="#fff" />
+                        </View>
+                      </SpringPress>
+                    </Entrance>
+                  </Animated.View>
+                  {/* Инфо о товаре внизу гифки */}
+                  <Animated.View style={[styles.gifCategoriesOverlay, {
+                    opacity: scrollY.interpolate({ inputRange: [0, 120], outputRange: [1, 0], extrapolate: 'clamp' }),
+                    transform: [{ translateY: scrollY.interpolate({ inputRange: [0, 120], outputRange: [0, 30], extrapolate: 'clamp' }) }],
+                  }]}>
+                    <View style={styles.bannerProductInfo}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.bannerProductName} numberOfLines={1}>{bannerProduct.name}</Text>
+                        <Text style={styles.bannerProductPrice}>
+                          {bannerProduct.items[0]?.price} TJS
+                        </Text>
+                      </View>
+                      <View style={styles.bannerProductBtn}>
+                        <Ionicons name="arrow-forward" size={18} color="#fff" />
+                      </View>
+                    </View>
+                    {renderCategoryRow(iconScrollRef)}
+                  </Animated.View>
+                </View>
+              </SpringPress>
+            ) : (
+              <View style={{ height: 0 }} />
             )}
-            {heroBannerUrl && !searchQuery && <View style={{ height: 30 }} />}
+            {heroSourceUrl && !searchQuery && <View style={{ height: 12 }} />}
+            {!searchQuery && categories.length > 0 && !hasBanner && (
+              <View style={styles.textCategoryRow}>
+                {renderCategoryRow(iconScrollRef)}
+              </View>
+            )}
             {stories.length > 0 && (
               <ScrollView
                 horizontal
@@ -624,12 +758,56 @@ export default function MenuScreen() {
           if (categories.length > 0 && section.id === categories[0].id) return <View style={{ height: 20 }} />;
           return <Text style={styles.sectionTitle}>{getCategoryName(section)}</Text>;
         }}
-        renderItem={renderRow}
+        renderItem={renderRow as any}
         contentContainerStyle={styles.menuList}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />
         }
-      />
+        />
+      )}
+      {/* Липкая шапка: только поиск + категории при скролле */}
+      {!headerAlwaysVisible && (
+        <Animated.View
+          pointerEvents={headerShown ? 'auto' : 'none'}
+          style={[
+            styles.fixedHeader,
+            { paddingTop: insets.top + 8 },
+            {
+              opacity: headerRevealOpacity,
+              transform: [{ translateY: headerRevealShift }],
+            },
+          ]}>
+          <Animated.View style={[{ transform: [{ scale: searchScale }] }, styles.searchWrap]}>
+            <LiquidGlassCard rounded={16} intensity={theme.mode === 'dark' ? 55 : 80} shadow="sm">
+              <View style={styles.searchContainer}>
+                <Ionicons name="search-outline" size={20} color={theme.textSubtle} style={styles.searchIcon} />
+                <TextInput
+                  ref={searchRef}
+                  style={styles.searchInput}
+                  placeholder={t('header.searchPlaceholder')}
+                  placeholderTextColor={theme.textSubtle}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  onFocus={onSearchFocus}
+                  onBlur={onSearchBlur}
+                  clearButtonMode="while-editing"
+                />
+              </View>
+            </LiquidGlassCard>
+          </Animated.View>
+
+          {!searchQuery && categories.length > 0 && (
+            <Animated.View
+              pointerEvents={catsStuck ? 'auto' : 'none'}
+              style={[styles.stickyCats, {
+                opacity: catsReveal,
+                transform: [{ translateY: catsReveal.interpolate({ inputRange: [0, 1], outputRange: [26, 0] }) }],
+              }]}>
+              {renderCategoryRow(iconScrollRef)}
+            </Animated.View>
+          )}
+        </Animated.View>
+      )}
 
       <ChooseProductModal
         visible={modalVisible}
@@ -640,19 +818,51 @@ export default function MenuScreen() {
 
       {cartQuantity > 0 && (
         <Animated.View
-          style={[styles.cartPillWrap, { bottom: insets.bottom + 16 }, { transform: [{ scale: cartPop }] }]}>
+          style={[styles.cartPillWrap, { bottom: insets.bottom + 16 }, {
+            opacity: hasBanner ? cartRevealOpacity : 1,
+            transform: [
+              { scale: cartPop },
+              ...(hasBanner ? [{ translateY: cartRevealShift }] : []),
+            ],
+          }]}>
           <SpringPress onPress={() => router.push('/two')} scaleTo={0.95}>
-            <LinearGradient
-              colors={['#ff8a3d', '#ff5400']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.cartPill}>
-              <View style={styles.cartPillBadge}>
-                <Text style={styles.cartPillBadgeText}>{cartQuantity}</Text>
+            <View style={styles.cartBar}>
+              <Text style={styles.cartBarAmount}>
+                {Math.round(cartTotal)}
+                <Text style={styles.cartBarCurrency}> TJS</Text>
+              </Text>
+              {/* Стопка круглых превью последних добавленных товаров */}
+              <View style={styles.cartBarThumbs}>
+                {cartItems.slice(-3).map((ci: any, idx: number, arr: any[]) => (
+                  <View key={ci.id ?? idx} style={[styles.cartBarThumb, idx === 0 && arr.length > 1 && styles.cartBarThumbFirst]}>
+                    <BlurImage
+                      uri={ci.productItem?.product?.imageUrl ?? ci.imageUrl ?? ''}
+                      style={{ width: 32, height: 32, borderRadius: 16 }}
+                      resizeMode="cover"
+                    />
+                  </View>
+                ))}
               </View>
-              <Ionicons name="cart" size={20} color="#fff" />
-              <Text style={styles.cartPillText}>{Math.round(cartTotal)} TJS</Text>
-            </LinearGradient>
+              {/* Круглая кнопка с прогресс-кольцом, как в референсе */}
+              <View style={styles.cartBarAction}>
+                <Svg width={44} height={44} style={styles.cartBarRing}>
+                  <SvgCircle cx={22} cy={22} r={20} stroke={theme.mode === 'dark' ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.1)'} strokeWidth={2.5} fill="none" />
+                  <SvgCircle
+                    cx={22}
+                    cy={22}
+                    r={20}
+                    stroke={theme.primary}
+                    strokeWidth={2.5}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeDasharray={`${2 * Math.PI * 20 * cartProgress} ${2 * Math.PI * 20}`}
+                  />
+                </Svg>
+                <View style={styles.cartBarActionBtn}>
+                  <Ionicons name="add" size={17} color="#fff" />
+                </View>
+              </View>
+            </View>
           </SpringPress>
         </Animated.View>
       )}
@@ -696,9 +906,72 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     backgroundColor: t.background,
   },
   fixedHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     zIndex: 100,
     paddingTop: 10,
     paddingBottom: 8,
+    backgroundColor: t.mode === 'dark' ? 'rgba(18,21,27,0.95)' : 'rgba(243,245,251,0.95)',
+    borderBottomWidth: 1,
+    borderBottomColor: t.border,
+  },
+  gifHeaderOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+  },
+  gifCategoriesOverlay: {
+    position: 'absolute',
+    bottom: 16,
+    left: 16,
+    right: 16,
+    zIndex: 10,
+  },
+  bannerProductInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 10,
+  },
+  bannerProductName: {
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+  },
+  bannerProductPrice: {
+    color: 'rgba(255,255,255,0.75)',
+    fontSize: 15,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  bannerProductBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: t.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerSubtitleLight: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 1,
+    fontWeight: '600',
+  },
+  headerCartBtnLight: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTop: {
     flexDirection: 'row',
@@ -754,40 +1027,71 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     alignItems: 'center',
     zIndex: 200,
   },
-  cartPill: {
+  // Тёмная стеклянная плашка корзины, как в референсе
+  cartBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    backgroundColor: t.primary,
+    gap: 12,
+    paddingLeft: 20,
+    paddingRight: 6,
+    paddingVertical: 7,
     borderRadius: 999,
-    paddingVertical: 14,
-    paddingLeft: 16,
-    paddingRight: 26,
+    backgroundColor: t.mode === 'dark' ? 'rgba(17,19,26,0.97)' : 'rgba(255,255,255,0.98)',
+    borderWidth: 1,
+    borderColor: t.mode === 'dark' ? 'rgba(255,255,255,0.09)' : t.border,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 16,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.38,
+    shadowRadius: 20,
+    elevation: 12,
   },
-  cartPillBadge: {
-    minWidth: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 6,
-  },
-  cartPillBadgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '900',
-  },
-  cartPillText: {
-    color: '#fff',
+  cartBarAmount: {
+    color: t.text,
     fontSize: 17,
     fontWeight: '900',
     letterSpacing: -0.2,
+  },
+  cartBarCurrency: {
+    color: t.textMuted,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  cartBarThumbs: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cartBarThumb: {
+    width: 37,
+    height: 37,
+    borderRadius: 19,
+    overflow: 'hidden',
+    backgroundColor: t.surfaceMuted,
+    borderWidth: 2.5,
+    borderColor: t.mode === 'dark' ? '#111219' : '#ffffff',
+    marginLeft: -10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cartBarThumbFirst: {
+    marginLeft: 0,
+  },
+  cartBarAction: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cartBarRing: {
+    position: 'absolute',
+    transform: [{ rotate: '-90deg' }],
+  },
+  cartBarActionBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: t.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   searchWrap: {
     marginHorizontal: 16,
@@ -796,8 +1100,8 @@ const makeStyles = (t: Theme) => StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 50,
-    borderRadius: 18,
+    height: 48,
+    borderRadius: 16,
     paddingHorizontal: 14,
   },
   searchIcon: {
@@ -810,46 +1114,65 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     fontWeight: '600',
     padding: 0,
   },
-  iconRow: {
+  textCategoryRow: {
     paddingBottom: 12,
   },
-  iconRowScroll: {
+  stickyCats: {
+    paddingBottom: 12,
+  },
+  textCategoryScroll: {
     paddingHorizontal: 16,
-    gap: 14,
+    gap: 26,
   },
-  iconTile: {
-    width: 72,
+  textCategoryPressable: {
+    paddingVertical: 6,
     alignItems: 'center',
-    gap: 6,
   },
-  iconTileActive: {},
-  iconTileIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
-    backgroundColor: t.surface,
-    borderWidth: 1,
-    borderColor: t.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconTileIconActive: {
-    backgroundColor: t.primarySoft,
-    borderColor: t.primary,
-  },
-  iconTileLabel: {
-    fontSize: 11,
-    fontWeight: '700',
+  textCategoryLabel: {
+    fontSize: 16,
+    fontWeight: '800',
     color: t.textMuted,
-    textAlign: 'center',
   },
-  iconTileLabelActive: {
+  textCategoryLabelActive: {
     color: t.text,
   },
-  bannerWrap: {
-    paddingHorizontal: 16,
-    marginBottom: 6,
-    marginTop: 4,
+  textCategoryIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    borderRadius: 3,
+    backgroundColor: t.primary,
+  },
+  heroBanner: {
+    height: BANNER_H,
+    marginHorizontal: -16,
+    overflow: 'hidden',
+    borderRadius: 24,
+    backgroundColor: t.surfaceMuted,
+  },
+  heroBannerImage: {
+    width: '100%',
+    height: '100%',
+  },
+  heroBannerCopy: {
+    position: 'absolute',
+    left: 24,
+    right: 24,
+    bottom: 26,
+  },
+  heroBannerTitle: {
+    color: t.text,
+    fontSize: 25,
+    fontWeight: '900',
+    letterSpacing: -0.6,
+  },
+  heroBannerSubtitle: {
+    color: t.textMuted,
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 5,
   },
   banner: {
     borderRadius: 28,
@@ -1024,10 +1347,47 @@ const makeStyles = (t: Theme) => StyleSheet.create({
   },
   menuList: {
     paddingBottom: 150,
-    paddingHorizontal: 16,
   },
+  loadingWatermark: {
+    position: 'absolute',
+    top: '38%',
+    alignSelf: 'center',
+    color: t.mode === 'dark' ? 'rgba(255,255,255,0.045)' : 'rgba(0,0,0,0.05)',
+    fontSize: 44,
+    fontWeight: '900',
+    letterSpacing: -2,
+  },
+  emptyState: {
+    flexGrow: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    paddingBottom: 140,
+  },
+  emptyLogo: {
+    color: t.mode === 'dark' ? '#20242d' : '#d7dbe7',
+    fontSize: 42,
+    fontWeight: '900',
+    letterSpacing: -2,
+    marginBottom: 34,
+  },
+  emptyLoaders: {
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  emptyCards: { flexDirection: 'row', gap: 8, width: '100%', marginBottom: 44 },  emptyHeartWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: t.mode === 'dark' ? 'rgba(63,82,217,0.14)' : 'rgba(63,82,217,0.08)',
+    marginBottom: 16,
+  },
+  emptyTitle: { color: t.text, fontSize: 21, fontWeight: '900', textAlign: 'center', marginBottom: 8 },
+  emptySubtitle: { color: t.textMuted, fontSize: 14, textAlign: 'center', lineHeight: 20 },
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 21,
     fontWeight: '900',
     color: t.text,
     marginTop: 20,
@@ -1039,23 +1399,43 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
   },
+  rowScroll: {
+    paddingHorizontal: 16,
+    gap: 12,
+  },
   cardWrap: {
-    width: (width - 44) / 2,
+    width: (width - 80) / 2,
     marginBottom: 16,
   },
+  compactCardWrap: {
+    width: 145,
+    marginRight: 0,
+  },
+  compactCardImageWrap: {
+    height: 142,
+    borderRadius: 22,
+  },
+  compactCardImage: {
+    width: 112,
+    height: 112,
+  },
   card: {
-    borderRadius: 28,
-    backgroundColor: 'transparent',
+    borderRadius: 22,
+    backgroundColor: t.mode === 'dark' ? '#111318' : '#ffffff',
     overflow: 'hidden',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderWidth: 1,
+    borderColor: t.mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+  },
+  compactCard: {
+    borderRadius: 22,
+    backgroundColor: t.mode === 'dark' ? '#111318' : '#ffffff',
   },
   cardImageWrap: {
-    height: 160,
+    height: 164,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    borderRadius: 28,
+    borderRadius: 22,
     overflow: 'hidden',
   },
   cardImage: {
@@ -1064,7 +1444,7 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     resizeMode: 'contain',
   },
   cardName: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '800',
     color: t.text,
     marginTop: 10,
@@ -1082,8 +1462,8 @@ const makeStyles = (t: Theme) => StyleSheet.create({
   cardPill: {
     marginTop: 8,
     height: 40,
-    borderRadius: 999,
-    backgroundColor: t.surface,
+    borderRadius: 14,
+    backgroundColor: t.mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 8,
@@ -1104,13 +1484,12 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     fontSize: 12,
     fontWeight: '900',
     color: t.primary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
+    letterSpacing: 0.2,
   },
   cardPillActive: {
     marginTop: 8,
     height: 40,
-    borderRadius: 999,
+    borderRadius: 14,
     backgroundColor: t.primary,
     alignItems: 'center',
     justifyContent: 'center',

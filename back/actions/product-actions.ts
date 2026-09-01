@@ -145,3 +145,17 @@ export async function deleteProduct(id: number) {
   }
 }
 
+export async function clearAllGifUrls() {
+  try {
+    await prisma.product.updateMany({
+      where: { gifUrl: { not: null } },
+      data: { gifUrl: null },
+    });
+    revalidatePath('/dashboard/products');
+    revalidatePath('/');
+  } catch (error) {
+    console.error('Error [CLEAR_GIF_URLS]', error);
+    throw error;
+  }
+}
+

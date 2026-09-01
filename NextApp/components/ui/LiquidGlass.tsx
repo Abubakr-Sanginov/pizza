@@ -71,7 +71,7 @@ export const LiquidGlassCard: React.FC<CardProps> = ({
         <BlurView
           intensity={intensity}
           tint={resolvedTint}
-          style={[StyleSheet.absoluteFill, { backgroundColor: theme.mode === 'dark' ? 'rgba(36,30,26,0.35)' : 'rgba(255,255,255,0.4)' }]}
+          style={[StyleSheet.absoluteFill, { backgroundColor: theme.mode === 'dark' ? 'rgba(18,20,26,0.5)' : 'rgba(255,255,255,0.4)' }]}
         />
         <GlassEdges rounded={rounded} theme={theme} />
         <View
@@ -166,7 +166,7 @@ export const LiquidGlassButton: React.FC<ButtonProps> = ({
         <View style={[styles.btnOuter, { height: heights[size], borderRadius: radii[size] }]}>
           {variant === 'primary' ? (
             <LinearGradient
-              colors={['#ff8a3d', '#ff5400'] as const}
+              colors={['#5869e8', '#3549d0'] as const}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFill}
@@ -175,7 +175,7 @@ export const LiquidGlassButton: React.FC<ButtonProps> = ({
             <BlurView
               intensity={95}
               tint={theme.mode === 'dark' ? 'dark' : 'light'}
-                  style={[StyleSheet.absoluteFill, { backgroundColor: theme.mode === 'dark' ? 'rgba(36,30,26,0.35)' : 'rgba(255,255,255,0.4)' }]}
+                  style={[StyleSheet.absoluteFill, { backgroundColor: theme.mode === 'dark' ? 'rgba(18,20,26,0.5)' : 'rgba(255,255,255,0.4)' }]}
             />
           ) : null}
 
@@ -231,7 +231,7 @@ export const LiquidGlassPill: React.FC<PillProps> = ({ active, onPress, label, s
         <View style={[styles.pillOuter]}>
           {active ? (
             <LinearGradient
-              colors={['#ff8a3d', '#ff5400'] as const}
+              colors={['#5869e8', '#3549d0'] as const}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFill}
@@ -240,7 +240,7 @@ export const LiquidGlassPill: React.FC<PillProps> = ({ active, onPress, label, s
             <BlurView
               intensity={85}
               tint={theme.mode === 'dark' ? 'dark' : 'light'}
-                  style={[StyleSheet.absoluteFill, { backgroundColor: theme.mode === 'dark' ? 'rgba(36,30,26,0.35)' : 'rgba(255,255,255,0.4)' }]}
+                  style={[StyleSheet.absoluteFill, { backgroundColor: theme.mode === 'dark' ? 'rgba(18,20,26,0.5)' : 'rgba(255,255,255,0.4)' }]}
             />
           )}
 

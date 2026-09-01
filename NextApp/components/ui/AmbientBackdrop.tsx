@@ -13,8 +13,8 @@ export const AmbientBackdrop: React.FC = () => {
       <LinearGradient
         colors={
           isDark
-            ? ['rgba(255,112,0,0.18)', 'transparent']
-            : ['rgba(255,138,61,0.16)', 'transparent']
+            ? ['rgba(63,82,217,0.16)', 'transparent']
+            : ['rgba(63,82,217,0.08)', 'transparent']
         }
         start={{ x: 0, y: 0 }}
         end={{ x: 0.7, y: 0.6 }}
@@ -23,8 +23,8 @@ export const AmbientBackdrop: React.FC = () => {
       <LinearGradient
         colors={
           isDark
-            ? ['transparent', 'rgba(255,84,0,0.14)']
-            : ['transparent', 'rgba(255,138,61,0.10)']
+            ? ['transparent', 'rgba(30,44,145,0.14)']
+            : ['transparent', 'rgba(63,82,217,0.06)']
         }
         start={{ x: 1, y: 1 }}
         end={{ x: 0.3, y: 0.3 }}

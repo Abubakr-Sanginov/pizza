@@ -538,7 +538,7 @@ export default function CartScreen() {
           justify-content: center;
           width: 42px;
           height: 42px;
-          border: 2.5px solid #f97316;
+          border: 2.5px solid #3f52d9;
           box-sizing: border-box;
         }
         .custom-pizza-marker span { font-size: 22px; line-height: 1; }
@@ -582,7 +582,7 @@ export default function CartScreen() {
               if (data.routes && data.routes.length > 0) {
                 var route = data.routes[0];
                 var coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
-                var polyline = L.polyline(coords, { color: '#f97316', weight: 5 }).addTo(map);
+                var polyline = L.polyline(coords, { color: '#3f52d9', weight: 5 }).addTo(map);
                 map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
                 window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'route', distance: route.distance, duration: route.duration }));
               }
