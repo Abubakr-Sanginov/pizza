@@ -86,6 +86,8 @@ export const useCartStore = create<CartState>((set, get) => ({
     } catch (error) {
       console.error(error);
       set({ error: true });
+      // Пробрасываем дальше, чтобы UI мог показать тост об ошибке (напр. «товара нет в наличии»)
+      throw error;
     } finally {
       set({ loading: false });
     }

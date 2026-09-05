@@ -89,6 +89,10 @@ export const TopProducts: React.FC<Props> = async ({ className }) => {
               price={product.items[0]?.price || 0}
               ingredients={product.ingredients}
               reviews={product.reviews}
+              stock={(() => {
+                const tracked = product.items.filter((it: any) => it.stock !== null && it.stock !== undefined);
+                return tracked.length === 0 ? null : tracked.reduce((s: number, it: any) => s + (it.stock ?? 0), 0);
+              })()}
             />
           ))}
         </div>

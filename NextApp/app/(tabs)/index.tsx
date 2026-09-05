@@ -93,6 +93,9 @@ const uiText = {
     pickup: 'Самовывоз',
     freshToday: 'Сегодня в меню',
     inMenu: 'В меню',
+    outOfStock: 'Нет в наличии',
+    comeBack: 'вернись',
+    willReturn: 'вернусь <3',
   },
   en: {
     brand: 'Pizza Flow',
@@ -103,6 +106,9 @@ const uiText = {
     pickup: 'Pickup',
     freshToday: 'Fresh today',
     inMenu: 'On menu',
+    outOfStock: 'Out of stock',
+    comeBack: 'come back',
+    willReturn: 'we\'ll return <3',
   },
   tg: {
     brand: 'Pizza Flow',
@@ -113,8 +119,19 @@ const uiText = {
     pickup: 'Худбурд',
     freshToday: 'Имрӯз',
     inMenu: 'Дар меню',
+    outOfStock: 'Дар мавҷудият нест',
+    comeBack: 'баргард',
+    willReturn: 'бармегардам <3',
   },
 } as const;
+
+// Склад: true, если tracked-остатков нет или все равны 0
+function isOutOfStock(product: any): boolean {
+  const items: any[] = product?.items ?? [];
+  const tracked = items.filter((it: any) => it.stock !== null && it.stock !== undefined);
+  if (tracked.length === 0) return false; // склад не ведётся
+  return tracked.every((it: any) => (it.stock ?? 0) <= 0);
+}
 
 export default function MenuScreen() {
   const insets = useSafeAreaInsets();
@@ -321,8 +338,17 @@ export default function MenuScreen() {
   }, []);
 
   const handleProductPress = (product: any) => {
+    // Товара нет на складе — карточка серая, модалка не открывается
+    if (isOutOfStock(product)) return;
     setSelectedProduct(product);
     setModalVisible(true);
+  };
+
+  // «вернись» → «вернусь <3»: товары, по которым нажали кнопку на серой карточке
+  const [comebackIds, setComebackIds] = useState<Set<number>>(new Set());
+
+  const handleComeback = (productId: number) => {
+    setComebackIds((prev) => new Set(prev).add(productId));
   };
 
   const handleAddToCart = async (values: any) => {
@@ -464,6 +490,10 @@ export default function MenuScreen() {
       .reduce((sum: number, ci: any) => sum + ci.quantity, 0);
     const inCart = cartQuantityForProduct > 0;
 
+    // Склад: null у всех вариантов = склад не ведётся
+    const isOut = isOutOfStock(item);
+    const comeback = comebackIds.has(item.id);
+
     const goToCart = (e: any) => {
       e?.stopPropagation?.();
       router.push('/two');
@@ -471,8 +501,8 @@ export default function MenuScreen() {
 
     return (
       <SpringPress onPress={() => handleProductPress(item)} scaleTo={0.97} style={[styles.cardWrap, compact && styles.compactCardWrap]}>
-      <View style={[styles.card, compact && styles.compactCard]}>
-          <View style={[styles.cardImageWrap, compact && styles.compactCardImageWrap]}>
+      <View style={[styles.card, compact && styles.compactCard, isOut && styles.cardDisabled]}>
+          <View style={[styles.cardImageWrap, compact && styles.compactCardImageWrap, isOut && styles.cardImageDisabled]}>
             <BlurView
               intensity={100}
               tint={theme.mode === 'dark' ? 'dark' : 'light'}
@@ -494,16 +524,21 @@ export default function MenuScreen() {
             />
             <BlurImage
               uri={item.imageUrl}
-              gifUri={item.gifUrl}
+              gifUri={isOut ? null : item.gifUrl}
               style={[styles.cardImage, compact && styles.compactCardImage]}
               resizeMode="contain"
             />
-            {hasDiscount && (
+            {hasDiscount && !isOut && (
               <View style={styles.discountBadge}>
                 <Text style={styles.discountBadgeText}>-{discountPercent}%</Text>
               </View>
             )}
-            {inCart && (
+            {isOut && (
+              <View style={[styles.discountBadge, { backgroundColor: theme.textMuted }]}>
+                <Text style={styles.discountBadgeText}>{copy.outOfStock}</Text>
+              </View>
+            )}
+            {inCart && !isOut && (
               <View style={styles.cartBadge}>
                 <Ionicons name="cart" size={11} color="white" />
                 <Text style={styles.cartBadgeText}>{cartQuantityForProduct}</Text>
@@ -511,8 +546,19 @@ export default function MenuScreen() {
             )}
           </View>
         </View>
-        <Text style={styles.cardName} numberOfLines={2}>{item.name}</Text>
-        {inCart ? (
+        <Text style={[styles.cardName, isOut && { color: theme.textMuted }]} numberOfLines={2}>{item.name}</Text>
+        {isOut ? (
+          <Pressable
+            onPress={() => handleComeback(item.id)}
+            style={({ pressed }) => [
+              styles.cardPill,
+              { backgroundColor: pressed ? theme.textMuted : theme.textSubtle },
+            ]}>
+            <Text style={[styles.cardPillText, { color: theme.mode === 'dark' ? '#fff' : '#666' }]} numberOfLines={1}>
+              {comeback ? copy.willReturn : copy.comeBack}
+            </Text>
+          </Pressable>
+        ) : inCart ? (
           <Pressable onPress={goToCart} style={styles.cardPillActive}>
             <Ionicons name="cart" size={14} color="#fff" />
             <Text style={styles.cardPillActiveText} numberOfLines={1}>
@@ -812,6 +858,12 @@ export default function MenuScreen() {
       <ChooseProductModal
         visible={modalVisible}
         product={selectedProduct}
+        relatedProducts={
+          selectedProduct
+            ? (categories.find((c: any) => c.id === selectedProduct.categoryId)?.products || [])
+                .filter((p: any) => p.id !== selectedProduct.id)
+            : []
+        }
         onClose={() => setModalVisible(false)}
         onAddToCart={handleAddToCart}
       />
@@ -1437,6 +1489,13 @@ const makeStyles = (t: Theme) => StyleSheet.create({
     position: 'relative',
     borderRadius: 22,
     overflow: 'hidden',
+  },
+  cardDisabled: {
+    opacity: 0.55,
+    backgroundColor: t.mode === 'dark' ? '#1a1c22' : '#ececec',
+  },
+  cardImageDisabled: {
+    backgroundColor: t.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
   },
   cardImage: {
     width: 132,

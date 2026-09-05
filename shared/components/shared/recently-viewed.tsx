@@ -51,6 +51,10 @@ export const RecentlyViewed: React.FC = () => {
             ingredients={product.ingredients}
             reviews={[]}
             tags={product.tags ?? []}
+            stock={(() => {
+              const tracked = (product.items ?? []).filter((it: any) => it.stock !== null && it.stock !== undefined);
+              return tracked.length === 0 ? null : tracked.reduce((s: number, it: any) => s + (it.stock ?? 0), 0);
+            })()}
           />
         ))}
       </div>

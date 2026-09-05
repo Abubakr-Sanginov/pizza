@@ -26,6 +26,11 @@
     "allCocktails": "Все коктейли",
     "allDrinks": "Все напитки"
   },
+  "stock": {
+    "out": "Нет в наличии",
+    "comebackButton": "вернись",
+    "comeback": "вернусь <3"
+  },
   "cart": {
     "title": "Корзина",
     "itemsInCart": "В корзине",
@@ -240,6 +245,7 @@
       "reviews": "Отзывы",
       "users": "Пользователи",
       "settings": "Настройки",
+      "warehouses": "Склады",
       "myDeliveries": "Мои доставки"
     },
     "dashboard": {
@@ -287,6 +293,18 @@
       "address": "Адрес",
       "phone": "Телефон",
       "entityName": "заведение"
+    },
+    "warehouses": {
+      "title": "Склады — остатки товаров",
+      "stock": "Остаток",
+      "totalStock": "Всего на складе",
+      "outOfStockCount": "Закончилось",
+      "outOfStock": "Нет в наличии",
+      "noItems": "Нет вариантов",
+      "empty": "Товаров пока нет",
+      "invalidValue": "Введите корректное число (0 или больше) или оставьте поле пустым (∞)",
+      "updated": "Остаток обновлён",
+      "updateError": "Не удалось обновить остаток"
     },
     "stories": {
       "title": "Управление сториз",

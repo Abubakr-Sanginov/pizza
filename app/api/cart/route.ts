@@ -65,6 +65,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Товар не найден' }, { status: 404 });
     }
 
+    // Склад: нельзя заказать товар, которого нет в наличии
+    if (productItem.stock !== null && productItem.stock <= 0) {
+      return NextResponse.json({ message: 'Товара нет в наличии' }, { status: 409 });
+    }
+
     const customName = data.customName?.trim().slice(0, 40) || null;
 
     const cartItems = await prisma.cartItem.findMany({

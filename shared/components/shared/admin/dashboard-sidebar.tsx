@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { cn } from '@/shared/lib/utils';
-import { LayoutDashboard, ShoppingBasket, FolderTree, Beef, ArrowLeft, Images, MapPin, Package, MessageSquare, Settings, Bike, Bell, Ticket } from 'lucide-react';
+import { LayoutDashboard, ShoppingBasket, FolderTree, Beef, ArrowLeft, Images, MapPin, Package, MessageSquare, Settings, Bike, Bell, Ticket, Warehouse } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +16,7 @@ const adminItems = [
   { title: 'admin.nav.home', icon: LayoutDashboard, href: '/dashboard' },
   { title: 'admin.nav.orders', icon: Package, href: '/dashboard/orders' },
   { title: 'admin.nav.products', icon: ShoppingBasket, href: '/dashboard/products' },
+  { title: 'admin.nav.warehouses', icon: Warehouse, href: '/dashboard/warehouses' },
   { title: 'admin.nav.categories', icon: FolderTree, href: '/dashboard/categories' },
   { title: 'admin.nav.ingredients', icon: Beef, href: '/dashboard/ingredients' },
   { title: 'admin.nav.promo', icon: Ticket, href: '/dashboard/promo' },

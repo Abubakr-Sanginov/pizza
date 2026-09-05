@@ -140,6 +140,9 @@ model ProductItem {
   size      Int?
   pizzaType Int?
 
+  // Остаток на складе. NULL = склад не ведётся, товар всегда доступен.
+  stock Int?
+
   cartItems CartItem[]
 
   product   Product @relation(fields: [productId], references: [id])

@@ -26,6 +26,7 @@ interface Props {
   ingredients: Ingredient[];
   reviews?: ReviewWithUser[];
   tags?: string[];
+  stock?: number | null;
   className?: string;
 }
 
@@ -39,8 +40,12 @@ export const ProductCard: React.FC<Props> = ({
   ingredients,
   reviews = [],
   tags = [],
+  stock,
   className,
 }) => {
+  // stock === null / undefined → склад не ведётся, товар доступен
+  const outOfStock = stock !== null && stock !== undefined && stock <= 0;
+  const [comeback, setComeback] = React.useState(false);
   const averageRating =
     reviews.length > 0
       ? (reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length).toFixed(1)
@@ -80,9 +85,19 @@ export const ProductCard: React.FC<Props> = ({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-50px' }}
       transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}>
-      <Link href={`/product/${id}`} className="block lift">
+      <Link
+        href={`/product/${id}`}
+        onClick={(e) => {
+          if (outOfStock) e.preventDefault();
+        }}
+        aria-disabled={outOfStock}
+        className="block lift">
         {/* Фото */}
-        <div className="relative h-[170px] md:h-[280px] rounded-3xl overflow-hidden shadow-soft group-hover:shadow-soft-lg transition-shadow flex items-center justify-center glass-card">
+        <div
+          className={cn(
+            'relative h-[170px] md:h-[280px] rounded-3xl overflow-hidden shadow-soft group-hover:shadow-soft-lg transition-shadow flex items-center justify-center glass-card',
+            outOfStock && 'grayscale opacity-60',
+          )}>
           {/* Стеклянный блик сверху */}
           <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/25 via-white/5 to-transparent dark:from-white/10 dark:via-white/0 pointer-events-none" />
           {/* Мягкое свечение за пиццей */}
@@ -95,6 +110,13 @@ export const ProductCard: React.FC<Props> = ({
             className="w-[140px] h-[140px] md:w-[230px] md:h-[230px]"
             imageClassName="w-full h-full object-contain transition-transform duration-500 ease-out group-hover:scale-110"
           />
+
+          {/* Нет в наличии */}
+          {outOfStock && (
+            <div className="absolute top-2.5 right-2.5 md:top-3 md:right-3 px-2.5 md:px-3 py-1 md:py-1.5 rounded-full bg-muted text-muted-foreground border border-border shadow-soft z-10">
+              <span className="text-xs md:text-sm font-black tracking-tight">{t('stock.out')}</span>
+            </div>
+          )}
 
           {/* Скидка */}
           {priceOld && priceOld > price && (
@@ -144,7 +166,10 @@ export const ProductCard: React.FC<Props> = ({
           <Title
             text={name}
             size="sm"
-            className="font-bold leading-tight line-clamp-2 group-hover:text-primary transition-colors"
+            className={cn(
+              'font-bold leading-tight line-clamp-2 transition-colors',
+              !outOfStock && 'group-hover:text-primary',
+            )}
           />
           {tags.length > 0 && <ProductTagBadges tags={tags} className="mt-1.5 md:mt-2" max={3} />}
           <p className="hidden sm:block text-sm text-muted-foreground line-clamp-2 mt-1.5 leading-snug">
@@ -155,7 +180,23 @@ export const ProductCard: React.FC<Props> = ({
         {/* Цена-пилюля */}
         <div className="mt-2.5 md:mt-4 px-1">
           <motion.div whileTap={{ scale: 0.97 }}>
-            {inCart ? (
+            {outOfStock ? (
+              <Button
+                variant="secondary"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setComeback(true);
+                }}
+                className={cn(
+                  'w-full h-10 md:h-12 rounded-full text-sm font-extrabold gap-1.5 border-0 transition-all',
+                  comeback
+                    ? 'bg-primary/10 text-primary'
+                    : 'bg-muted text-muted-foreground hover:bg-muted',
+                )}>
+                {comeback ? t('stock.comeback') : t('stock.comebackButton')}
+              </Button>
+            ) : inCart ? (
               <Button
                 onClick={goToCart}
                 className="btn-gradient w-full h-10 md:h-12 rounded-full text-sm font-extrabold gap-2 border-0">

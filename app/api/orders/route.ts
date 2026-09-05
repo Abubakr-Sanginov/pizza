@@ -59,6 +59,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Cart is empty or not found' }, { status: 400 });
     }
 
+    // Склад: не принимаем заказ, если какой-то товар закончился
+    const outOfStock = userCart.items.filter(
+      (item) => item.productItem.stock !== null && item.productItem.stock <= 0,
+    );
+    if (outOfStock.length > 0) {
+      const names = outOfStock
+        .map((item) => item.productItem.product.name)
+        .filter((v, i, a) => a.indexOf(v) === i)
+        .join(', ');
+      return NextResponse.json(
+        { error: `Товара нет в наличии: ${names}. Удалите его из корзины, пожалуйста <3` },
+        { status: 409 },
+      );
+    }
+
     let finalStoreId = storeId;
 
 

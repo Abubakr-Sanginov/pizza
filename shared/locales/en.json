@@ -26,6 +26,11 @@
     "allCocktails": "All Cocktails",
     "allDrinks": "All Drinks"
   },
+  "stock": {
+    "out": "Out of stock",
+    "comebackButton": "come back",
+    "comeback": "we'll return <3"
+  },
   "cart": {
     "title": "Cart",
     "itemsInCart": "In cart",
@@ -237,6 +242,7 @@
       "reviews": "Reviews",
       "users": "Users",
       "settings": "Settings",
+      "warehouses": "Warehouses",
       "myDeliveries": "My deliveries"
     },
     "dashboard": {
@@ -284,6 +290,18 @@
       "address": "Address",
       "phone": "Phone",
       "entityName": "restaurant"
+    },
+    "warehouses": {
+      "title": "Warehouses — stock levels",
+      "stock": "Stock",
+      "totalStock": "Total in stock",
+      "outOfStockCount": "Out of stock",
+      "outOfStock": "Out of stock",
+      "noItems": "No variants",
+      "empty": "No products yet",
+      "invalidValue": "Enter a valid number (0 or more) or leave the field empty (∞)",
+      "updated": "Stock updated",
+      "updateError": "Failed to update stock"
     },
     "stories": {
       "title": "Stories management",

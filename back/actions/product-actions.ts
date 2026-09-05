@@ -72,7 +72,7 @@ export async function createProduct(data: ProductInput) {
 
 export async function updateProduct(id: number, data: ProductInput) {
   try {
-    const oldItems = await prisma.productItem.findMany({ where: { productId: id }, select: { id: true } });
+    const oldItems = await prisma.productItem.findMany({ where: { productId: id }, select: { id: true, size: true, pizzaType: true, stock: true } });
     if (oldItems.length > 0) {
       await prisma.cartItem.deleteMany({
         where: { productItemId: { in: oldItems.map(i => i.id) } },
@@ -104,6 +104,8 @@ export async function updateProduct(id: number, data: ProductInput) {
             priceOld: item.priceOld || null,
             size: item.size || null,
             pizzaType: item.pizzaType || null,
+            // Переносим остаток склада со старого варианта (совпадение по size+pizzaType)
+            stock: oldItems.find(o => o.size === (item.size ?? null) && o.pizzaType === (item.pizzaType ?? null))?.stock ?? null,
           })),
         },
       } as any,
