@@ -25,5 +25,15 @@ export default async function ProductModalPage({ params: { id } }: { params: { i
     return notFound();
   }
 
-  return <ChooseProductModal product={product} />;
+  const relatedProducts = await prisma.product.findMany({
+    where: {
+      categoryId: product.categoryId,
+      id: { not: product.id },
+    },
+    include: { items: true },
+    take: 10,
+    orderBy: { createdAt: 'desc' },
+  });
+
+  return <ChooseProductModal product={product} relatedProducts={relatedProducts} />;
 }
