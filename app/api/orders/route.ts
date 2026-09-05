@@ -6,6 +6,7 @@ import { OrderSuccessTemplate } from '@/shared/components/shared/email-temapltes
 import { sendOrderNotification } from '@/bot/service';
 import { sendOrderToIiko } from '@/back/services/iiko';
 import { applyPromo, bumpPromoUsage } from '@/back/lib/promo';
+import { decrementStockForOrder } from '@/back/lib/stock';
 import React from 'react';
 
 export async function POST(req: NextRequest) {
@@ -179,6 +180,11 @@ export async function POST(req: NextRequest) {
     if (promoCodeApplied) {
       bumpPromoUsage(promoCodeApplied).catch(() => {});
     }
+
+    // Склад: списываем остатки по заказу
+    decrementStockForOrder(order.id).catch((e: unknown) =>
+      console.error('[API_ORDER] decrementStock failed', e),
+    );
 
     // Spend bonuses if requested
     if (userId && bonusSpent > 0) {

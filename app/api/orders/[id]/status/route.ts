@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserSession } from '@/back/lib/get-user-session';
 import { OrderStatus } from '@prisma/client';
 import { notifyOrderStatus } from '@/back/lib/notify-order-status';
+import { restoreStockForOrder, decrementStockForOrder } from '@/back/lib/stock';
 
 export const dynamic = 'force-dynamic';
 
@@ -104,6 +105,17 @@ export async function PATCH(
       notifyOrderStatus(orderId, status).catch((e) =>
         console.error('[notifyOrderStatus]', e),
       );
+
+      // Склад: возврат остатков при отмене / повторное списание при возврате из отмены
+      if (status === OrderStatus.CANCELLED) {
+        restoreStockForOrder(orderId).catch((e) =>
+          console.error('[ORDER_STATUS_PATCH] restoreStock failed', e),
+        );
+      } else if (previous.status === OrderStatus.CANCELLED) {
+        decrementStockForOrder(orderId).catch((e) =>
+          console.error('[ORDER_STATUS_PATCH] decrementStock failed', e),
+        );
+      }
     }
 
     return NextResponse.json(order);

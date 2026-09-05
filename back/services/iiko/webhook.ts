@@ -3,6 +3,7 @@ import { OrderStatus, Prisma } from '@prisma/client';
 
 import { prisma } from '@/back/prisma/prisma-client';
 import { notifyOrderStatus } from '@/back/lib/notify-order-status';
+import { restoreStockForOrder, decrementStockForOrder } from '@/back/lib/stock';
 
 import { IIKO_CONFIG } from './config';
 import { mapIikoStatusToLocal } from './status-map';
@@ -90,6 +91,17 @@ async function handleDeliveryStatus(event: IikoWebhookEvent): Promise<HandleResu
   await prisma.order.update({ where: { id: order.id }, data: update });
 
   if (localStatus && localStatus !== order.status) {
+    // Склад: возврат при отмене, повторное списание при выводе из отмены
+    if (localStatus === OrderStatus.CANCELLED) {
+      restoreStockForOrder(order.id).catch((e) =>
+        console.error('[IIKO WEBHOOK] restoreStock failed', e),
+      );
+    } else if (order.status === OrderStatus.CANCELLED) {
+      decrementStockForOrder(order.id).catch((e) =>
+        console.error('[IIKO WEBHOOK] decrementStock failed', e),
+      );
+    }
+
     notifyOrderStatus(order.id, localStatus).catch((e) =>
       console.error('[notifyOrderStatus][webhook]', e),
     );

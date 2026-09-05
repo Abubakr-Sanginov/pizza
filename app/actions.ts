@@ -14,6 +14,7 @@ import { cookies } from 'next/headers';
 import { sendOrderNotification } from '@/bot/service';
 import { sendOrderToIiko } from '@/back/services/iiko';
 import { applyPromo, bumpPromoUsage } from '@/back/lib/promo';
+import { decrementStockForOrder } from '@/back/lib/stock';
 import { accrueBonus, spendBonus, BONUS_MAX_SPEND_RATE } from '@/back/lib/bonus';
 
 export async function createOrder(data: CheckoutFormValues) {
@@ -161,6 +162,11 @@ export async function createOrder(data: CheckoutFormValues) {
     if (promoCodeApplied) {
       bumpPromoUsage(promoCodeApplied).catch(() => {});
     }
+
+    // Склад: списываем остатки по заказу
+    decrementStockForOrder(order.id).catch((e: unknown) =>
+      console.error('[CreateOrder] decrementStock failed', e),
+    );
 
     if (currentUser && bonusSpent > 0) {
       await spendBonus({
